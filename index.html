@@ -1113,14 +1113,14 @@ Object.assign(HABILIDADES, {
                    desc: (n) => `Lanzas una nube de tormenta que avanza en línea recta. Cada 0,9 s suelta una descarga (${n.descargas} en total): ${n.dano} de daño a los enemigos bajo la nube. No daña a tus aliados.`,
                    n1: { dano: 135, descargas: 4 }, n2: { dano: 175, descargas: 4 } },   // Seba (28-10): +35% (100 → 135)
   // ---- Takichi (Seba, 28-10)
-  sablazo:       { nombre: 'Sablazo', glifo: 'sablazo', cd: 9, cdFijo: true, canal: 0.7, largo: 220, ancho: 34,   // Seba (28-10): recarga -1 s (10 → 9)
-                   desc: (n) => `Canalizas 0,7 s (brillas en morado; un aturdimiento lo corta) y avanzas de un sablazo: ${n.dano} de daño a todos los enemigos que atraviesas. Quedas al final del tajo.`,
-                   n1: { dano: 150 }, n2: { dano: 195 } },
+  sablazo:       { nombre: 'Sablazo', glifo: 'sablazo', cd: 8, cdFijo: true, canal: 0.7, largo: 220, ancho: 34, bajaKill: 0.5,   // Seba (28-10): recarga 10 → 9 → 8 s; si mata a un héroe, la recarga baja a la mitad
+                   desc: (n) => `Canalizas 0,7 s (brillas en morado; un aturdimiento o un silencio lo corta) y avanzas de un sablazo: ${n.dano} de daño a todos los enemigos que atraviesas. Quedas al final del tajo. Si matas a un héroe con el tajo, la recarga baja a la mitad.`,
+                   n1: { dano: 160 }, n2: { dano: 208 } },   // Seba (28-10): 150 → 160
   humo:          { nombre: 'Bomba de humo', glifo: 'humo', cd: 14.17, sinEnemigos: 250,
-                   desc: (n) => `Solo sin enemigos a menos de 250: te vuelves invisible hasta ${n.dur} s. Los rivales no te ven ni te apuntan solos, pero los tiros y las áreas te pegan. Atacar o usar una habilidad te revela; recibir daño no.`,
+                   desc: (n) => `Solo sin enemigos a menos de 250, salvo que estés bajo un árbol (ahí siempre se puede): te vuelves invisible hasta ${n.dur} s. Los rivales no te ven ni te apuntan solos, pero los tiros y las áreas te pegan. Atacar o usar una habilidad te revela; recibir daño no.`,
                    n1: { dur: 6 }, n2: { dur: 7 } },
   danza:         { nombre: 'Danza silenciosa', glifo: 'clones', cd: 50, ulti: true, lado: 180,
-                   desc: (n) => `Marcas un cuadrado donde estás con 5 clones (uno en cada esquina y uno al centro) por ${n.dur} s. Al aparecer, los 4 de las esquinas canalizan 0,5 s y cruzan en diagonal con un Sablazo (150 a todos los que atraviesan) hasta la esquina opuesta. Cada clon golpea por ${Math.round(n.mult * 100)}% de tu daño a los enemigos pegados a él, a tu mismo ritmo de ataque (si estás potenciado, ellos también). Los enemigos dentro quedan lentos ${Math.round(n.lento * 100)}%. Prefieren héroes antes que invocaciones.`,
+                   desc: (n) => `Marcas un cuadrado donde estás con 5 clones (uno en cada esquina y uno al centro) por ${n.dur} s. Al aparecer, los 4 de las esquinas canalizan 0,5 s y cruzan en diagonal con un Sablazo (160 a todos los que atraviesan) hasta la esquina opuesta. Cada clon golpea por ${Math.round(n.mult * 100)}% de tu daño a los enemigos pegados a él, a tu mismo ritmo de ataque (si estás potenciado, ellos también). Los enemigos dentro quedan lentos ${Math.round(n.lento * 100)}%. Prefieren héroes antes que invocaciones.`,
                    n1: { dur: 6, mult: 0.5, lento: 0.35 }, n2: { dur: 6, mult: 0.65, lento: 0.35 } },
   // ---- Aracnida (Seba, 28-10)
   atraparPresa:  { nombre: 'Atrapar presa', glifo: 'gancho', cd: 13.3, alcance: 400, vel: 900,
@@ -1249,114 +1249,114 @@ for (const u of Object.values(UNIDADES)) if (u.vel) u.vel = Math.round(u.vel * R
 // Medido con bots (apuntado automático), 200 duelos por par.
 const MATCHUPS = {
  "beast": {
-  "lire": 46,
-  "nigromante": 97,
-  "maidas": 33,
+  "lire": 41,
+  "nigromante": 96,
+  "maidas": 30,
   "monh": 100,
   "biteroi": 0,
   "rasho": 0,
   "takichi": 98,
-  "aracnida": 97,
-  "trelgon": 100
+  "aracnida": 100,
+  "trelgon": 99
  },
  "lire": {
-  "beast": 54,
-  "nigromante": 36,
-  "maidas": 73,
-  "monh": 32,
-  "biteroi": 80,
-  "rasho": 90,
-  "takichi": 33,
-  "aracnida": 84,
-  "trelgon": 63
+  "beast": 60,
+  "nigromante": 31,
+  "maidas": 72,
+  "monh": 39,
+  "biteroi": 82,
+  "rasho": 93,
+  "takichi": 31,
+  "aracnida": 83,
+  "trelgon": 66
  },
  "nigromante": {
-  "beast": 4,
-  "lire": 65,
-  "maidas": 93,
+  "beast": 5,
+  "lire": 69,
+  "maidas": 95,
   "monh": 100,
   "biteroi": 86,
-  "rasho": 84,
-  "takichi": 89,
-  "aracnida": 99,
+  "rasho": 88,
+  "takichi": 67,
+  "aracnida": 100,
   "trelgon": 6
  },
  "maidas": {
-  "beast": 68,
-  "lire": 27,
-  "nigromante": 7,
-  "monh": 53,
-  "biteroi": 61,
-  "rasho": 67,
-  "takichi": 21,
-  "aracnida": 73,
-  "trelgon": 16
+  "beast": 70,
+  "lire": 28,
+  "nigromante": 6,
+  "monh": 61,
+  "biteroi": 63,
+  "rasho": 70,
+  "takichi": 23,
+  "aracnida": 76,
+  "trelgon": 17
  },
  "monh": {
   "beast": 0,
-  "lire": 69,
+  "lire": 62,
   "nigromante": 0,
-  "maidas": 47,
-  "biteroi": 51,
-  "rasho": 65,
+  "maidas": 40,
+  "biteroi": 57,
+  "rasho": 54,
   "takichi": 0,
-  "aracnida": 48,
-  "trelgon": 3
+  "aracnida": 44,
+  "trelgon": 1
  },
  "biteroi": {
   "beast": 100,
-  "lire": 20,
+  "lire": 19,
   "nigromante": 14,
-  "maidas": 40,
-  "monh": 50,
-  "rasho": 49,
+  "maidas": 37,
+  "monh": 43,
+  "rasho": 45,
   "takichi": 100,
   "aracnida": 100,
-  "trelgon": 38
+  "trelgon": 32
  },
  "rasho": {
   "beast": 100,
-  "lire": 10,
-  "nigromante": 17,
-  "maidas": 34,
-  "monh": 35,
-  "biteroi": 52,
-  "takichi": 68,
-  "aracnida": 97,
+  "lire": 7,
+  "nigromante": 13,
+  "maidas": 30,
+  "monh": 47,
+  "biteroi": 55,
+  "takichi": 62,
+  "aracnida": 99,
   "trelgon": 100
  },
  "takichi": {
-  "beast": 2,
-  "lire": 68,
-  "nigromante": 11,
-  "maidas": 80,
+  "beast": 3,
+  "lire": 70,
+  "nigromante": 34,
+  "maidas": 78,
   "monh": 100,
   "biteroi": 0,
-  "rasho": 32,
+  "rasho": 39,
   "aracnida": 3,
-  "trelgon": 82
+  "trelgon": 85
  },
  "aracnida": {
-  "beast": 3,
+  "beast": 1,
   "lire": 17,
   "nigromante": 1,
-  "maidas": 27,
-  "monh": 53,
-  "biteroi": 1,
-  "rasho": 3,
+  "maidas": 25,
+  "monh": 56,
+  "biteroi": 0,
+  "rasho": 1,
   "takichi": 97,
   "trelgon": 85
  },
  "trelgon": {
   "beast": 1,
-  "lire": 37,
+  "lire": 34,
   "nigromante": 94,
-  "maidas": 85,
-  "monh": 97,
-  "biteroi": 63,
+  "maidas": 83,
+  "monh": 100,
+  "biteroi": 68,
   "rasho": 0,
-  "takichi": 18,
-  "aracnida": 16
+  "takichi": 16,
+  "aracnida": 15
  }
 };
 const MATCHUPS_INFO = { fecha: '2026-10-28', duelos: 200 };
@@ -3394,7 +3394,7 @@ class Game {
       this._presa = presa;
     }
     // Takichi: la bomba de humo solo funciona sin enemigos cerca (no gasta la recarga si no se puede)
-    if (key === 'humo' && [...this.players.values()].some(q => q.alive && this.teamOf(q.id) !== this.teamOf(p.id) && dist(q, p) < h.sinEnemigos)) {
+    if (key === 'humo' && !this.bajoArbol(p) && [...this.players.values()].some(q => q.alive && this.teamOf(q.id) !== this.teamOf(p.id) && dist(q, p) < h.sinEnemigos)) {
       this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ENEMIGOS CERCA', id: p.id });
       return;
     }
@@ -3512,9 +3512,20 @@ class Game {
             const x0 = p.x, y0 = p.y;
             const fin = { x: x0 + Math.cos(a) * h.largo, y: y0 + Math.sin(a) * h.largo }; this.clampWall(fin);
             const dx = fin.x - x0, dy = fin.y - y0, L2 = dx * dx + dy * dy || 1;
+            let mato = false;
             for (const e of this.enemigos(p.id, false)) {
               const t = Math.max(0, Math.min(1, ((e.x - x0) * dx + (e.y - y0) * dy) / L2));
-              if (Math.hypot(e.x - (x0 + dx * t), e.y - (y0 + dy * t)) <= h.ancho / 2 + CONFIG.RADIO_JUGADOR) this.damage(e, n.dano, p, { tipo: 'mag', desde: { x: x0, y: y0 } });
+              if (Math.hypot(e.x - (x0 + dx * t), e.y - (y0 + dy * t)) <= h.ancho / 2 + CONFIG.RADIO_JUGADOR) {
+                const vivo = e.alive;
+                this.damage(e, n.dano, p, { tipo: 'mag', desde: { x: x0, y: y0 } });
+                // Seba (28-10): si el tajo mata a un héroe, la recarga del Sablazo baja a la mitad
+                if (vivo && !e.alive && !e.esUnidad && !mato) {
+                  mato = true;
+                  p.cd[slot + 1] = Math.max(0, p.cd[slot + 1] - h.cd * h.bajaKill);
+                  this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: 34, c: 'magia' });
+                  this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'RECARGA -50%', id: p.id });
+                }
+              }
             }
             p.x = fin.x; p.y = fin.y; p.kbx = p.kby = 0;
             if (this.modo === 'equipos') this.chocarCamara(p);
