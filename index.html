@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#1a1424">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -38,7 +38,9 @@ html, body {
   margin: 0; height: 100%; overflow: hidden; background: var(--tinta); color: var(--perg2);
   font-family: var(--f-titulo); font-size: 16px; overscroll-behavior: none;
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  touch-action: manipulation; -webkit-text-size-adjust: 100%;
 }
+#hud, #hud * { touch-action: none; }
 #app { position: fixed; inset: 0; }
 #cv { position: absolute; left: 0; top: 0; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
 img { image-rendering: pixelated; image-rendering: crisp-edges; }
@@ -5095,6 +5097,24 @@ class Controls {
     this.base = joyBase; this.knob = joyKnob;
     const RADIO = 56;
 
+    // Evita el zoom del navegador (doble toque y pellizco) al spamear botones en iPhone/Android.
+    // Los pointer events siguen llegando aunque se cancele el touchstart.
+    const sinZoom = (el) => el.addEventListener('touchstart', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+    sinZoom(zone);
+    if (!window.__lolaSinZoom) {
+      window.__lolaSinZoom = true;
+      for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+      document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
+      let ultimoToque = 0;
+      document.addEventListener('touchend', (e) => {
+        const ahora = Date.now();
+        const enJuego = e.target.closest && e.target.closest('#hud, #zone, canvas');
+        if (enJuego && ahora - ultimoToque < 350 && e.cancelable) e.preventDefault();
+        ultimoToque = ahora;
+      }, { passive: false });
+      document.addEventListener('touchmove', (e) => { if (e.touches.length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
+    }
+
     zone.addEventListener('pointerdown', (e) => {
       if (!this.enabled) return;
       if (e.target.closest('button')) return;
@@ -5138,6 +5158,7 @@ class Controls {
     // Botón con arrastre para apuntar (celular). alSoltar(apunte) con apunte = null (automático) o { a, frac }
     const arrastrable = (btn, { alApretar, alMover, alSoltar }) => {
       let id = null, ox = 0, oy = 0, apunte = null, salio = false;   // salio: ya se arrastró fuera del centro
+      sinZoom(btn);
       btn.addEventListener('pointerdown', (e) => {
         e.preventDefault(); e.stopPropagation();
         if (e.pointerType === 'mouse') { alSoltar && alSoltar(null, true); return; }   // con mouse, clic = lanzar ya
