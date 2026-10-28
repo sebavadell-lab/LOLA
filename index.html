@@ -538,6 +538,20 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 .matriz td.prom { background: var(--madera0); color: var(--oro2); }
 @media (max-width: 520px) { .matriz tbody th span { display: none; } .fi-top img { width: 68px; height: 60px; } }
 
+/* Status (Seba 28-10): cuadritos a la izquierda */
+#hud-status { position: absolute; left: max(8px, var(--sal)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; pointer-events: none; z-index: 4; }
+#hud-status .est { position: relative; width: 26px; height: 26px; border: 2px solid var(--tinta); box-shadow: 0 0 0 1px var(--oro2); }
+#hud-status .est.malo { box-shadow: 0 0 0 1px var(--carm2); }
+#hud-status .est img { width: 100%; height: 100%; display: block; }
+#hud-status .est span { display: none; }
+@media (hover: hover) { #hud-status .est span { display: block; position: absolute; left: 30px; top: 5px; font: 9px var(--f-num); color: var(--perg2); text-shadow: 1px 1px 0 var(--tinta); white-space: nowrap; text-transform: uppercase; } }
+/* Boletín: avisos en el centro, semitransparentes */
+#feed { position: absolute; left: 50%; top: calc(40px + var(--sat)); transform: translateX(-50%); width: min(420px, 60vw); display: flex; flex-direction: column; align-items: center; gap: 3px; pointer-events: none; z-index: 4; }
+#feed .fi { background: rgba(26, 20, 36, 0.55); color: var(--perg2); font: 11px var(--f-num); padding: 3px 10px; text-transform: uppercase; text-align: center; text-shadow: 1px 1px 0 var(--tinta); transition: opacity .6s steps(3); }
+#feed .fi.racha { color: var(--oro2); }
+#feed .fi.kill { color: var(--perg1); }
+#feed .fi.fuera { opacity: 0; }
+#hud-me .me-n { display: none; }
 /* Status activos en tu panel */
 .me-st { display: flex; flex-wrap: wrap; gap: 3px; }
 .me-st:empty { display: none; }
@@ -567,6 +581,48 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 #lobby-list li.eq-b .eqtag { background: var(--carm1); }
 #lobby-list li { min-height: 44px; }
 
+/* Seba 28-10: menos recuadros en el celular, más combate */
+@media (hover: none) and (pointer: coarse) {
+  #hud-players { display: none; }
+  #hud-top .tag { font-size: 10px; padding: 1px 6px; border-width: 2px; }
+  #hud-top .tag.big { font-size: 15px; min-width: 44px; }
+  #hud-me { width: 130px; padding: 4px; }
+  .me-bar { height: 12px; }
+  .me-bar.mn { height: 9px; }
+  .me-bar span { font-size: 8px; }
+  #feed .fi { font-size: 9px; }
+}
+
+/* Marcador 1v1 / 2v2 (Seba 28-10): una sola barra compacta arriba al centro */
+#marcador { position: absolute; left: 50%; top: calc(6px + var(--sat)); transform: translateX(-50%); display: flex; align-items: stretch; gap: 0; pointer-events: none; z-index: 5;
+  border: 2px solid var(--tinta); box-shadow: 0 0 0 1px var(--noche); }
+#marcador .mc-eq { display: flex; align-items: center; gap: 5px; padding: 2px 7px; min-width: 70px; }
+#marcador .mc-eq.az { background: var(--acero0); }
+#marcador .mc-eq.ro { background: var(--carm0); justify-content: flex-end; }
+#marcador .mc-eq.mio { box-shadow: inset 0 -2px 0 var(--oro2); }
+#marcador .mc-n { font: 16px var(--f-num); color: var(--perg2); text-shadow: 1px 1px 0 var(--tinta); min-width: 18px; text-align: center; }
+#marcador .mc-bar { flex: 1; height: 5px; background: var(--tinta); min-width: 34px; display: block; }
+#marcador .mc-bar b { display: block; height: 100%; }
+#marcador .az .mc-bar b { background: var(--acero2); }
+#marcador .ro .mc-bar b { background: var(--carm2); margin-left: auto; }
+#marcador .mc-mid { background: var(--tinta); padding: 1px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+#marcador .mc-t { font: 13px var(--f-num); color: var(--oro2); line-height: 1; }
+#marcador .mc-obj { display: flex; gap: 4px; align-items: center; height: 9px; }
+#marcador .mc-txt { font: 7px var(--f-num); color: var(--piedra3); text-transform: uppercase; }
+#marcador .mc-c { width: 8px; height: 8px; border: 2px solid; box-sizing: border-box; }
+#marcador .mc-c.lado-a { border-color: var(--acero2); }
+#marcador .mc-c.lado-b { border-color: var(--carm2); }
+#marcador .mc-c.tomado.a { background: var(--acero2); }
+#marcador .mc-c.tomado.b { background: var(--carm2); }
+#marcador .mc-c.capt { background: var(--oro2); animation: mcParpadeo 0.5s steps(2) infinite; }
+#marcador .mc-ck { font: 7px var(--f-num); color: var(--magia); padding: 0 2px; border: 1px solid var(--magia); line-height: 7px; }
+#marcador .mc-ck.vivo { color: var(--oro2); border-color: var(--oro2); animation: mcParpadeo 0.5s steps(2) infinite; }
+@keyframes mcParpadeo { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { #marcador .mc-c.capt, #marcador .mc-ck.vivo { animation: none; } }
+@media (min-width: 900px) and (hover: hover) {
+  #marcador .mc-n { font-size: 20px; } #marcador .mc-t { font-size: 16px; } #marcador .mc-eq { min-width: 96px; }
+}
+
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
 .demo-note b{color:var(--carm1)}
@@ -579,6 +635,12 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
   <div id="zone" class="hidden">
     <div id="joy"><div id="knob"></div></div>
     <div id="hud">
+      <!-- Marcador 1v1 / 2v2 (Seba 28-10): compacto, una sola barra -->
+      <div id="marcador" class="hidden">
+        <div class="mc-eq az" id="mc-eqa"><span class="mc-n" id="mc-a">0</span><span class="mc-bar"><b id="mc-ab"></b></span></div>
+        <div class="mc-mid"><div class="mc-t" id="mc-t">10:00</div><div class="mc-obj" id="mc-obj"></div></div>
+        <div class="mc-eq ro" id="mc-eqb"><span class="mc-bar"><b id="mc-bb"></b></span><span class="mc-n" id="mc-b">0</span></div>
+      </div>
       <div id="hud-top">
         <div class="tag" id="hud-round">Ronda 1</div>
         <div class="tag big" id="hud-timer">75</div>
@@ -595,7 +657,9 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <button class="act ab hidden" id="b-h3"><img class="ic" alt=""><span class="cd"></span><span class="key">O</span></button>
       <button class="act atk" id="b-atk"><img class="ic" alt=""><span class="key">J</span></button>
     </div>
-    <div id="hud-me"><div class="me-n" id="me-n"></div><div class="me-bar hp"><i id="me-hp"></i><span id="me-hpt"></span></div><div class="me-bar mn"><i id="me-mn"></i><span id="me-mnt"></span></div><div class="me-bar xp hidden" id="me-xpb"><i id="me-xp"></i><span id="me-xpt"></span></div><div class="me-st" id="me-st"></div></div>
+    <div id="hud-me"><div class="me-n" id="me-n"></div><div class="me-bar hp"><i id="me-hp"></i><span id="me-hpt"></span></div><div class="me-bar mn"><i id="me-mn"></i><span id="me-mnt"></span></div><div class="me-bar xp hidden" id="me-xpb"><i id="me-xp"></i><span id="me-xpt"></span></div></div>
+    <div id="hud-status"></div>
+    <div id="feed"></div>
     <div id="banner" class="hidden"></div>
     <div id="countdown" class="hidden"></div>
   </div>
@@ -838,7 +902,7 @@ const HEROES = {
   beast: {
     nombre: 'The Beast', rol: 'Tanque / iniciador', fondo: 'beast', arma: 'garras',
     desc: 'Bestia mamífera. Mucha vida, entra rodando y aturde a pedradas.',
-    vida: 270, dano: 40, recarga: 1.2, ultiCarga: 416, velocidad: 168,
+    vida: 445, dano: 35, recarga: 1.2, ultiCarga: 354, velocidad: 168,   // Seba (28-10): velocidad vuelve a 168
     ataque: { tipo: 'melee', rango: 60, arco: 120 },
     habs: ['lanzaPiedra', 'terremoto', 'mayhem'],
     pasiva: 'regenBestial',
@@ -846,15 +910,15 @@ const HEROES = {
   lire: {
     nombre: 'Lire', rol: 'Daño', fondo: 'lire', arma: 'arco3',
     desc: 'Elfa verde arquera. Mucho daño a distancia y se cura bajo los árboles.',
-    vida: 230, dano: 28, recarga: 1.0, ultiCarga: 338, velocidad: 165,
-    ataque: { tipo: 'proyectil', proj: 'flecha', vel: 640, alcance: 520, radio: 5 },
+    vida: 405, dano: 28, recarga: 1.0, ultiCarga: 287, velocidad: 165,
+    ataque: { tipo: 'proyectil', proj: 'flecha', vel: 640, alcance: 440, radio: 5 },
     habs: ['torreta', 'fuga', 'tiroBosque'],
     pasiva: 'savia',
   },
   nigromante: {
     nombre: 'Nigromante', rol: 'Magia · invocador', fondo: 'nigromante', arma: 'baculoHueso',
     desc: 'Brujo que revive muertos. Esqueletos, maldiciones y un gólem.',
-    vida: 220, dano: 25, recarga: 1.5, ultiCarga: 312, velocidad: 141,
+    vida: 395, dano: 25, recarga: 1.5, ultiCarga: 265, velocidad: 141,
     ataque: { tipo: 'proyectil', proj: 'sombra', vel: 460, alcance: 420, radio: 6 },
     habs: ['esqueletos', 'maldicion', 'golem'],
     pasiva: 'almas',
@@ -862,7 +926,7 @@ const HEROES = {
   maidas: {
     nombre: 'Maidas', rol: 'Magia · daño', fondo: 'maidas', arma: 'baston3',
     desc: 'Mago de la realeza. Fuego, muros de hielo y un dragón que cobra su precio.',
-    vida: 200, dano: 28, recarga: 1.4, ultiCarga: 338, velocidad: 141,
+    vida: 375, dano: 28, recarga: 1.4, ultiCarga: 287, velocidad: 141,
     ataque: { tipo: 'proyectil', proj: 'orbeFuego', vel: 440, alcance: 420, radio: 6 },
     habs: ['pulso', 'muro', 'dragon'],
     pasiva: 'sangreReal',
@@ -870,7 +934,7 @@ const HEROES = {
   monh: {
     nombre: 'Monh', rol: 'Sanador', fondo: 'monh', arma: 'bastonFarol',
     desc: 'Curandero vagabundo, un sacerdote algo raro sin religión. Sostiene al equipo con círculos y orbes de sanación.',
-    vida: 210, dano: 18, recarga: 1.6, ultiCarga: 286, velocidad: 146,
+    vida: 359, dano: 18, recarga: 1.6, ultiCarga: 243, velocidad: 146,
     ataque: { tipo: 'proyectil', proj: 'orbe', vel: 440, alcance: 420, radio: 6 },
     habs: ['circulo', 'orbeVida', 'bendicion'],
     pasiva: 'eco',
@@ -878,14 +942,42 @@ const HEROES = {
   biteroi: {
     nombre: 'Biteroi', rol: 'Daño · control', fondo: 'biteroi', arma: 'bombaMano',
     desc: 'Bombardero loco. Bombas que caen donde apuntas, bombas que se pegan, minas escondidas y un bombazo que no perdona a nadie.',
-    vida: 200, dano: 26, recarga: 1.8, ultiCarga: 330, velocidad: 146,
+    vida: 375, dano: 41, recarga: 1.8, ultiCarga: 280, velocidad: 146,   // Seba (28-10): +15 al ataque y +25 a las habilidades
     ataque: { tipo: 'parabola', alcance: 380, area: 45, vuelo: 0.6 },
     habs: ['bombaPegajosa', 'mina', 'granBombazo'],
     pasiva: null,
   },
+  // Seba (28-10): dios del trueno que flota sobre una nube de tormenta
+  rasho: {
+    nombre: 'Rasho', rol: 'Daño · magia', fondo: 'rasho', arma: 'rayoMano',
+    desc: 'Dios del trueno que flota sobre una nube de tormenta. Frena con rayos que rebotan entre enemigos.',
+    vida: 365, dano: 28, recarga: 1.0, ultiCarga: 280, velocidad: 150,
+    ataque: { tipo: 'proyectil', proj: 'rayoBola', vel: 700, alcance: 420, radio: 6 },
+    habs: ['trueno', 'manosRayo', 'tormenta'],
+    pasiva: 'nubeVoladora',
+  },
+  // Seba (28-10): asesino silencioso, samurái errante y sombrío con dos sables
+  takichi: {
+    nombre: 'Takichi', rol: 'Asesino', fondo: 'takichi', arma: 'sable',
+    desc: 'Samurái errante y sombrío con dos sables. Entra de un sablazo, desaparece en humo y castiga a los mal parados.',
+    vida: 365, dano: 40, recarga: 1.0, ultiCarga: 300, velocidad: 170,
+    ataque: { tipo: 'melee', rango: 55, arco: 100 },
+    habs: ['sablazo', 'humo', 'danza'],
+    pasiva: 'pasoSigiloso',
+  },
+  // Seba (28-10): control, mujer araña que caza con seda y veneno
+  aracnida: {
+    nombre: 'Aracnida', rol: 'Control', fondo: 'aracnida', arma: 'ninguna',
+    desc: 'Mujer araña cazadora: atrapa a su presa con seda, la arrastra a sus pies y la remata con veneno.',
+    vida: 395, dano: 30, recarga: 1.0, ultiCarga: 290, velocidad: 160,
+    ataque: { tipo: 'melee', rango: 55, arco: 110 },
+    habs: ['atraparPresa', 'tejer', 'mordida'],
+    pasiva: 'sentidoAracnido',
+  },
 };
 
 // ---------------------------------------------------------------------
+//  Seba (28-10): +100 de vida a todos los héroes (daños iguales) · ultis 15% más baratas · The Beast daño 40→35 · esqueletos 45 vida / 2 daño · gólem 30 de daño.
 //  HABILIDADES — cd en segundos. Sin mana: 1 y 2 se limitan por recarga; la ulti se carga haciendo daño.
 //  n1 / n2 = números principales en nivel 1 y nivel 2 (nivel 2 = +30%).
 //  Seba (28-10): el nivel 2 NO existe en el juego actual (todos juegan siempre con n1). Los n2 quedan guardados por si vuelve.
@@ -895,37 +987,37 @@ const HABILIDADES = {
   // Seba (28-10): reemplaza al Rugido
   lanzaPiedra: { nombre: 'Lanzamiento de piedra', glifo: 'rocaLanzada', cd: 8, alcance: 220, vel: 520,
                 desc: (n) => `Arrancas una roca y la lanzas en línea recta: ${fmtN(n.dano)} de daño al primer enemigo y lo aturdes ${fmtN(n.aturde)} s (no se mueve, no ataca ni lanza habilidades).`,
-                n1: { dano: 60, aturde: 0.8 }, n2: { dano: 78, aturde: 1 } },   // Seba (28-10): corto alcance, 0,8 s
+                n1: { dano: 56, aturde: 0.8 }, n2: { dano: 78, aturde: 1 } },   // Seba (28-10): corto alcance, 0,8 s
   terremoto:  { nombre: 'Terremoto', glifo: 'roca', cd: 12,
                 desc: (n) => `Durante ${n.dur} s, cada paso largo (un cuerpo y cuarto) que avanzas dispara 4 piedras: primero norte, sur, este y oeste, y en el siguiente paso las diagonales: ${n.dano} de daño, ${n.danoInv} a invocaciones.`,
-                n1: { dur: 3, dano: 25, danoInv: 50 }, n2: { dur: 3, dano: 32.5, danoInv: 65 }, paso: 45, alcancePiedra: 180 },   // Seba (28-10): menos piedras (antes cada 18 = medio cuerpo)
+                n1: { dur: 3, dano: 23, danoInv: 46 }, n2: { dur: 3, dano: 32.5, danoInv: 65 }, paso: 45, alcancePiedra: 180 },   // Seba (28-10): menos piedras (antes cada 18 = medio cuerpo)
   mayhem:     { nombre: 'Mayhem', glifo: 'remolinoBestia', cd: 0.5, ulti: true,
                 desc: (n) => `Te enrollas ${n.dur} s: +30% de velocidad y ${n.dano} de daño a cada enemigo que pisas (1 vez cada 2 s por enemigo). No puedes usar habilidades mientras ruedas.`,
-                n1: { dur: 5, dano: 50 }, n2: { dur: 5, dano: 65 } },
+                n1: { dur: 5, dano: 47 }, n2: { dur: 5, dano: 65 } },
 
   // ---- Lire
   torreta:    { nombre: 'Torreta', glifo: 'diana', cd: 10,
-                desc: (n) => `Montas una torreta a tus pies que dispara como tú pero con 60% menos de daño (${fmtN(n.dano)} por flecha). Indestructible, dura ${n.dur} s. Máximo 2.`,
-                n1: { dano: 4, dur: 6 }, n2: { dano: 5.2, dur: 6 } },
+                desc: (n) => `Montas una torreta a tus pies que dispara sola, a tu mismo ritmo: ${fmtN(n.dano)} por flecha. Indestructible, dura ${n.dur} s. Máximo 1 (si pones otra, la anterior desaparece).`,
+                n1: { dano: 20, dur: 6 }, n2: { dano: 26, dur: 6 } },   // Seba (28-10): 4 → 25 → 20 por flecha
   fuga:       { nombre: 'Fuga', glifo: 'bota', cd: 12,
                 desc: (n) => `Durante ${n.dur} s ganas ${Math.round(n.pct * 100)}% de velocidad de movimiento y de ataque.`,
                 n1: { pct: 0.3, dur: 3 }, n2: { pct: 0.39, dur: 3 } },
   tiroBosque: { nombre: 'Tiro del bosque', glifo: 'flechaVerde', cd: 0.5, ulti: true,
-                desc: (n) => `Flecha que rebota entre enemigos sin repetir: ${n.dano} de daño y +${n.extra} por cada rebote (máx. 5). Ignora invocaciones.`,
-                n1: { dano: 50, extra: 25 }, n2: { dano: 65, extra: 32.5 }, rebotes: 5, radioRebote: 320 },
+                desc: (n) => `Flecha que busca héroes (ignora invocaciones): ${n.dano} al primero. Rebota 3 veces, cada rebote 25% menos (${Math.round(n.dano * 0.75)}, ${Math.round(n.dano * 0.5625)}, ${Math.round(n.dano * 0.421875)}). Rebota a otro enemigo cercano; si no hay, vuelve a golpear al mismo.`,
+                n1: { dano: 125 }, n2: { dano: 160 }, rebotes: 3, radioRebote: 320, baja: 0.75 },   // Seba (28-10): rework
 
   // ---- Nigromante
   esqueletos: { nombre: 'Invocar esqueletos', glifo: 'calavera', cd: 10,
                 desc: (n) => `Invocas ${n.cant} esqueletos (${n.vida} de vida, ${fmtN(n.dano)} de daño, 2,5 ataques/s) por ${n.dur} s o hasta morir. Máximo ${n.max}.`,
                 // Nerf de Seba (27-10): -30% de vida y de daño (antes 50 de vida y 3 de daño)
                 // Seba (27-10): menos esqueletos (antes 3 por invocación, máximo 6)
-                n1: { cant: 2, dano: 2.1, vida: 35, dur: 20, max: 4 }, n2: { cant: 3, dano: 2.7, vida: 46, dur: 20, max: 5 } },
+                n1: { cant: 2, dano: 2, vida: 45, dur: 20, max: 4 }, n2: { cant: 3, dano: 2.7, vida: 46, dur: 20, max: 5 } },
   maldicion:  { nombre: 'Maldición', glifo: 'espiral', cd: 14,
                 desc: (n) => `Onda en todas direcciones: los enemigos alcanzados reciben ${fmtN(n.dps)} de daño por segundo por 5 s y quedan silenciados ${n.silencio} s.`,
                 n1: { dps: 15, silencio: 2 }, n2: { dps: 19.5, silencio: 2 }, radio: 220 },
   golem:      { nombre: 'Invocar gólem', glifo: 'calaveraPiedra', cd: 0.5, ulti: true,
                 desc: (n) => `Gólem de ${n.vida} de vida que golpea en área cada 1,5 s por ${fmtN(n.dano)}. Te cura 25 por cada jugador que golpea. Dura ${n.dur} s o hasta morir.`,
-                n1: { vida: 280, dano: 25, dur: 12 }, n2: { vida: 360, dano: 32.5, dur: 14 } },   // Seba (27-10): el gólem dura 12 s
+                n1: { vida: 280, dano: 30, dur: 12 }, n2: { vida: 360, dano: 32.5, dur: 14 } },   // Seba (27-10): el gólem dura 12 s
 
   // ---- Maidas
   pulso:      { nombre: 'Pulso de fuego', glifo: 'llama', cd: 6,
@@ -957,13 +1049,43 @@ Object.assign(HABILIDADES, {
   // ---- Biteroi (Seba, 27-10)
   bombaPegajosa: { nombre: 'Bomba pegajosa', glifo: 'bomba', cd: 9, alcance: 420, area: 40, vuelo: 0.7,
                    desc: (n) => `Lanzas una bomba en parábola que cae donde apuntas. Si cae sobre un enemigo, se le queda pegada ${n.dur} s y lo enlentece 50%; al terminar, recibe ${n.dano} de daño.`,
-                   n1: { dur: 2, dano: 100 }, n2: { dur: 2, dano: 130 } },
+                   n1: { dur: 2, dano: 106 }, n2: { dur: 2, dano: 155 } },
   mina:          { nombre: 'Mina antipersonal', glifo: 'mina', cd: 10, max: 2, armado: 1,
                    desc: (n) => `Plantas una mina en el suelo (los rivales solo ven un punto rojo parpadeante). Si un enemigo la pisa, recibe ${n.dano} de daño. Máximo 2.`,
-                   n1: { dano: 100 }, n2: { dano: 130 } },
-  granBombazo:   { nombre: 'Gran bombazo', glifo: 'bombazo', cd: 0.5, ulti: true, alcance: 500, radio: 108, aviso: 2,
+                   n1: { dano: 106 }, n2: { dano: 155 } },
+  // ---- Rasho (Seba, 28-10)
+  trueno:        { nombre: 'Trueno', glifo: 'rayo', cd: 9, alcance: 420, vel: 820, radioRebote: 150,
+                   desc: (n) => `Lanzas un rayo en línea recta: ${n.dano} de daño y deja lento 50% por ${n.dur} s. Si hay otro enemigo cerca, rebota 1 vez con la mitad de todo: ${fmtN(n.dano / 2)} de daño y 25% lento.`,
+                   n1: { dano: 50, dur: 2 }, n2: { dano: 65, dur: 2 } },
+  manosRayo:     { nombre: 'Manos de rayo', glifo: 'manoRayo', cd: 12, radioRebote: 150,
+                   desc: (n) => `Durante ${n.dur} s tus disparos hacen +${Math.round(n.dano * 100)}% de daño, tus cargas vuelven ${Math.round(n.ritmo * 100)}% más rápido y cada disparo que acierta rebota el ${Math.round(n.rebote * 100)}% de su daño al enemigo más cercano.`,
+                   n1: { dur: 6, dano: 0.2, ritmo: 0.2, rebote: 0.25 }, n2: { dur: 6, dano: 0.26, ritmo: 0.26, rebote: 0.32 } },
+  tormenta:      { nombre: 'Tormenta eléctrica', glifo: 'nubeRayo', cd: 0.5, ulti: true, vel: 110, ancho: 90, cada: 0.9, descargas: 4,
+                   desc: (n) => `Lanzas una nube de tormenta que avanza en línea recta. Cada 0,9 s suelta una descarga (${n.descargas} en total): ${n.dano} de daño a los enemigos bajo la nube. No daña a tus aliados.`,
+                   n1: { dano: 100, descargas: 4 }, n2: { dano: 130, descargas: 4 } },
+  // ---- Takichi (Seba, 28-10)
+  sablazo:       { nombre: 'Sablazo', glifo: 'sablazo', cd: 8.3, canal: 0.7, largo: 220, ancho: 34,
+                   desc: (n) => `Canalizas 0,7 s (brillas en morado; un aturdimiento lo corta) y avanzas de un sablazo: ${n.dano} de daño a todos los enemigos que atraviesas. Quedas al final del tajo.`,
+                   n1: { dano: 150 }, n2: { dano: 195 } },
+  humo:          { nombre: 'Bomba de humo', glifo: 'humo', cd: 14.17, sinEnemigos: 250,
+                   desc: (n) => `Solo sin enemigos a menos de 250: te vuelves invisible hasta ${n.dur} s. Los rivales no te ven ni te apuntan solos, pero los tiros y las áreas te pegan. Atacar o usar una habilidad te revela; recibir daño no.`,
+                   n1: { dur: 6 }, n2: { dur: 7 } },
+  danza:         { nombre: 'Danza silenciosa', glifo: 'clones', cd: 0.5, ulti: true, lado: 180,
+                   desc: (n) => `Marcas un cuadrado donde estás con 5 clones (uno en cada esquina y uno al centro) por ${n.dur} s. Al aparecer, los 4 de las esquinas canalizan 0,5 s y cruzan en diagonal con un Sablazo (150 a todos los que atraviesan) hasta la esquina opuesta. Cada clon golpea por ${Math.round(n.mult * 100)}% de tu daño a los enemigos pegados a él, a tu mismo ritmo de ataque (si estás potenciado, ellos también). Los enemigos dentro quedan lentos ${Math.round(n.lento * 100)}%. Prefieren héroes antes que invocaciones.`,
+                   n1: { dur: 6, mult: 0.5, lento: 0.35 }, n2: { dur: 6, mult: 0.65, lento: 0.35 } },
+  // ---- Aracnida (Seba, 28-10)
+  atraparPresa:  { nombre: 'Atrapar presa', glifo: 'gancho', cd: 13.3, alcance: 400, vel: 900,
+                   desc: (n) => `Disparas un hilo de seda en línea recta. El primer enemigo que toca (también invocaciones) recibe ${n.dano} de daño, queda aturdido ${n.aturde} s y es arrastrado hasta tus pies. The Cucko no se mueve.`,
+                   n1: { dano: 100, aturde: 2 }, n2: { dano: 130, aturde: 2 } },
+  tejer:         { nombre: 'Tejer', glifo: 'telarana', cd: 25, radio: 130,
+                   desc: (n) => `Tejes una tela de araña donde estás (solo 1 a la vez) por ${n.dur} s. Encima de ella ganas +${Math.round(n.buff * 100)}% de recarga de ataque y de velocidad, y recibes ${Math.round(n.buff * 100)}% menos de daño. Los enemigos que la pisan quedan lentos ${Math.round(n.lento * 100)}%.`,
+                   n1: { dur: 25, buff: 0.15, lento: 0.2 }, n2: { dur: 25, buff: 0.2, lento: 0.25 } },
+  mordida:       { nombre: 'Mordida venenosa', glifo: 'colmillos', cd: 0.5, ulti: true, alcance: 120,
+                   desc: (n) => `Saltas sobre el héroe enemigo más cercano (a menos de 120) y lo muerdes: ${n.dano} de daño y veneno de ${n.dps} por segundo durante ${n.dur} s. Si no hay nadie cerca, no se gasta.`,
+                   n1: { dano: 100, dps: 25, dur: 5 }, n2: { dano: 130, dps: 32.5, dur: 5 } },
+  granBombazo:   { nombre: 'Gran bombazo', glifo: 'bombazo', cd: 0.5, ulti: true, alcance: 420, radio: 108, aviso: 2,
                    desc: (n) => `Marcas una zona circular; a los 2 s cae un bombazo: ${n.dano} de daño a todos los jugadores dentro, incluidos tus aliados y tú.`,
-                   n1: { dano: 200 }, n2: { dano: 260 } },
+                   n1: { dano: 191 }, n2: { dano: 285 } },
 });
 
 const PASIVAS = {
@@ -971,17 +1093,23 @@ const PASIVAS = {
   savia:        { nombre: 'Savia del bosque', glifo: 'nube', desc: 'Recuperas 5 de vida por segundo bajo un árbol.' },
   almas:        { nombre: 'Cosecha de almas', glifo: 'gotaVerde', desc: 'Cuando matan a una de tus invocaciones, recuperas 15 de vida.' },
   eco:          { nombre: 'Eco del camino', glifo: 'gotaAzul', desc: 'Curar a tus aliados también carga tu ulti.' },
+  nubeVoladora: { nombre: 'Sobre la nube', glifo: 'nube', desc: 'Flotas sobre tu nube: pasas por encima de los obstáculos (muros de hielo y muros de la cámara de The Cucko).' },
+  pasoSigiloso: { nombre: 'Paso sigiloso', glifo: 'bota', desc: '+10% de velocidad de movimiento si no recibiste daño en los últimos 3 s.' },
+  sentidoAracnido: { nombre: 'Sentido arácnido', glifo: 'ojoArana', desc: 'Los enemigos invisibles o escondidos que pisan tu tela quedan a la vista de todos.' },
   sangreReal:   { nombre: 'Sangre real', glifo: 'corona', desc: 'Recuperas 25 de vida cada vez que usas una habilidad.' },
 };
 
 // Invocaciones y estructuras
 const UNIDADES = {
-  esqueleto: { vida: 35,  vel: 170, cd: 0.4, rango: 30, sprite: 'esqueleto' },
+  esqueleto: { vida: 45,  vel: 170, cd: 0.4, rango: 30, sprite: 'esqueleto' },
   golem:     { vel: 110, cd: 1.5, rango: 44, area: 60, sprite: 'golem' },
   dragon:    { vel: 170, cd: 1 / 1.5, rango: 260, area: 60, duracion: 5, sprite: 'dragon' },
   torreta:   { vel: 0, sprite: 'ballesta', invulnerable: true },
   muro:      { vel: 0, largo: 108, grosor: 14, sprite: 'muro' },
   cucko:     { vel: 80, sprite: 'cucko' },
+  nubeTormenta: { vel: 0, invulnerable: true },
+  clon:      { vel: 0, invulnerable: true },
+  tela:      { vel: 0, invulnerable: true },
   orbeVida:  { vel: 0, invulnerable: true },
   circuloVida: { vel: 0, invulnerable: true },
   mina: { vel: 0, invulnerable: true },
@@ -995,37 +1123,45 @@ const fmtN = (v) => Number.isInteger(v) ? String(v) : String(Math.round(v * 10) 
 // Status: efectos con nombre que se ven sobre el personaje y en tu panel (Seba 28-10:
 // las fortalezas y resistencias se manejan como status, no como stats fijos).
 const ESTADOS = [
-  { bit: 1048576, nombre: 'Cucko', bueno: true },
-  { bit: 262144, nombre: 'Bendecido', bueno: true },
-  { bit: 16384,  nombre: 'Fuga', bueno: true },
-  { bit: 8192,   nombre: 'Terremoto', bueno: true },
-  { bit: 4096,   nombre: 'Mayhem', bueno: true },
-  { bit: 8,      nombre: 'Camuflado', bueno: true },
-  { bit: 65536,  nombre: 'Marcado', bueno: false },
-  { bit: 524288, nombre: 'Bomba pegada', bueno: false },
-  { bit: 256,    nombre: 'Vulnerable', bueno: false },
-  { bit: 2048,   nombre: 'Aturdido', bueno: false },
-  { bit: 64,     nombre: 'Silenciado', bueno: false },
-  { bit: 32,     nombre: 'Lento', bueno: false },
-  { bit: 16,     nombre: 'Quemado', bueno: false },
+  { bit: 1048576, nombre: 'Cucko', glifo: 'corona', bueno: true },
+  { bit: 8388608, nombre: 'Invisible', glifo: 'humo', bueno: true },
+  { bit: 33554432, nombre: 'En su tela', glifo: 'telarana', bueno: true },
+  { bit: 4194304, nombre: 'Canalizando', glifo: 'sablazo', bueno: true },
+  { bit: 2097152, nombre: 'Manos de rayo', glifo: 'manoRayo', bueno: true },
+  { bit: 262144, nombre: 'Bendecido', glifo: 'solVida', bueno: true },
+  { bit: 16384,  nombre: 'Fuga', glifo: 'bota', bueno: true },
+  { bit: 8192,   nombre: 'Terremoto', glifo: 'roca', bueno: true },
+  { bit: 4096,   nombre: 'Mayhem', glifo: 'remolinoBestia', bueno: true },
+  { bit: 8,      nombre: 'Camuflado', glifo: 'nube', bueno: true },
+  { bit: 2048,   nombre: 'Aturdido', glifo: 'rocaLanzada', bueno: false },
+  { bit: 16777216, nombre: 'Envenenado', glifo: 'colmillos', bueno: false },
+  { bit: 65536,  nombre: 'Marcado', glifo: 'diana', bueno: false },
+  { bit: 524288, nombre: 'Bomba pegada', glifo: 'bomba', bueno: false },
+  { bit: 256,    nombre: 'Vulnerable', glifo: 'grito', bueno: false },
+  { bit: 64,     nombre: 'Silenciado', glifo: 'espiral', bueno: false },
+  { bit: 32,     nombre: 'Lento', glifo: 'telarana', bueno: false },
+  { bit: 16,     nombre: 'Quemado', glifo: 'llama', bueno: false },
 ];
 
 const GUIAS = {
   lanzaPiedra: { tipo: 'linea', alcance: 220, ancho: 28 }, terremoto: { tipo: 'propio', r: 180 }, mayhem: { tipo: 'propio', r: 40 },
-  torreta: { tipo: 'propio', r: 30 }, fuga: { tipo: 'propio', r: 30 }, tiroBosque: { tipo: 'linea', alcance: 600, ancho: 7 },
+  torreta: { tipo: 'propio', r: 30 }, fuga: { tipo: 'propio', r: 30 }, tiroBosque: { tipo: 'linea', alcance: 440, ancho: 7 },
   esqueletos: { tipo: 'propio', r: 50 }, maldicion: { tipo: 'propio', r: 220 }, golem: { tipo: 'propio', r: 50 },
   pulso: { tipo: 'punto', alcance: 420, r: 70 }, muro: { tipo: 'muro', alcance: 70, largo: 108 }, dragon: { tipo: 'propio', r: 50 },
   circulo: { tipo: 'punto', alcance: 200, r: 108 },
-  bombaPegajosa: { tipo: 'punto', alcance: 420, r: 40 }, mina: { tipo: 'propio', r: 20 }, granBombazo: { tipo: 'punto', alcance: 500, r: 108 }, orbeVida: { tipo: 'linea', alcance: 360, ancho: 70 }, bendicion: { tipo: 'propio', r: 40 },
+  bombaPegajosa: { tipo: 'punto', alcance: 420, r: 40 }, mina: { tipo: 'propio', r: 20 }, granBombazo: { tipo: 'punto', alcance: 420, r: 108 }, orbeVida: { tipo: 'linea', alcance: 360, ancho: 70 },
+  trueno: { tipo: 'linea', alcance: 420, ancho: 20 }, sablazo: { tipo: 'linea', alcance: 220, ancho: 34 }, humo: { tipo: 'propio', r: 250 }, danza: { tipo: 'propio', r: 90 },
+  atraparPresa: { tipo: 'linea', alcance: 400, ancho: 20 }, tejer: { tipo: 'propio', r: 130 }, mordida: { tipo: 'propio', r: 120 }, manosRayo: { tipo: 'propio', r: 30 }, tormenta: { tipo: 'linea', alcance: 400, ancho: 90 }, bendicion: { tipo: 'propio', r: 40 },
 };
 
 // ---------------------------------------------------------------------
 // RITMO GLOBAL (Seba 28-10: "todo va muy rápido, que las decisiones pesen más").
 // Se aplica una sola vez sobre los números de arriba, así las fichas muestran los valores reales.
 const RITMO = {
-  movimiento: 0.85,   // héroes e invocaciones se mueven 15% más lento
-  proyectil: 0.75,    // proyectiles 25% más lentos (se esquivan mejor); las parábolas tardan 25% más en caer
-  recarga: 1.25,      // las cargas del ataque tardan 25% más en volver
+  // Seba (28-10, 2ª vez): movimiento y todo lo que vuela un 10% más lento. La recarga de los ataques y de las habilidades no cambia.
+  movimiento: 0.765,  // héroes e invocaciones: -15% y luego -10%
+  proyectil: 0.675,   // proyectiles: -25% y luego -10%; las parábolas tardan más en caer
+  recarga: 1.25,      // cargas del ataque: +25% (Seba: no tocar más)
   enfriamiento: 1.2,  // habilidades 1 y 2: 20% más de enfriamiento
 };
 for (const h of Object.values(HEROES)) {
@@ -1041,52 +1177,100 @@ for (const u of Object.values(UNIDADES)) if (u.vel) u.vel = Math.round(u.vel * R
 
 // ===== matchups.js =====
 // Generado por tools/matchups.js (2026-10-28): % de duelos 1v1 que gana la fila contra la columna.
-// Medido con bots (apuntado automático), 150 duelos por par.
+// Medido con bots (apuntado automático), 120 duelos por par.
 const MATCHUPS = {
  "beast": {
-  "lire": 28,
-  "nigromante": 94,
-  "maidas": 29,
+  "lire": 3,
+  "nigromante": 87,
+  "maidas": 13,
   "monh": 100,
-  "biteroi": 85
+  "biteroi": 61,
+  "rasho": 0,
+  "takichi": 88,
+  "aracnida": 21
  },
  "lire": {
-  "beast": 72,
-  "nigromante": 36,
-  "maidas": 56,
-  "monh": 62,
-  "biteroi": 63
+  "beast": 97,
+  "nigromante": 83,
+  "maidas": 72,
+  "monh": 86,
+  "biteroi": 88,
+  "rasho": 97,
+  "takichi": 64,
+  "aracnida": 89
  },
  "nigromante": {
-  "beast": 6,
-  "lire": 64,
-  "maidas": 60,
-  "monh": 99,
-  "biteroi": 75
+  "beast": 13,
+  "lire": 17,
+  "maidas": 59,
+  "monh": 100,
+  "biteroi": 58,
+  "rasho": 66,
+  "takichi": 1,
+  "aracnida": 80
  },
  "maidas": {
-  "beast": 71,
-  "lire": 44,
-  "nigromante": 40,
-  "monh": 99,
-  "biteroi": 63
+  "beast": 88,
+  "lire": 28,
+  "nigromante": 41,
+  "monh": 93,
+  "biteroi": 37,
+  "rasho": 78,
+  "takichi": 47,
+  "aracnida": 66
  },
  "monh": {
   "beast": 0,
-  "lire": 38,
-  "nigromante": 1,
-  "maidas": 1,
-  "biteroi": 23
+  "lire": 14,
+  "nigromante": 0,
+  "maidas": 7,
+  "biteroi": 31,
+  "rasho": 66,
+  "takichi": 0,
+  "aracnida": 8
  },
  "biteroi": {
-  "beast": 15,
-  "lire": 37,
-  "nigromante": 25,
-  "maidas": 37,
-  "monh": 77
+  "beast": 39,
+  "lire": 13,
+  "nigromante": 42,
+  "maidas": 63,
+  "monh": 69,
+  "rasho": 73,
+  "takichi": 0,
+  "aracnida": 68
+ },
+ "rasho": {
+  "beast": 100,
+  "lire": 3,
+  "nigromante": 34,
+  "maidas": 23,
+  "monh": 34,
+  "biteroi": 27,
+  "takichi": 75,
+  "aracnida": 74
+ },
+ "takichi": {
+  "beast": 13,
+  "lire": 36,
+  "nigromante": 99,
+  "maidas": 53,
+  "monh": 100,
+  "biteroi": 100,
+  "rasho": 25,
+  "aracnida": 2
+ },
+ "aracnida": {
+  "beast": 79,
+  "lire": 11,
+  "nigromante": 20,
+  "maidas": 34,
+  "monh": 93,
+  "biteroi": 32,
+  "rasho": 26,
+  "takichi": 98
  }
 };
-const MATCHUPS_INFO = { fecha: '2026-10-28', duelos: 150 };
+const MATCHUPS_INFO = { fecha: '2026-10-28', duelos: 120 };
 
 // ===== sprites.js =====
 // =====================================================================
@@ -1470,7 +1654,117 @@ Object.assign(CAPAS, {
   hollin: L({ 11: '.......1..1.........', 12: '........1...........' }),
 });
 
+// Rasho (Seba 28-10): dios del trueno sin barba, pelo de rayo, ojos de rayo, rayos en las manos.
+// De la cintura para abajo es una nube gris de tormenta (el render le agrega bolas que laten).
+Object.assign(CAPAS, {
+  peloRayo: L({
+    2: '.......y.....y......',
+    3: '......yy..y.yy......',
+    4: '.....yOy.yyyOy.y....',
+    5: '....yOOyyOOyOOyy....',
+    6: '....yOOOOOOOOOOy....',
+    7: '.....yOOOOOOOOy.....',
+    8: '.....OyO.....Oy.....',
+    9: '.....Oy.............',
+    10: '.....yO.............',
+  }),
+  ojosRayo: L({ 9: '.........c..c.......', 10: '.........y..y.......' }),
+  pechoRayo: L({ 14: '..........y.........', 15: '.....c...y....c.....', 16: '.....c....y...c.....' }),
+  nubeCuerpo: L({
+    17: '....33433443333.....',
+    18: '...3344444433443....',
+    19: '..334444433444433...',
+    20: '..2333333333333332..',
+    21: '..2222222222222.....',
+  }),
+});
+
+// Takichi (Seba 28-10): samurái errante sombrío, capucha y capa morado oscuro, ojos morados, cicatriz, dos sables.
+Object.assign(CAPAS, {
+  capuchaSombria: L({
+    4: '.......nnnn.........',
+    5: '......nnvnnn........',
+    6: '.....nnnnnnnn.......',
+    7: '.....nnnnnnnnn......',
+    8: '.....nnn.e...nn.....',
+    9: '.....nn..v..v.......',
+    10: '.....nn..e..v.......',
+    11: '......n...e.........',
+  }),
+  kimonoSombrio: L({
+    14: '......12333321......',
+    15: '.....P1v3333v1P.....',
+    16: '.....p12v33v21p.....',
+    17: '......vvvvXvvv......',
+    18: '......11222211......',
+  }),
+  capaRota: L({
+    12: '....nn........nn....',
+    13: '....nvn......nvn....',
+    14: '....nn........nn....',
+    15: '....n..........n....',
+    16: '....n..........n....',
+    17: '....n..........n....',
+    18: '....n..........n....',
+    19: '....n.n......n.n....',
+    20: '.....n.........n....',
+  }),
+});
+
+// Aracnida (Seba 28-10): mujer araña, 4 patas de araña desde la espalda, ojos múltiples rojos, negro y morado oscuro.
+Object.assign(CAPAS, {
+  patasArana: L({
+    6: '..n..............n..',
+    7: '...n............n...',
+    8: '..n.n..........n.n..',
+    9: '.n...n........n...n.',
+    10: 'n....nn......nn....n',
+    11: 'n.....n......n.....n',
+    12: '......n......n......',
+    13: '.....n........n.....',
+    14: '....n..........n....',
+    15: '...n............n...',
+    16: '..n..............n..',
+  }),
+  peloArana: L({
+    5: '.......nnnnn........',
+    6: '......nnnnnnn.......',
+    7: '.....nnnnnnnnn......',
+    8: '.....nn.....nnn.....',
+    9: '.....n.......n......',
+    10: '.....n.......n......',
+    11: '.....nn.....n.......',
+  }),
+  ojosArana: L({
+    8: '.........e..e.......',
+    9: '........e....e......',
+    10: '.........e..e.......',
+  }),
+  corseArana: L({
+    14: '......nvvvvvvn......',
+    15: '.....PnvnvvnvnP.....',
+    16: '.....pnvvnnvvnp.....',
+    17: '......nnnnXnnn......',
+    18: '......n1111111......',
+  }),
+});
+
 Object.assign(APARIENCIA, {
+  aracnida: {
+    back: [['patasArana'], ['patasArana']],
+    cuerpo: [['corseArana'], ['corseArana']],
+    cabeza: [['peloArana', 'ojosArana'], ['peloArana', 'ojosArana']],
+  },
+  takichi: {
+    back: [['capaRota'], ['capaRota']],
+    cuerpo: [['kimonoSombrio'], ['kimonoSombrio']],
+    cabeza: [['capuchaSombria'], ['capuchaSombria']],
+  },
+  rasho: {
+    back: [],
+    cuerpo: [['pechoRayo', 'nubeCuerpo'], ['pechoRayo', 'nubeCuerpo']],
+    cabeza: [['peloRayo', 'ojosRayo'], ['peloRayo', 'ojosRayo']],
+  },
   biteroi: {
     back: [],
     cuerpo: [['chalecoBombas'], ['chalecoBombas', 'hollin']],
@@ -1579,6 +1873,22 @@ const ARMAS_SPR = {
     '............', '............', '............', '.......3....',
     '......3.....', '.....3......', 'WWWWWWWWWe..', '.....3......',
     '......3.....', '.......3....', '............', '............'] },
+  // Sin arma en la mano (Aracnida ataca con las patas de la espalda)
+  ninguna: { g: [1, 6], rows: ['............', '............', '............', '............', '............', '............', '............', '............', '............', '............', '............', '............'] },
+  // Pata de araña con garra (Aracnida)
+  patas: { g: [1, 6], rows: [
+    '............', '............', '........n...', '.......nvn..',
+    '......nvn...', '....nnvn....', 'PPnnvnn.....', '.......n....',
+    '........nq..', '.........q..', '............', '............'] },
+  // Dos sables que salen del mismo puño (Takichi)
+  sable: { g: [1, 6], rows: [
+    '............', '..........4.', '........43..', '......43....',
+    '....43......', '..y43.......', 'PPwy44444444', '............',
+    '............', '............', '............', '............'] },
+  rayoMano: { g: [1, 5], rows: [
+    '............', '............', '............', '......yy....',
+    '...yyyy.....', 'PPyyyyyyyy..', '.....yyyy...', '....yy......',
+    '...y........', '............', '............', '............'] },
   bombaMano: { g: [1, 6], rows: [
     '............', '............', '............', '......f.....',
     '.....W......', '....nnn.....', 'PP.n2nnn....', '...nnnnn....',
@@ -1662,6 +1972,14 @@ const OTROS = {
     ['..kkkk..', '.k3443k.', 'k344433k', 'k3443322', 'k3332221', 'k2322211', '.k2211k.', '..kkkk..'],
     ['..kkkk..', '.k2334k.', 'k223444k', 'k2334443', 'k1223443', 'k1122332', '.k1122k.', '..kkkk..'],
   ],
+  // Rasho: disparo (celeste), disparo con Manos de rayo (dorado) y Trueno (grande, con chispas)
+  telaGancho: [['..kk..', '.kqqk.', 'kqPqqk', 'kqqPqk', '.kqqk.', '..kk..'], ['.k..k.', 'kqqqqk', '.qPqq.', '.qqPq.', 'kqqqqk', '.k..k.']],
+  rayoBola: ['..kk..', '.kcck.', 'kcqqck', 'kcqqck', '.kcck.', '..kk..'],
+  rayoBolaCargada: [['..kk..', '.kyyk.', 'kyqqyk', 'kyqqyk', '.kyyk.', '..kk..'], ['.ykky.', 'ykyyky', 'kyqqyk', 'kyqqyk', 'ykyyky', '.ykky.']],
+  trueno: [
+    ['...kk...', '..kcck..', '.kcqqck.', 'kcqqqqck', 'kcqqqqck', '.kcqqck.', '..kcck..', '...kk...'],
+    ['y..kk..y', '..kcck..', '.kcqqck.', 'kcqqqqck', 'kcqqqqck', '.kcqqck.', '..kcck..', 'y..kk..y'],
+  ],
   orbe: ['.vv.', 'vqvv', 'vvvv', '.vv.'],
   orbeFuego: ['.ff.', 'fyff', 'ffff', '.ff.'],
   orbeRayo: ['.cc.', 'cqcc', 'cccc', '.cc.'],
@@ -1739,6 +2057,15 @@ const GLIFOS = {
   espiral: ['..vvvvv..', '.v.....v.', 'v..vvv..v', 'v.v...v.v', 'v.v.v.v.v', 'v.v.vv..v', 'v..v....v', '.v.....v.', '..vvvvv..'],
   caballo: ['.........', '.....WW..', '....WmmW.', '...WmmkW.', '..WmmmWWW', '.WmmmW...', 'WmmmmW...', '.wmmW....', '..ww.....'],
   rocaLanzada: ['......2..', '.....2...', '..222.2..', '.23342...', '23344322.', '2334432..', '1233321..', '.11221...', '.........'],
+  gancho: ['......qq.', '.....q..q', '....q...q', '...q..qq.', '..q......', '.q.......', 'q........', '.........', '.........'],
+  telarana: ['q...q...q', '.q..q..q.', '..qqqqq..', '.qq.q.qq.', 'qqqqqqqqq', '.qq.q.qq.', '..qqqqq..', '.q..q..q.', 'q...q...q'],
+  colmillos: ['.nnnnnnn.', 'nkkkkkkkn', 'nkq.k.qkn', 'nkq...qkn', 'nk.q.q.kn', '.....l...', '....l.l..', '.........', '.........'],
+  ojoArana: ['.........', '..e...e..', '.eee.eee.', '..e...e..', '.........', '...e.e...', '..eee.ee.', '...e.e...', '.........'],
+  sablazo: ['.......vv', '......vvq', '.....vvq.', '....vvq..', '...vvq...', '..vvq....', '.vvq.....', 'vvq......', '.........'],
+  humo: ['..33..3..', '.3443343.', '344443443', '.34444433', '..3333333', '...v..v..', '..v....v.', '.........', '.........'],
+  clones: ['v.......v', 'vv.....vv', '.........', '....v....', '...vvv...', '.........', 'v.......v', 'vv.....vv', '.........'],
+  manoRayo: ['....y....', '...yy....', '..yyyy...', '....yy...', '.PP.y.PP.', '.PPPPPPP.', '.PPPPPPP.', '..PPPPP..', '...ppp...'],
+  nubeRayo: ['..222....', '.233322..', '23333332.', '22222222.', '...yy....', '..yy.....', '.yyyy....', '...yy....', '..y......'],
   roca: ['.........', '...222...', '..23342..', '.2334432.', '.2334332.', '.1233321.', '..11221..', '2.......2', '.1.....1.'],
   muroHielo: ['.........', 'BcBBBcBB.', 'BccBBccB.', 'BBBBBBBB.', 'cBBBcBBB.', 'BBccBBcc.', 'BBBBBBBB.', 'bbbbbbbb.', '.........'],
   circuloVida: ['.........', '..lllll..', '.l.....l.', 'l...l...l', 'l..lll..l', 'l...l...l', '.l.....l.', '..lllll..', '.........'],
@@ -1936,7 +2263,8 @@ const FONDOS = {
   mago: ['n', 'v'], caballero: ['b', 'B'], arquero: ['g', 'G'], nigromante: ['k', '1'],
   fuego: ['r', 'R'], rayo: ['b', 'B'], barbaro: ['w', 'W'], real: ['o', 'O'],
   cazador: ['g', 'G'], trampero: ['w', 'm'], nigromaster: ['1', '2'], brujo: ['n', 'v'],
-  beast: ['w', 'W'], lire: ['g', 'G'], maidas: ['n', 'v'], monh: ['1', '2'], biteroi: ['r', 'R'],
+  beast: ['w', 'W'], lire: ['g', 'G'], maidas: ['n', 'v'], monh: ['1', '2'], biteroi: ['r', 'R'], rasho: ['n', '2'], takichi: ['k', 'n'], aracnida: ['n', 'v'],
+  estBueno: ['o', 'O'], estMalo: ['r', 'R'],
   bloqueado: ['1', '1'],
 };
 
@@ -2410,6 +2738,7 @@ class Game {
     let best = null, bd = maxDist;
     const owner = p.esUnidad ? p.owner : p.id;
     for (const q of this.enemigos(owner, false)) {
+      if (q.fx && q.fx.invisible && !q.fx.expuesto) continue;   // invisible: nadie lo apunta solo
       const d = dist(q, from);
       if (d < bd) { bd = d; best = q; }
     }
@@ -2419,7 +2748,7 @@ class Game {
   // Auto-apuntado: prefiere jugadores, si no hay, invocaciones.
   target(p, range) {
     let best = null, bd = range;
-    for (const q of this.jugadoresEnemigos(p.id)) { const d = dist(q, p); if (d < bd) { bd = d; best = q; } }
+    for (const q of this.jugadoresEnemigos(p.id)) { if (q.fx && q.fx.invisible && !q.fx.expuesto) continue; const d = dist(q, p); if (d < bd) { bd = d; best = q; } }
     return best || this.nearestEnemy(p, range);
   }
 
@@ -2453,6 +2782,7 @@ class Game {
       if (o.tipo === 'mag' && at && at.fx && at.fx.bendecido) amt *= 1.1;
       if (at && at.fx && at.fx.cucko) amt *= CONFIG.CUCKO.buff.dano; }
     if (esJugador && target.fx && target.fx.cucko) amt *= CONFIG.CUCKO.buff.recibe;
+    if (esJugador && target.fx && target.fx.enTela) amt *= 1 - target.fx.enTela.buff;   // Aracnida sobre su tela
     if (amt <= 0) return 0;
 
     const atacante = src ? (src.esUnidad ? this.players.get(src.owner) : src) : null;
@@ -2527,6 +2857,12 @@ class Game {
 
   aplicarEfecto(t, key, val) {
     if (!t.fx) t.fx = {};
+    // Un aturdimiento corta la canalización del Sablazo
+    if (key === 'aturdido' && t.fx.canalSablazo) {
+      const z = t.fx.canalSablazo.zona; if (z) { z.cancelado = true; z.t = 0; }
+      delete t.fx.canalSablazo;
+      this.emit({ k: 'txt', x: t.x | 0, y: t.y | 0, s: 'CORTADO' });
+    }
     t.fx[key] = val;
   }
 
@@ -2543,6 +2879,7 @@ class Game {
     if (killer && killer !== p && this.teamOf(killer.id) !== this.teamOf(p.id)) {
       killer.killsRound++;
       killer.racha = (killer.racha || 0) + 1;
+      this.emit({ k: 'feedKill', s: `${killer.name} derrotó a ${p.name}` });
       // Racha (Seba 28-10): mensaje desde 2 kills seguidas sin morir
       if (killer.racha >= 2) this.emit({ k: 'anuncio', s: `${killer.name} ha matado ${killer.racha} enemigos sin morir`, chico: true });
       if (this.modo === 'equipos') { this.marcador[this.teamOf(killer.id)]++; this.metaDirty = true; }
@@ -2581,7 +2918,7 @@ class Game {
 
   // ================================================================ ataques básicos (daño físico)
   // Ritmo de recarga de las cargas (Fuga y Bendición lo aceleran)
-  ritmoRecarga(p) { return (p.fx.fuga ? 1 + p.fx.fuga.pct : 1) * (p.fx.bendecido ? 1.1 : 1); }
+  ritmoRecarga(p) { return (p.fx.fuga ? 1 + p.fx.fuga.pct : 1) * (p.fx.bendecido ? 1.1 : 1) * (p.fx.manosRayo ? 1 + p.fx.manosRayo.n.ritmo : 1) * (p.fx.enTela ? 1 + p.fx.enTela.buff : 1); }
 
   // Carga de la ulti: daño hecho (y en Monh también curación a aliados). Lo que hace la propia ulti no la carga.
   cargarUlti(p, cant, src, o = {}) {
@@ -2592,15 +2929,23 @@ class Game {
     if (antes < 1 && p.ulti >= 1) this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ULTI LISTA', id: p.id });
   }
   velocidadDe(p) {
-    if (p.fx.aturdido) return 0;
+    if (p.fx.aturdido || p.fx.canalSablazo) return 0;
+    if (p.build && HEROES[p.build.heroe]?.pasiva === 'pasoSigiloso' && this.combatTime - (p.ultimoDano ?? -99) >= 3) return this.velocidadBase(p) * 1.1;   // Takichi
+    return this.velocidadBase(p);
+  }
+  velocidadBase(p) {
     let v = p.st.velocidad;
+    if (p.fx.enTela) v *= 1 + p.fx.enTela.buff;   // Aracnida sobre su tela
     if (p.fx.fuga) v *= 1 + p.fx.fuga.pct;
     if (p.fx.mayhem) v *= 1.3;
     if (p.fx.slow) v *= p.fx.slow.mult;
     return v;
   }
 
-  revelar(p) { p.revelado = 1.5; p.hidden = false; }
+  revelar(p) {
+    p.revelado = 1.5; p.hidden = false;
+    if (p.fx && p.fx.invisible) { delete p.fx.invisible; this.emit({ k: 'humo', x: p.x | 0, y: p.y | 0, chico: true }); }   // Takichi: atacar lo revela
+  }
 
   basicAttack(p, ang = null, dd = null) {
     const at = p.st.ataque;
@@ -2631,7 +2976,9 @@ class Game {
     } else {
       const { a } = this.aim(p, at.alcance);
       p.facing = a;
-      this.spawnProj(p, a, { vel: at.vel, alcance: at.alcance, radio: at.radio, dmg: p.st.dano, tipo: 'fis', spr: at.proj });
+      const mr = p.fx.manosRayo;   // Rasho: Manos de rayo
+      this.spawnProj(p, a, { vel: at.vel, alcance: at.alcance, radio: at.radio, dmg: p.st.dano * (mr ? 1 + mr.n.dano : 1), tipo: 'fis', spr: mr ? 'rayoBolaCargada' : at.proj,
+        efecto: mr ? 'manosRayo' : null, extra: mr ? mr.n : null });
     }
     this._apunte = null;
   }
@@ -2658,7 +3005,7 @@ class Game {
 
   meleeArc(p, a, rango, arcoDeg, dmg) {
     const half = (arcoDeg * Math.PI / 180) / 2;
-    this.emit({ k: 'slash', id: p.id, x: p.x | 0, y: p.y | 0, a: +a.toFixed(2), r: rango, w: +(half * 2).toFixed(2), c: p.colorIdx });
+    this.emit({ k: 'slash', id: p.id, x: p.x | 0, y: p.y | 0, a: +a.toFixed(2), r: rango, w: +(half * 2).toFixed(2), c: p.colorIdx, h: p.build.heroe });
     for (const q of this.enemigos(p.id)) {
       const pt = puntoDe(q, p);
       const d = dist(pt, p);
@@ -2703,24 +3050,25 @@ class Game {
         this.knock(hit, pr.x - pr.vx * 0.05, pr.y - pr.vy * 0.05, 60);
         return;
       case 'tiroBosque': {
+        // Seba (28-10): 125 al primero; 3 rebotes de 25% menos cada uno; si no hay otro enemigo cerca, vuelve al mismo
         if (!hit) return;
-        const n = pr.extra;
-        let actual = hit;
-        const tocados = new Set([hit]);
+        const n = pr.extra, H = HABILIDADES.tiroBosque;
         this.damage(hit, n.dano, owner, { tipo: 'mag', ulti: true });
-        for (let i = 1; i <= HABILIDADES.tiroBosque.rebotes; i++) {
-          let sig = null, bd = HABILIDADES.tiroBosque.radioRebote;
-          for (const e of this.jugadoresEnemigos(pr.owner)) {
-            if (tocados.has(e)) continue;
-            const d = dist(e, actual);
-            if (d < bd) { bd = d; sig = e; }
-          }
-          if (!sig) break;
-          this.emit({ k: 'bolt', x1: actual.x | 0, y1: actual.y | 0, x2: sig.x | 0, y2: sig.y | 0, c: 'bosque' });
-          this.damage(sig, n.dano + n.extra * i, owner, { tipo: 'mag', ulti: true });
-          tocados.add(sig);
-          actual = sig;
-        }
+        const rebote = (i, actual, dmg) => {
+          if (i > H.rebotes || !actual) return;
+          let sig = null, bd = H.radioRebote;
+          for (const e of this.jugadoresEnemigos(pr.owner)) { if (e === actual || e.esUnidad) continue; const d = dist(e, actual); if (d < bd) { bd = d; sig = e; } }
+          if (!sig) sig = actual.alive ? actual : null;
+          if (!sig) return;
+          this.zones.push({ id: this.nextId++, kind: 'nada', x: sig.x, y: sig.y, r: 0, t: 0.2, total: 0.2, fin: () => {
+            if (!sig.alive) return;
+            if (sig === actual) this.emit({ k: 'ring', x: sig.x | 0, y: sig.y | 0, r: 26, c: 'vida' });
+            else this.emit({ k: 'bolt', x1: actual.x | 0, y1: actual.y | 0, x2: sig.x | 0, y2: sig.y | 0, c: 'bosque' });
+            this.damage(sig, dmg, owner, { tipo: 'mag', ulti: true });
+            rebote(i + 1, sig, dmg * H.baja);
+          } });
+        };
+        rebote(1, hit, n.dano * H.baja);
         return;
       }
     }
@@ -2732,6 +3080,36 @@ class Game {
       return;
     }
     if (!hit) return;
+    if (pr.efecto === 'gancho') {
+      const own = this.players.get(pr.owner);
+      this.damage(hit, pr.dmg, src, { tipo: pr.tipo, desde: pr });
+      if (!hit.alive) return;
+      this.aplicarEfecto(hit, 'aturdido', { t: pr.extra.aturde });
+      if (own && !(hit.esUnidad && (hit.kind === 'cucko' || UNIDADES[hit.kind]?.invulnerable || hit.kind === 'muro'))) {
+        const a = Math.atan2(hit.y - own.y, hit.x - own.x), d0 = CONFIG.RADIO_JUGADOR * 2 + 4;
+        this.aplicarEfecto(hit, 'arrastre', { t: 0.35, tx: own.x + Math.cos(a) * d0, ty: own.y + Math.sin(a) * d0 });
+        this.emit({ k: 'seda', x1: own.x | 0, y1: own.y | 0, x2: hit.x | 0, y2: hit.y | 0 });
+      }
+      this.emit({ k: 'txt', x: hit.x | 0, y: hit.y | 0, s: '¡ATRAPADO!' });
+      return;
+    }
+    if (pr.efecto === 'trueno' || pr.efecto === 'manosRayo') {
+      const n = pr.extra;
+      this.damage(hit, pr.dmg, src, { tipo: pr.tipo, desde: pr });
+      if (pr.efecto === 'trueno') { this.aplicarEfecto(hit, 'slow', { t: n.dur, mult: 0.5 }); this.emit({ k: 'txt', x: hit.x | 0, y: hit.y | 0, s: 'LENTO' }); }
+      this.emit({ k: 'boom', x: hit.x | 0, y: hit.y | 0, r: 22, c: 'rayo' });
+      // Rebote: al enemigo más cercano al golpeado (1 vez)
+      const R = pr.efecto === 'trueno' ? HABILIDADES.trueno.radioRebote : HABILIDADES.manosRayo.radioRebote;
+      let sig = null, bd = R + CONFIG.RADIO_JUGADOR;
+      for (const e of this.enemigos(pr.owner, false)) { if (e === hit) continue; const d = dist(e, hit); if (d < bd) { bd = d; sig = e; } }
+      if (sig) {
+        this.emit({ k: 'bolt', x1: hit.x | 0, y1: hit.y | 0, x2: sig.x | 0, y2: sig.y | 0, c: 'rayo' });
+        const mult = pr.efecto === 'trueno' ? 0.5 : n.rebote;
+        this.damage(sig, pr.dmg * mult, src, { tipo: pr.tipo, desde: pr });
+        if (pr.efecto === 'trueno') this.aplicarEfecto(sig, 'slow', { t: n.dur, mult: 0.75 });   // Seba: el rebote hace la mitad de todo
+      }
+      return;
+    }
     if (pr.efecto === 'aturde') {
       this.aplicarEfecto(hit, 'aturdido', { t: pr.extra.t });
       this.emit({ k: 'txt', x: hit.x | 0, y: hit.y | 0, s: 'ATURDIDO' });
@@ -2782,7 +3160,23 @@ class Game {
     const key = habs[slot];
     if (!key || p.build.niv[slot] < 1) return;
     const h = HABILIDADES[key];
-    if (p.cd[slot + 1] > 0 || p.fx.silence || p.fx.aturdido) return;
+    if (p.cd[slot + 1] > 0 || p.fx.silence || p.fx.aturdido || p.fx.canalSablazo) return;
+    // Aracnida: la mordida necesita un héroe enemigo cerca (si no, no se gasta)
+    if (key === 'mordida') {
+      if (p.ulti < 1) return;
+      let presa = null, bd = h.alcance + CONFIG.RADIO_JUGADOR * 2;
+      for (const q of this.players.values()) {
+        if (!q.alive || this.teamOf(q.id) === this.teamOf(p.id) || ((q.hidden || (q.fx && q.fx.invisible)) && !(q.fx && q.fx.expuesto))) continue;
+        const d = dist(q, p); if (d < bd) { bd = d; presa = q; }
+      }
+      if (!presa) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'SIN PRESA CERCA', id: p.id }); return; }
+      this._presa = presa;
+    }
+    // Takichi: la bomba de humo solo funciona sin enemigos cerca (no gasta la recarga si no se puede)
+    if (key === 'humo' && [...this.players.values()].some(q => q.alive && this.teamOf(q.id) !== this.teamOf(p.id) && dist(q, p) < h.sinEnemigos)) {
+      this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ENEMIGOS CERCA', id: p.id });
+      return;
+    }
     if (p.fx.mayhem) return;   // Seba (28-10): rodando no lanza nada
     if (h.ulti && p.ulti < 1) return;   // la ulti necesita la carga completa
     const n = numerosHab(key, p.build.niv[slot]);
@@ -2794,6 +3188,110 @@ class Game {
 
     switch (key) {
       // ---------------------------------------------------------- The Beast
+      // ---------------------------------------------------------- Rasho
+      case 'trueno': {
+        const { a } = this.aim(p, h.alcance + 40);
+        p.facing = a;
+        this.spawnProj(p, a, { vel: h.vel, alcance: h.alcance, radio: 8, dmg: n.dano, tipo: 'mag', spr: 'trueno', efecto: 'trueno', extra: n });
+        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: 26, c: 'rayo' });
+        break;
+      }
+      case 'manosRayo':
+        this.aplicarEfecto(p, 'manosRayo', { t: n.dur, n });
+        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: 34, c: 'rayo' });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'MANOS DE RAYO' });
+        break;
+      case 'tormenta': {
+        const { a } = this.aim(p, 400);
+        p.facing = a;
+        const v = h.vel * RITMO.movimiento;
+        this.units.push({ id: this.nextId++, kind: 'nubeTormenta', owner: p.id, esUnidad: true, alive: true, sinCuerpo: true,
+          x: p.x + Math.cos(a) * 30, y: p.y + Math.sin(a) * 30, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+          hp: 1, maxHp: 0, cd: h.cada, t: 0, dur: h.cada * n.descargas + 0.2, facing: a, fx: {}, n, descargas: 0, deUlti: true });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'TORMENTA' });
+        break;
+      }
+      // ---------------------------------------------------------- Aracnida
+      case 'atraparPresa': {
+        const { a } = this.aim(p, h.alcance + 30);
+        p.facing = a;
+        this.spawnProj(p, a, { vel: h.vel, alcance: h.alcance, radio: 9, dmg: n.dano, tipo: 'mag', spr: 'telaGancho', efecto: 'gancho', extra: n });
+        break;
+      }
+      case 'tejer': {
+        this.limitar(p, 'tela', 0);
+        this.units.push({ id: this.nextId++, kind: 'tela', owner: p.id, esUnidad: true, alive: true, sinCuerpo: true,
+          x: p.x, y: p.y, hp: 1, maxHp: 0, cd: 0, t: 0, dur: n.dur, facing: 0, fx: {}, n, r: h.radio });
+        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: h.radio, c: 'seda' });
+        break;
+      }
+      case 'mordida': {
+        const q = this._presa; this._presa = null;
+        if (!q) break;
+        const a = Math.atan2(q.y - p.y, q.x - p.x);
+        p.x = q.x - Math.cos(a) * (CONFIG.RADIO_JUGADOR * 2 + 2); p.y = q.y - Math.sin(a) * (CONFIG.RADIO_JUGADOR * 2 + 2); p.facing = a;
+        this.clampWall(p);
+        this.damage(q, n.dano, p, { tipo: 'mag', ulti: true });
+        this.aplicarEfecto(q, 'veneno', { t: n.dur, dps: n.dps, src: p.id });
+        this.emit({ k: 'mordida', x: q.x | 0, y: q.y | 0 });
+        this.emit({ k: 'txt', x: q.x | 0, y: q.y | 0, s: 'ENVENENADO' });
+        break;
+      }
+      // ---------------------------------------------------------- Takichi
+      case 'sablazo': {
+        const { a } = this.aim(p, h.largo + 60);
+        p.facing = a;
+        const zona = { id: this.nextId++, kind: 'tajo', x: p.x, y: p.y, r: h.largo, a, w: h.ancho, t: h.canal, total: h.canal,
+          fin: (z) => {
+            if (z.cancelado || !p.alive || !p.fx.canalSablazo) return;
+            delete p.fx.canalSablazo;
+            const x0 = p.x, y0 = p.y;
+            const fin = { x: x0 + Math.cos(a) * h.largo, y: y0 + Math.sin(a) * h.largo }; this.clampWall(fin);
+            const dx = fin.x - x0, dy = fin.y - y0, L2 = dx * dx + dy * dy || 1;
+            for (const e of this.enemigos(p.id, false)) {
+              const t = Math.max(0, Math.min(1, ((e.x - x0) * dx + (e.y - y0) * dy) / L2));
+              if (Math.hypot(e.x - (x0 + dx * t), e.y - (y0 + dy * t)) <= h.ancho / 2 + CONFIG.RADIO_JUGADOR) this.damage(e, n.dano, p, { tipo: 'mag', desde: { x: x0, y: y0 } });
+            }
+            p.x = fin.x; p.y = fin.y; p.kbx = p.kby = 0;
+            if (this.modo === 'equipos') this.chocarCamara(p);
+            this.emit({ k: 'tajo', x1: x0 | 0, y1: y0 | 0, x2: p.x | 0, y2: p.y | 0 });
+          } };
+        this.zones.push(zona);
+        this.aplicarEfecto(p, 'canalSablazo', { t: h.canal + 0.1, zona });
+        break;
+      }
+      case 'humo':
+        this.aplicarEfecto(p, 'invisible', { t: n.dur });
+        this.emit({ k: 'humo', x: p.x | 0, y: p.y | 0 });
+        break;
+      case 'danza': {
+        const L = h.lado / 2, cada = p.st.recarga / this.ritmoRecarga(p);   // mismo ritmo que Takichi al ultear
+        this.zones.push({ id: this.nextId++, kind: 'cuadro', x: p.x, y: p.y, r: L, t: n.dur, total: n.dur });
+        const SB = HABILIDADES.sablazo, nSab = numerosHab('sablazo', 1), cx0 = p.x, cy0 = p.y;
+        [[-L, -L], [L, -L], [-L, L], [L, L], [0, 0]].forEach(([ox, oy], i) => {
+          const u = { id: this.nextId++, kind: 'clon', owner: p.id, esUnidad: true, alive: true, sinCuerpo: true, deUlti: true,
+            x: cx0 + ox, y: cy0 + oy, hp: 1, maxHp: 0, cd: i < 4 ? 0.7 : 0.2, t: 0, dur: n.dur, facing: p.facing, fx: {},
+            cx: cx0, cy: cy0, L, cada, dano: p.st.dano * n.mult, centro: i === 4, lento: n.lento };
+          this.units.push(u);
+          if (i === 4) return;
+          // Seba (28-10): los clones de las esquinas canalizan 0,5 s y cruzan en diagonal con un Sablazo hasta la esquina opuesta
+          const x0 = u.x, y0 = u.y, x1 = cx0 - ox, y1 = cy0 - oy, a = Math.atan2(y1 - y0, x1 - x0), largo = Math.hypot(x1 - x0, y1 - y0);
+          u.facing = a;
+          this.zones.push({ id: this.nextId++, kind: 'tajo', x: x0, y: y0, r: largo, a, w: SB.ancho, t: 0.5, total: 0.5, fin: () => {
+            if (!u.alive) return;
+            const dx = x1 - x0, dy = y1 - y0, L2 = dx * dx + dy * dy || 1;
+            for (const e of this.enemigos(p.id, false)) {
+              const t = Math.max(0, Math.min(1, ((e.x - x0) * dx + (e.y - y0) * dy) / L2));
+              if (Math.hypot(e.x - (x0 + dx * t), e.y - (y0 + dy * t)) <= SB.ancho / 2 + CONFIG.RADIO_JUGADOR) this.damage(e, nSab.dano, u, { tipo: 'mag', ulti: true, desde: { x: x0, y: y0 } });
+            }
+            u.x = x1; u.y = y1;
+            this.emit({ k: 'tajo', x1: x0 | 0, y1: y0 | 0, x2: x1 | 0, y2: y1 | 0 });
+          } });
+        });
+        this.emit({ k: 'humo', x: p.x | 0, y: p.y | 0 });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'DANZA SILENCIOSA' });
+        break;
+      }
       case 'lanzaPiedra': {
         const { a } = this.aim(p, h.alcance + 40);
         p.facing = a;
@@ -2812,7 +3310,7 @@ class Game {
       // ---------------------------------------------------------- Lire
       case 'torreta':
         this.invocar(p, 'torreta', p.x, p.y + 4, { dur: n.dur, dano: n.dano, maxHp: 0, hp: 1 });
-        this.limitar(p, 'torreta', 2);
+        this.limitar(p, 'torreta', 1);   // Seba (28-10): máximo 1
         break;
       case 'fuga':
         this.aplicarEfecto(p, 'fuga', { t: n.dur, pct: n.pct });
@@ -2821,7 +3319,7 @@ class Game {
       case 'tiroBosque': {
         const { a } = this.aim(p, 600);
         p.facing = a;
-        this.spawnProj(p, a, { vel: 760, alcance: 600, radio: 7, dmg: n.dano, tipo: 'mag', spr: 'flechaBosque', efecto: 'tiroBosque', soloJugadores: true, extra: n });
+        this.spawnProj(p, a, { vel: 760, alcance: 440, radio: 7, dmg: n.dano, tipo: 'mag', spr: 'flechaBosque', efecto: 'tiroBosque', soloJugadores: true, extra: n });
         break;
       }
       // ---------------------------------------------------------- Nigromante
@@ -2981,7 +3479,13 @@ class Game {
     for (const k of Object.keys(fx)) {
       const f = fx[k];
       f.t -= dt;
-      if ((k === 'burn' || k === 'dot') && e.alive) this.damage(e, f.dps * dt, this.players.get(f.src), { tipo: 'mag', silencioso: true });
+      if ((k === 'burn' || k === 'dot' || k === 'veneno') && e.alive) this.damage(e, f.dps * dt, this.players.get(f.src), { tipo: 'mag', silencioso: true, ulti: k === 'veneno' });
+      // Atrapar presa: arrastre hasta los pies de Aracnida
+      if (k === 'arrastre' && e.alive) {
+        const q = Math.min(1, dt / Math.max(dt, f.t + dt));
+        e.x += (f.tx - e.x) * q; e.y += (f.ty - e.y) * q;
+        this.clampWall(e);
+      }
       if (f.t <= 0) {
         delete fx[k];
         if (k === 'bombaPegada' && e.alive) {
@@ -3024,6 +3528,56 @@ class Game {
       }
       if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'vida' }); }
     }
+    // Aracnida: tela de araña (potencia a Aracnida, enlentece y expone a enemigos)
+    for (const u of this.units) {
+      if (!u.alive || u.kind !== 'tela') continue;
+      u.t += dt;
+      const own = this.players.get(u.owner);
+      if (u.t >= u.dur || !own) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0 }); continue; }
+      if (own.alive && dist(own, u) < u.r) this.aplicarEfecto(own, 'enTela', { t: 0.25, buff: u.n.buff });
+      for (const q of this.players.values()) {
+        if (!q.alive || this.teamOf(q.id) === this.teamOf(own.id) || dist(q, u) > u.r) continue;
+        if (!q.fx.slow || q.fx.slow.mult >= 1 - u.n.lento) this.aplicarEfecto(q, 'slow', { t: 0.25, mult: 1 - u.n.lento });
+        if (HEROES[own.build.heroe]?.pasiva === 'sentidoAracnido') this.aplicarEfecto(q, 'expuesto', { t: 0.25 });
+      }
+    }
+    // Takichi: clones de la Danza silenciosa (quietos; golpean a quien esté pegado a ellos)
+    for (const u of this.units) {
+      if (!u.alive || u.kind !== 'clon') continue;
+      u.t += dt; u.cd -= dt;
+      const own = this.players.get(u.owner);
+      if (u.t >= u.dur || !own) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'magia' }); continue; }
+      const alcance = (HEROES.takichi.ataque.rango * 0.75) + CONFIG.RADIO_JUGADOR;
+      // el clon del centro deja lentos 25% a los enemigos dentro del cuadrado
+      if (u.centro) for (const e of this.enemigos(own.id, false)) {
+        if (Math.abs(e.x - u.cx) > u.L || Math.abs(e.y - u.cy) > u.L) continue;
+        if (!e.fx || !e.fx.slow || e.fx.slow.mult >= 1 - u.lento) this.aplicarEfecto(e, 'slow', { t: 0.25, mult: 1 - u.lento });
+      }
+      if (u.cd > 0) continue;
+      let obj = null, bd = alcance;
+      for (const q of this.jugadoresEnemigos(own.id)) { if (q.esUnidad || (q.fx && q.fx.invisible)) continue; const d = dist(q, u); if (d < bd) { bd = d; obj = q; } }
+      if (!obj) for (const q of this.enemigos(own.id, false)) { if (!q.esUnidad) continue; const d = dist(q, u); if (d < bd) { bd = d; obj = q; } }
+      if (!obj) continue;
+      u.cd = u.cada;
+      u.facing = Math.atan2(obj.y - u.y, obj.x - u.x);
+      this.emit({ k: 'slash', x: u.x | 0, y: u.y | 0, a: +u.facing.toFixed(2), r: alcance - CONFIG.RADIO_JUGADOR, w: 1.8, c: 'morado' });
+      this.damage(obj, u.dano, u, { tipo: 'fis', ulti: true });
+    }
+    // Rasho: nube de tormenta que avanza y descarga cada 0,9 s (solo a enemigos)
+    for (const u of this.units) {
+      if (!u.alive || u.kind !== 'nubeTormenta') continue;
+      u.t += dt; u.cd -= dt;
+      u.x += u.vx * dt; u.y += u.vy * dt;
+      this.clampWall(u);
+      if (u.cd <= 0 && u.descargas < u.n.descargas) {
+        u.cd = HABILIDADES.tormenta.cada; u.descargas++;
+        const own = this.players.get(u.owner), R = HABILIDADES.tormenta.ancho / 2;
+        this.emit({ k: 'bolt', x1: u.x | 0, y1: (u.y - 70) | 0, x2: u.x | 0, y2: u.y | 0, c: 'rayo' });
+        this.emit({ k: 'boom', x: u.x | 0, y: u.y | 0, r: R, c: 'rayo' });
+        if (own) for (const e of this.enemigos(own.id, false)) if (dist(e, u) < R + CONFIG.RADIO_JUGADOR) this.damage(e, u.n.dano, own, { tipo: 'mag', ulti: true, desde: u });
+      }
+      if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'magia' }); }
+    }
     for (const u of this.units) {
       if (!u.alive || u.kind !== 'orbeVida') continue;
       u.t += dt; u.cd -= dt;
@@ -3046,7 +3600,7 @@ class Game {
       if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'magia' }); }
     }
     for (const u of this.units) {
-      if (!u.alive || u.enemigo || u.kind === 'orbeVida' || u.kind === 'circuloVida' || u.kind === 'mina') continue;
+      if (!u.alive || u.enemigo || u.kind === 'orbeVida' || u.kind === 'circuloVida' || u.kind === 'mina' || u.kind === 'nubeTormenta' || u.kind === 'clon' || u.kind === 'tela') continue;
       const d = UNIDADES[u.kind];
       const own = this.players.get(u.owner);
       if (u.kind === 'cucko') { this.tickEfectos(u, dt); continue; }   // se mueve en updateCucko
@@ -3070,12 +3624,12 @@ class Game {
       if (u.kind === 'muro') continue;
 
       if (u.kind === 'torreta') {
-        const obj = this.nearestEnemy(u, 520);
+        const obj = this.nearestEnemy(u, 440);
         if (obj) {
           u.facing = Math.atan2(obj.y - u.y, obj.x - u.x);
           if (u.cd <= 0 && own) {
-            u.cd = 0.45;
-            this.spawnProj(u, u.facing, { vel: 640, alcance: 540, radio: 5, dmg: u.dano, tipo: 'mag', spr: 'virote' });
+            u.cd = HEROES.lire.recarga;   // Claude (28-10): con 25 por flecha, dispara al ritmo de Lire (antes cada 0,45 s)
+            this.spawnProj(u, u.facing, { vel: 640, alcance: 440, radio: 5, dmg: u.dano, tipo: 'mag', spr: 'virote' });
           }
         }
         continue;
@@ -3193,8 +3747,9 @@ class Game {
       const decay = Math.exp(-7 * dt);
       p.kbx *= decay; p.kby *= decay;
       this.clampWall(p);
-      this.chocarMuros(p, p.id);
-      if (this.modo === 'equipos') this.chocarCamara(p);
+      const vuela = HEROES[p.build.heroe]?.pasiva === 'nubeVoladora';   // Rasho flota sobre los obstáculos
+      if (!vuela) this.chocarMuros(p, p.id);
+      if (this.modo === 'equipos' && !vuela) this.chocarCamara(p);
       const avance = Math.hypot(p.x - x0, p.y - y0);
 
       // Terremoto: piedras cada medio cuerpo de avance
@@ -3228,15 +3783,16 @@ class Game {
       p.revelado = Math.max(0, (p.revelado || 0) - dt);
       let oculto = this.bajoArbol(p) && p.revelado <= 0;
       if (oculto) for (const q of this.players.values()) if (q.alive && q !== p && dist(q, p) < CONFIG.RADIO_COPA) { oculto = false; break; }
+      if (p.fx.expuesto) oculto = false;   // pisando la tela de Aracnida
       p.hidden = oculto;
 
       // Acciones
-      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido) this.basicAttack(p);   // bots
+      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !p.fx.canalSablazo) this.basicAttack(p);   // bots
       // Jugadores: un disparo por toque o clic; si llega durante la cadencia, se guarda un instante
       if (p.input.d !== undefined && p.input.d !== p.seenD) { p.seenD = p.input.d; p.disparo = { a: p.input.da, d: p.input.dd, t: 0.4 }; }
       if (p.disparo) {
         p.disparo.t -= dt;
-        if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido) p.disparo = null;
+        if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido || p.fx.canalSablazo) p.disparo = null;
         else if (p.cd[0] <= 0 && p.cargas >= 1) { this.basicAttack(p, p.disparo.a, p.disparo.d); p.disparo = null; }
         else if (p.cargas < 1 && p.cd[0] <= 0) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'SIN CARGAS', id: p.id }); p.disparo = null; }
       }
@@ -3381,7 +3937,7 @@ class Game {
     // Objetivo: el jugador vivo más cercano dentro de su territorio
     let obj = null, best = 1e9;
     for (const p of this.players.values()) {
-      if (!p.alive || p.hidden) continue;
+      if (!p.alive || p.hidden || p.fx.invisible) continue;
       const dc = Math.hypot(p.x - C.x, p.y - C.y);
       if (dc > C.alcance) continue;
       const d = dist(p, u);
@@ -3549,7 +4105,7 @@ class Game {
       const flags = (p.alive ? 1 : 0) | (p.hidden ? 8 : 0)
         | (fx.burn || fx.dot ? 16 : 0) | (fx.slow ? 32 : 0) | (fx.silence ? 64 : 0) | (fx.aturdido ? 2048 : 0)
         | (fx.vuln ? 256 : 0) | (fx.mayhem ? 4096 : 0) | (fx.terremoto ? 8192 : 0) | (fx.fuga ? 16384 : 0)
-        | (p.caido ? 32768 : 0) | (fx.marcado ? 65536 : 0) | 0 | (fx.bendecido ? 262144 : 0) | (fx.bombaPegada ? 524288 : 0) | (fx.cucko ? 1048576 : 0);
+        | (p.caido ? 32768 : 0) | (fx.marcado ? 65536 : 0) | 0 | (fx.bendecido ? 262144 : 0) | (fx.bombaPegada ? 524288 : 0) | (fx.cucko ? 1048576 : 0) | (fx.manosRayo ? 2097152 : 0) | (fx.canalSablazo ? 4194304 : 0) | (fx.invisible && !fx.expuesto ? 8388608 : 0) | (fx.veneno ? 16777216 : 0) | (fx.enTela ? 33554432 : 0);
       ps.push([p.id, Math.round(p.x), Math.round(p.y), r1(p.hp), p.st.vidaMax, +p.facing.toFixed(2), flags,
         +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3)]);
     }
@@ -3559,7 +4115,7 @@ class Game {
       u: this.units.map(u => [u.id, u.kind, Math.round(u.x), Math.round(u.y), r1(u.hp), u.maxHp, u.owner, +u.facing.toFixed(2),
         (u.fx.burn || u.fx.dot ? 16 : 0) | (u.fx.vuln ? 256 : 0) | (u.carga > 0 ? 512 : 0) | (u.fx.bombaPegada ? 1024 : 0) | (u.armada ? 2048 : 0), u.dur ? +Math.max(0, u.dur - u.t).toFixed(1) : 0,
         u.tipo || null, u.elite ? 1 : 0]),
-      pr: this.projectiles.map(q => [q.id, Math.round(q.x), Math.round(q.y), q.spr, q.colorIdx, +Math.atan2(q.vy, q.vx).toFixed(2)]),
+      pr: this.projectiles.map(q => [q.id, Math.round(q.x), Math.round(q.y), q.spr, q.colorIdx, +Math.atan2(q.vy, q.vx).toFixed(2), q.owner]),
       z: this.zones.map(z => [z.id, Math.round(z.x), Math.round(z.y), z.r, z.kind, +(1 - z.t / z.total).toFixed(2), +(z.a || 0).toFixed(2), +(z.w || 0).toFixed(2), Math.round(z.ox || 0), Math.round(z.oy || 0)]),
       pv: this.modo === 'pve' && this.pve ? this.pveSnap() : null,
       zo: this.objetivos ? { ab: Math.max(0, Math.ceil(CONFIG.OBJETIVOS.apertura - this.combatTime)), o: this.objetivos.map(o => [o.x, o.y, this.colorDeEquipo(o.dueno), this.colorDeEquipo(o.equipo), +(o.prog / CONFIG.OBJETIVOS.captura).toFixed(2), o.disputado ? 1 : 0, o.dueno, o.lado]), ck: this.cucko ? -1 : Math.max(0, Math.ceil(this.cuckoT || 0)) } : null,
@@ -3728,7 +4284,16 @@ function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
     if (HABILIDADES[h].ulti && p.ulti < 1) return;
     let si = false;
     switch (h) {
-      case 'lanzaPiedra': si = d < 360; break;
+      case 'lanzaPiedra': si = d < 200; break;
+      case 'trueno': si = d < 440; break;
+      case 'sablazo': si = d < 210 && d > 40; break;
+      case 'atraparPresa': si = d < 430 && d > 90; break;
+      case 'tejer': si = d < 320; break;
+      case 'mordida': si = d < 130; break;
+      case 'humo': si = d > 260; break;
+      case 'danza': si = d < 70; break;
+      case 'manosRayo': si = d < 400; break;
+      case 'tormenta': si = d < 360; break;
       case 'terremoto': si = d < 220; break;
       case 'mayhem': si = d < 320 && !p.fx.terremoto; break;
       case 'torreta': si = d < 480; break;
@@ -4744,7 +5309,7 @@ class StateBuffer {
     const pra = new Map(a.s.pr.map(p => [p[0], p]));
     const projs = b.s.pr.map(pb => {
       const q = pra.get(pb[0]);
-      return { x: q ? lerp(q[1], pb[1], k) : pb[1], y: q ? lerp(q[2], pb[2], k) : pb[2], spr: pb[3], c: pb[4], a: pb[5] };
+      return { x: q ? lerp(q[1], pb[1], k) : pb[1], y: q ? lerp(q[2], pb[2], k) : pb[2], spr: pb[3], c: pb[4], a: pb[5], owner: pb[6] };
     });
     const zones = (b.s.z || []).map(z => ({ x: z[1], y: z[2], r: z[3], kind: z[4], prog: z[5], a: z[6], w: z[7], ox: z[8], oy: z[9] }));
     return { players, units, projs, zones, ar: lerp(a.s.ar, b.s.ar, k), zo: b.s.zo || null };
@@ -4989,7 +5554,8 @@ class Renderer {
   resize() {
     const cw = window.innerWidth, ch = window.innerHeight;
     // Escala entera: se ven ~250 píxeles de juego en el lado corto
-    this.S = Math.max(1, Math.round(Math.min(cw, ch) / 170));   // cámara cercana: ~170 píxeles de juego en el lado corto
+    // Seba (28-10): cámara un poco más lejos: ~240 píxeles de juego en el lado corto (escala no entera, pixelado nítido igual)
+    this.S = Math.max(1, Math.min(cw, ch) / 240);
     this.W = Math.ceil(cw / this.S);
     this.H = Math.ceil(ch / this.S);
     this.c.width = this.W; this.c.height = this.H;
@@ -5003,7 +5569,7 @@ class Renderer {
   gy(y) { return Math.round(y * ESC) + this.oy; }
 
   addEvent(ev) {
-    const dur = { cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.25, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
+    const dur = { cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
     const f = { ...ev, age: 0, dur };
     if (ev.k === 'death' || ev.k === 'heal' || ev.k === 'poof') {
       f.parts = Array.from({ length: ev.k === 'death' ? 16 : 7 }, (_, i) => ({ a: hash(i, ev.x | 0, ev.y | 0) * TAU, v: 20 + hash(i, 9, ev.x | 0) * (ev.k === 'death' ? 70 : 30) }));
@@ -5050,7 +5616,7 @@ class Renderer {
     }
   }
 
-  linea(x0, y0, x1, y1, col, zig = 0, seed = 0) {
+  linea(x0, y0, x1, y1, col, zig = 0, seed = 0, grosor = 1) {
     const g = this.g;
     g.fillStyle = col;
     const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0)));
@@ -5058,7 +5624,8 @@ class Renderer {
     for (let i = 0; i <= n; i++) {
       const t = i / n;
       const j = zig ? Math.round((hash(Math.floor(i / 4), seed, 3) - 0.5) * zig * 2) * (i % n ? 1 : 0) : 0;
-      g.fillRect(Math.round(x0 + (x1 - x0) * t + px * j), Math.round(y0 + (y1 - y0) * t + py * j), 1, 1);
+      const o = grosor >> 1;
+      g.fillRect(Math.round(x0 + (x1 - x0) * t + px * j) - o, Math.round(y0 + (y1 - y0) * t + py * j) - o, grosor, grosor);
     }
   }
 
@@ -5118,6 +5685,21 @@ class Renderer {
         const rr = Math.max(1, Math.round(2 + z.prog * 4));
         this.discDither(cx, cy, rr, PALETA.tinta, 2, 0);
         this.ring(cx, cy, Math.round(z.r * ESC), PALETA.carmesi1, 0.35, 1);
+      } else if (z.kind === 'tajo') {
+        // Aviso del Sablazo: camino morado que se llena mientras Takichi canaliza
+        const x2 = Math.round(cx + Math.cos(z.a) * r), y2 = Math.round(cy + Math.sin(z.a) * r);
+        const w = Math.max(3, Math.round(z.w * ESC));
+        this.linea(cx, cy, x2, y2, PALETA.tinta, 0, 0, w + 2);
+        this.linea(cx, cy, x2, y2, PALETA.noche, 0, 0, w);
+        this.linea(cx, cy, Math.round(cx + (x2 - cx) * z.prog), Math.round(cy + (y2 - cy) * z.prog), parpadeo ? PALETA.pergamino2 : PALETA.magia, 0, 0, Math.max(2, w - 2));
+      } else if (z.kind === 'cuadro') {
+        // Danza silenciosa: cuadrado morado
+        const L = r;
+        this.g.fillStyle = PALETA.magia;
+        for (let i = -L; i <= L; i += 2) {
+          if ((i + t) % 6 < 4) { this.g.fillRect(cx + i, cy - L, 1, 1); this.g.fillRect(cx + i, cy + L, 1, 1); this.g.fillRect(cx - L, cy + i, 1, 1); this.g.fillRect(cx + L, cy + i, 1, 1); }
+        }
+        this.g.globalAlpha = 0.18; this.g.fillRect(cx - L, cy - L, L * 2, L * 2); this.g.globalAlpha = 1;
       } else if (z.kind === 'mira') {
         const rr = 9 - Math.round(z.prog * 4);
         this.ring(cx, cy - 6, rr, PALETA.carmesi2, 1);
@@ -5138,6 +5720,8 @@ class Renderer {
       if (!(p.flags & 1) && (p.flags & 32768)) { ents.push({ y: p.y, tipo: 'c', e: p }); continue; }
       if (!(p.flags & 1)) continue;
       if ((p.flags & 8) && p.id !== myId) continue; // escondido en un árbol
+      const aliado = p.id === myId || (this.equipos && this.equipos[p.id] && this.equipos[p.id] === this.equipos[myId]);
+      if ((p.flags & 8388608) && !aliado) continue;  // Takichi invisible: los rivales no lo ven
       const pp = (p.id === myId && pred) ? { ...p, x: pred.x, y: pred.y } : p;
       ents.push({ y: pp.y, tipo: 'p', e: pp });
     }
@@ -5150,11 +5734,16 @@ class Renderer {
     }
     for (const it of ents) {
       if (it.tipo === 'c') this.drawCaido(it.e, metaById.get(it.e.id), it.e.id === myId);
-      else if (it.tipo === 'p') this.drawPlayer(it.e, metaById.get(it.e.id), it.e.id === myId, dt);
+      else if (it.tipo === 'p') { this.alphaPj = (it.e.flags & 8388608) ? 0.4 : 1; g.globalAlpha = this.alphaPj; this.drawPlayer(it.e, metaById.get(it.e.id), it.e.id === myId, dt); this.alphaPj = 1; g.globalAlpha = 1; }
       else this.drawUnit(it.e, metaById);
     }
 
     // Proyectiles
+    // Hilo de seda del gancho de Aracnida: desde ella hasta la punta
+    for (const p of view.projs) if (p.spr === 'telaGancho') {
+      const o = view.players.find(q => q.id === p.owner);
+      if (o) { const x1 = this.gx(o.x), y1 = this.gy(o.y) - 8, x2 = this.gx(p.x), y2 = this.gy(p.y) - 4; this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 3); this.linea(x1, y1, x2, y2, PALETA.pergamino2, 0, 0, 1); }
+    }
     for (const p of view.projs) this.drawProj(p);
     // Bombas en parábola (Biteroi)
     for (const z of view.zones) {
@@ -5286,8 +5875,18 @@ class Renderer {
     }
     const spr = personaje(look, frame)[izq ? 'izq' : 'der'];
     rastro.forEach((r, i) => { g.globalAlpha = 0.3 - i * 0.07; g.drawImage(spr, r.x - 11, r.y - 16); });
-    g.globalAlpha = 1;
-    const sx = cx - 11, sy = cy - 16;
+    g.globalAlpha = this.alphaPj || 1;
+    // Takichi canalizando el Sablazo: aura morada que late (aviso para los rivales)
+    if (p.flags & 4194304) {
+      const k = Math.floor(this.time * 12) % 3;
+      this.ring(cx, cy - 6, 13 + k, PALETA.magia, 1, 2);
+      for (let i = 0; i < 5; i++) { const a = this.time * 7 + i * 1.26; g.fillStyle = PALETA.magia; g.fillRect(Math.round(cx + Math.cos(a) * 11), Math.round(cy - 8 + Math.sin(a) * 9), 2, 2); }
+    }
+    // Rasho flota: sube y baja suave sobre su nube
+    const flota = meta.build.heroe === 'rasho';
+    const bob = flota ? Math.round(Math.sin(this.time * 3 + (p.id.length % 5)) * 1.5) - 3 : 0;
+    const sx = cx - 11, sy = cy - 16 + bob;
+    if (flota) this.nubeViva(cx, sy + 20, 1, true);
 
     // arma
     const key = armaSprite(meta.build);
@@ -5313,6 +5912,25 @@ class Renderer {
     if (arma && detras) g.drawImage(arma, hx - 14 + atras, hy - 14 - sube);
     g.drawImage(spr, sx + atras, sy - sube);
     if (arma && !detras) g.drawImage(arma, hx - 14 + atras, hy - 14 - sube);
+    if (flota) this.nubeViva(cx, sy + 20, 1, false);
+    // Envenenado (mordida de Aracnida): burbujas verdes que suben
+    if (p.flags & 16777216) {
+      const t = Math.floor(this.time * 12);
+      for (let i = 0; i < 4; i++) { const x = cx - 7 + ((i * 5 + t) % 14), y = sy + 16 - ((t * 2 + i * 6) % 22); g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 4, 4); g.fillStyle = i % 2 ? PALETA.bosque2 : PALETA.bosque1; g.fillRect(x, y, 2, 2); }
+    }
+    // Aracnida sobre su tela: brillo morado bajo los pies
+    if (p.flags & 33554432) this.ring(cx, cy + 6, 10, PALETA.magia, 0.9, 1);
+    // Manos de rayo: chispas eléctricas alrededor de las manos y el cuerpo
+    if (p.flags & 2097152) {
+      const t = Math.floor(this.time * 20);
+      for (let i = 0; i < 6; i++) {
+        const a = hash(i, t, 7) * TAU, r = 8 + hash(i, t, 3) * 6;
+        const x = Math.round(cx + Math.cos(a) * r), y = Math.round(sy + 12 + Math.sin(a) * r * 0.7);
+        g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 3);
+        g.fillStyle = i % 3 ? PALETA.acero2 : PALETA.pergamino2; g.fillRect(x, y, 1, 1);
+      }
+      g.fillStyle = PALETA.acero2; g.fillRect(hx - 1, hy - 1, 3, 3); g.fillStyle = PALETA.pergamino2; g.fillRect(hx, hy, 1, 1);
+    }
     // Aturdido: estrellas girando sobre la cabeza
     if (p.flags & 2048) {
       // estrellas grandes con borde (bien visibles)
@@ -5392,6 +6010,49 @@ class Renderer {
     if (isMe && (p.flags & 8)) {
       const t = texto('OCULTO', PALETA.bosque2);
       g.drawImage(t, cx - (t.width >> 1), by - 20);
+    }
+  }
+
+  // Nube viva (Rasho y su Tormenta): bolas grises que laten. atras = mitad de atrás (se dibuja antes del cuerpo)
+  nubeViva(cx, cy, k, atras) {
+    const g = this.g, T = this.time;
+    const bolas = [[-9, 1, 4], [-5, -1, 5], [0, -2, 5], [5, -1, 5], [9, 1, 4], [-3, 2, 4], [3, 2, 4]];
+    bolas.forEach(([ox, oy, r], i) => {
+      const delante = oy >= 1;
+      if (atras === delante) return;
+      const rr = Math.max(2, Math.round((r + Math.sin(T * 4 + i * 1.7) * 1) * k));
+      const x = Math.round(cx + ox * k + Math.sin(T * 1.3 + i) * k), y = Math.round(cy + oy * k);
+      this.bolaPixel(x, y, rr + 1, PALETA.tinta);
+      this.bolaPixel(x, y, rr, PALETA.piedra1);
+      this.bolaPixel(x - Math.round(rr / 3), y - Math.round(rr / 3), Math.max(1, rr - 2), PALETA.piedra2);
+    });
+    if (!atras) {
+      // destello eléctrico dentro de la nube cada tanto
+      const f = Math.floor(T * 3 + cx) % 5;
+      if (f === 0) { g.fillStyle = PALETA.oro2; const x = Math.round(cx - 3 * k), y = Math.round(cy); g.fillRect(x, y, 2, 1); g.fillRect(x + 1, y + 1, 2, 1); g.fillRect(x + 2, y + 2, 2, 1); }
+    }
+  }
+  bolaPixel(cx, cy, r, col) {
+    const g = this.g; g.fillStyle = col;
+    for (let dy = -r; dy <= r; dy++) { const w = Math.round(Math.sqrt(r * r - dy * dy)); g.fillRect(cx - w, cy + dy, w * 2 + 1, 1); }
+  }
+
+  // Tormenta eléctrica: nube grande en el aire con su sombra-aviso en el suelo
+  drawNubeTormenta(u) {
+    const g = this.g, cx = this.gx(u.x), cy = this.gy(u.y);
+    const R = Math.round(HABILIDADES.tormenta.ancho / 2 * ESC);
+    // zona de descarga en el suelo (aviso claro)
+    this.discDither(cx, cy, R, PALETA.acero0, 3, Math.floor(this.time * 10));
+    this.ring(cx, cy, R, PALETA.acero2, 1, 1);
+    // la nube, en lo alto
+    const alto = cy - 34;
+    this.nubeViva(cx, alto, 2.2, true);
+    this.nubeViva(cx, alto, 2.2, false);
+    // gotitas de lluvia
+    const t = Math.floor(this.time * 20);
+    for (let i = 0; i < 6; i++) {
+      const x = cx - 14 + Math.floor(hash(i, 3, 1) * 28), y = alto + 8 + ((t * 3 + i * 7) % 24);
+      g.fillStyle = PALETA.acero2; g.fillRect(x, y, 1, 2);
     }
   }
 
@@ -5590,6 +6251,26 @@ class Renderer {
     if (u.kind === 'muro') { this.drawMuro(u); return; }
     if (u.kind === 'enemigo') { this.drawEnemigo(u); return; }
     if (u.kind === 'cucko') { this.drawCucko(u); return; }
+    if (u.kind === 'nubeTormenta') { this.drawNubeTormenta(u); return; }
+    if (u.kind === 'tela') {
+      // Tela de araña en el suelo: anillos y radios blancos
+      const g = this.g, cx = this.gx(u.x), cy = this.gy(u.y), R = Math.round(HABILIDADES.tejer.radio * ESC);
+      for (const k of [1, 0.66, 0.33]) this.ring(cx, cy, Math.round(R * k), PALETA.pergamino1, 0.9, 1);
+      for (let i = 0; i < 8; i++) { const a = i * TAU / 8 + 0.2; this.linea(cx, cy, Math.round(cx + Math.cos(a) * R), Math.round(cy + Math.sin(a) * R), PALETA.pergamino1); }
+      g.fillStyle = PALETA.magia; g.fillRect(cx - 1, cy - 1, 3, 3);
+      return;
+    }
+    if (u.kind === 'clon') {
+      // Clon de Takichi: su silueta en morado translúcido
+      const ownM = metaById.get(u.owner);
+      const look = lookDe({ heroe: 'takichi', niv: [1, 1, 1] }, ownM ? ownM.colorIdx : 0);
+      const izq = Math.cos(u.f) < -0.05;
+      const spr = personaje(look, 0)[izq ? 'izq' : 'der'];
+      const cx = this.gx(u.x), cy = this.gy(u.y);
+      this.g.globalAlpha = 0.55; this.g.drawImage(spr, cx - 11, cy - 16); this.g.globalAlpha = 1;
+      this.ring(cx, cy + 6, 7, PALETA.magia, 0.8);
+      return;
+    }
     if (u.kind === 'mina') {
       // El dueño (y sus aliados) ven la mina; los rivales solo un punto rojo que parpadea
       const cx = this.gx(u.x), cy = this.gy(u.y);
@@ -5654,7 +6335,7 @@ class Renderer {
     else s = otro(p.spr, Math.floor(this.time * 8));
     // Estela: puntos detrás del proyectil, en el color de su tipo
     const col = { flecha: PALETA.pergamino2, flechaBosque: PALETA.bosque2, virote: PALETA.pergamino1, sombra: PALETA.magia,
-      orbeFuego: PALETA.antorcha, bolaFuego: PALETA.oro2, piedra: PALETA.piedra3, rocaGrande: PALETA.piedra3 }[p.spr] || PALETA.pergamino2;
+      orbeFuego: PALETA.antorcha, bolaFuego: PALETA.oro2, piedra: PALETA.piedra3, rocaGrande: PALETA.piedra3, rayoBola: PALETA.acero2, rayoBolaCargada: PALETA.oro2, trueno: PALETA.acero2, telaGancho: PALETA.pergamino2 }[p.spr] || PALETA.pergamino2;
     const ca = Math.cos(p.a), sa = Math.sin(p.a);
     for (let i = 1; i <= 5; i++) {
       if (i > 3 && (Math.floor(this.time * 20) + i) % 2) continue;
@@ -5673,13 +6354,44 @@ class Renderer {
       const t = f.age / f.dur;
       if (t >= 1) continue;
       const cx = this.gx(f.x || 0), cy = this.gy(f.y || 0);
-      const colJ = f.c !== undefined && f.c >= 0 && COLOR_JUGADOR[f.c] ? CHAR[COLOR_JUGADOR[f.c].z] : PALETA.pergamino2;
+      const colJ = f.c === 'morado' ? PALETA.magia : f.c !== undefined && f.c >= 0 && COLOR_JUGADOR[f.c] ? CHAR[COLOR_JUGADOR[f.c].z] : PALETA.pergamino2;
       switch (f.k) {
         case 'slash': {
+          // Golpes característicos por héroe (Seba 28-10)
+          if (f.h === 'beast' || f.h === 'takichi' || f.h === 'aracnida') {
+            const R0 = (f.r + CONFIG.RADIO_JUGADOR * 0.5) * ESC, ca = Math.cos(f.a), sa = Math.sin(f.a);
+            const px = Math.round(cx + ca * R0 * 0.75), py = Math.round(cy - 6 + sa * R0 * 0.75);
+            const prog = Math.min(1, t * 2.5);
+            if (f.h === 'beast') {
+              // 3 zarpazos paralelos (rojo y blanco)
+              for (let i = -1; i <= 1; i++) {
+                const ox = Math.round(-sa * i * 4), oy = Math.round(ca * i * 4);
+                const x1 = px + ox - Math.round((ca + sa) * 7), y1 = py + oy - Math.round((sa - ca) * 7);
+                const x2 = Math.round(x1 + (ca + sa) * 14 * prog), y2 = Math.round(y1 + (sa - ca) * 14 * prog);
+                this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 3); this.linea(x1, y1, x2, y2, i === 0 ? PALETA.pergamino2 : PALETA.carmesi2, 0, 0, 1);
+              }
+            } else if (f.h === 'takichi') {
+              // tajo en X (dos sables), morado y plata
+              for (const s of [-1, 1]) {
+                const dx = Math.round((ca * 0.7 - sa * s * 0.7) * 11), dy = Math.round((sa * 0.7 + ca * s * 0.7) * 11);
+                const x1 = px - dx, y1 = py - dy, x2 = Math.round(px - dx + dx * 2 * prog), y2 = Math.round(py - dy + dy * 2 * prog);
+                this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 4); this.linea(x1, y1, x2, y2, s < 0 ? PALETA.magia : PALETA.piedra3, 0, 0, 2);
+              }
+            } else {
+              // Aracnida: dos patas que pican desde los hombros
+              for (const s of [-1, 1]) {
+                const sx0 = Math.round(cx - sa * s * 7), sy0 = Math.round(cy - 14 + ca * s * 7);
+                const ex = Math.round(sx0 + (px - sx0) * prog), ey = Math.round(sy0 + (py - sy0) * prog);
+                this.linea(sx0, sy0, ex, ey, PALETA.tinta, 0, 0, 3); this.linea(sx0, sy0, ex, ey, PALETA.magia, 0, 0, 1);
+                if (prog >= 1) { g.fillStyle = PALETA.pergamino2; g.fillRect(ex - 1, ey - 1, 2, 2); }
+              }
+            }
+            break;
+          }
           const r = Math.round((f.r + CONFIG.RADIO_JUGADOR * 0.6) * ESC);
           const prog = Math.min(1, t * 2.2);
-          this.arc(cx, cy - 4, r, f.a - f.w / 2, f.a - f.w / 2 + f.w * prog, PALETA.pergamino2, 1);
-          if (t < 0.6) this.arc(cx, cy - 4, r - 2, f.a - f.w / 2, f.a - f.w / 2 + f.w * prog, colJ, 1);
+          this.arc(cx, cy - 4, r, f.a - f.w / 2, f.a - f.w / 2 + f.w * prog, f.c === 'morado' ? PALETA.magia : PALETA.pergamino2, f.c === 'morado' ? 2 : 1);
+          if (t < 0.6) this.arc(cx, cy - 4, r - 2, f.a - f.w / 2, f.a - f.w / 2 + f.w * prog, f.c === 'morado' ? PALETA.pergamino2 : colJ, 1);
           break;
         }
         case 'cono': {
@@ -5716,24 +6428,58 @@ class Renderer {
         }
         case 'boom': {
           const r = Math.round(f.r * ESC * (0.35 + t * 0.65));
-          const colR = f.c === 'verde' ? PALETA.bosque2 : f.c === 'piedra' ? PALETA.piedra3 : PALETA.oro2;
-          const colD = f.c === 'verde' ? PALETA.bosque1 : f.c === 'piedra' ? PALETA.piedra2 : PALETA.antorcha;
+          const colR = f.c === 'verde' ? PALETA.bosque2 : f.c === 'piedra' ? PALETA.piedra3 : f.c === 'rayo' ? PALETA.pergamino2 : PALETA.oro2;
+          const colD = f.c === 'verde' ? PALETA.bosque1 : f.c === 'piedra' ? PALETA.piedra2 : f.c === 'rayo' ? PALETA.acero1 : PALETA.antorcha;
           if (t < 0.6) this.discDither(cx, cy, r, colD, t < 0.3 ? 2 : 3, Math.floor(f.age * 30));
           this.ring(cx, cy, r, colR, 1 - t * 0.6);
           break;
         }
         case 'ring': {
-          const col = { fuego: PALETA.antorcha, acero: PALETA.acero2, grito: PALETA.carmesi2, oro: PALETA.oro2, magia: PALETA.magia, vida: PALETA.bosque2 }[f.c] || PALETA.pergamino2;
+          const col = { fuego: PALETA.antorcha, acero: PALETA.acero2, grito: PALETA.carmesi2, oro: PALETA.oro2, magia: PALETA.magia, vida: PALETA.bosque2, rayo: PALETA.acero2, seda: PALETA.pergamino2 }[f.c] || PALETA.pergamino2;
           const r = Math.round(f.r * ESC * (0.3 + t * 0.7));
           this.ring(cx, cy, r, col, 1 - t * 0.7, f.c === 'fuego' ? 2 : 1);
           if (f.c === 'fuego' && t < 0.5) this.ring(cx, cy, Math.max(1, r - 3), PALETA.oro2, 0.5);
+          break;
+        }
+        case 'seda': {
+          const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 8, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 8;
+          this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 3); this.linea(x1, y1, x2, y2, PALETA.pergamino2, 0, 0, 1);
+          break;
+        }
+        case 'mordida': {
+          // Colmillos que se cierran + gotas de veneno
+          const s = Math.round(10 * (1 - Math.min(1, t * 2)));
+          for (const dx of [-4, 4]) { g.fillStyle = PALETA.tinta; g.fillRect(cx + dx - 2, cy - 22 - s, 5, 9); g.fillStyle = PALETA.pergamino2; g.fillRect(cx + dx - 1, cy - 21 - s, 3, 7); g.fillRect(cx + dx - 1, cy - 2 + s, 3, 7); }
+          for (let i = 0; i < 6; i++) { g.fillStyle = PALETA.bosque2; g.fillRect(Math.round(cx + (hash(i, 4, 4) - 0.5) * 30), Math.round(cy - 6 + (hash(i, 5, 5) - 0.5) * 20 + t * 12), 2, 2); }
+          break;
+        }
+        case 'tajo': {
+          // Sablazo de Takichi: corte morado ancho a lo largo del recorrido
+          const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 6, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 6;
+          const gr = Math.max(1, Math.round(7 * (1 - t)));
+          this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, gr + 2);
+          this.linea(x1, y1, x2, y2, PALETA.magia, 0, 0, gr);
+          if (t < 0.5) this.linea(x1, y1, x2, y2, PALETA.pergamino2, 0, 0, Math.max(1, gr - 4));
+          break;
+        }
+        case 'humo': {
+          // Bomba de humo: nube gris que se expande y se disipa, con chispas moradas
+          const n = f.chico ? 5 : 9, R = (f.chico ? 10 : 22) * (0.5 + t);
+          for (let i = 0; i < n; i++) {
+            const a = hash(i, f.x | 0, 5) * TAU, d = R * (0.4 + hash(i, 2, f.y | 0) * 0.6);
+            const x = Math.round(cx + Math.cos(a) * d), y = Math.round(cy - 6 + Math.sin(a) * d * 0.6);
+            const rr = Math.max(1, Math.round((f.chico ? 4 : 7) * (1 - t * 0.7)));
+            this.bolaPixel(x, y, rr + 1, PALETA.tinta); this.bolaPixel(x, y, rr, i % 3 ? PALETA.piedra2 : PALETA.piedra3);
+          }
+          if (t < 0.6) for (let i = 0; i < 4; i++) { g.fillStyle = PALETA.magia; g.fillRect(Math.round(cx + (hash(i, 7, 7) - 0.5) * R * 2), Math.round(cy - 6 + (hash(i, 8, 8) - 0.5) * R), 2, 2); }
           break;
         }
         case 'bolt': {
           const col = { rayo: PALETA.acero2, fuego: PALETA.antorcha, drenar: PALETA.bosque2, bosque: PALETA.bosque2 }[f.c] || PALETA.pergamino2;
           const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 6, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 6;
           const seed = f.seed + Math.floor(f.age * 30);
-          this.linea(x1, y1, x2, y2, col, f.c === 'rayo' ? 3 : 1, seed);
+          if (f.c === 'rayo') this.linea(x1, y1, x2, y2, PALETA.tinta, 3, seed, 4);   // borde negro: rayo bien visible
+          this.linea(x1, y1, x2, y2, col, f.c === 'rayo' ? 3 : 1, seed, f.c === 'rayo' ? 2 : 1);
           if (f.c === 'rayo' && t < 0.5) this.linea(x1, y1, x2, y2, PALETA.pergamino2, 2, seed + 1);
           break;
         }
@@ -5956,6 +6702,41 @@ function startPve() {
 }
 
 let bannerT = null;
+// Marcador compacto 1v1 / 2v2: kills de cada equipo con barra hacia 10, reloj, círculos y The Cucko
+function actualizarMarcador(latest) {
+  const K = CONFIG.OBJETIVOS.killsParaGanar, mk = S.meta.marcador, miEq = S.meta.equipos ? S.meta.equipos[S.myId] : null;
+  $('mc-a').textContent = mk.A; $('mc-b').textContent = mk.B;
+  $('mc-ab').style.width = Math.min(100, mk.A / K * 100) + '%';
+  $('mc-bb').style.width = Math.min(100, mk.B / K * 100) + '%';
+  $('mc-eqa').classList.toggle('mio', miEq === 'A'); $('mc-eqb').classList.toggle('mio', miEq === 'B');
+  const s = latest.ph === 'combat' ? Math.ceil(latest.tm) : CONFIG.OBJETIVOS.duracionRonda;
+  $('mc-t').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const zo = latest.zo;
+  let html = '';
+  if (zo) {
+    if (zo.ab > 0) html += `<span class="mc-txt">círculos ${zo.ab}</span>`;
+    else for (const o of zo.o) {
+      // o = [x, y, colDueño, colCaptura, progreso, disputado, dueño, lado]
+      const cls = o[6] ? 'tomado ' + (o[6] === 'A' ? 'a' : 'b') : (o[4] > 0 ? 'capt' : 'libre');
+      html += `<span class="mc-c lado-${o[7] === 'A' ? 'a' : 'b'} ${cls}" title="Círculo ${o[7] === 'A' ? 'azul' : 'rojo'}"></span>`;
+    }
+    html += zo.ck > 0 ? `<span class="mc-ck">${zo.ck}</span>` : zo.ck < 0 ? '<span class="mc-ck vivo">!</span>' : '';
+  }
+  if ($('mc-obj').innerHTML !== html) $('mc-obj').innerHTML = html;
+}
+
+// Boletín: avisos de la partida en el centro, semitransparentes, se apilan y se borran solos
+function boletin(text, tipo = '') {
+  const f = $('feed');
+  const el = document.createElement('div');
+  el.className = 'fi ' + tipo;
+  el.textContent = text;
+  f.prepend(el);
+  while (f.children.length > 4) f.lastChild.remove();
+  setTimeout(() => el.classList.add('fuera'), 3200);
+  setTimeout(() => el.remove(), 3800);
+}
+
 function banner(text, chico = false) {
   const b = $('banner');
   b.textContent = text;
@@ -6522,7 +7303,7 @@ function renderOver() {
 function setupActionButtons() {
   const me = S.metaById.get(S.myId);
   if (!me || !me.build.heroe) return;
-  $('b-atk').querySelector('.ic').src = imgArma(armaSprite(me.build), 3);
+  $('b-atk').querySelector('.ic').src = armaSprite(me.build) === 'ninguna' ? imgIcono('colmillo', me.build.heroe, 3) : imgArma(armaSprite(me.build), 3);
   BTN_HAB[3].classList.add('hidden');
   habilidadesDe(me.build).forEach((k, i) => {
     const btn = BTN_HAB[i];
@@ -6584,6 +7365,9 @@ function updateHud(latest, now) {
   } else {
     $('hud-jefe').classList.add('hidden');
     const eqs = S.meta && S.meta.modo === 'equipos' && S.meta.marcador;
+    $('marcador').classList.toggle('hidden', !eqs);
+    $('hud-top').classList.toggle('hidden', !!eqs);
+    if (eqs) actualizarMarcador(latest);
     $('hud-round').textContent = eqs ? `Azul ${S.meta.marcador.A} – ${S.meta.marcador.B} Rojo /${CONFIG.OBJETIVOS.killsParaGanar}` : `Ronda ${S.meta ? S.meta.round : ''}`;
     const reloj = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
     $('hud-timer').textContent = latest.ph === 'combat' ? (eqs ? reloj(Math.ceil(latest.tm)) : Math.ceil(latest.tm)) : (eqs ? reloj(CONFIG.OBJETIVOS.duracionRonda) : CONFIG.TIEMPO_COMBATE);
@@ -6623,9 +7407,9 @@ function updateHud(latest, now) {
   $('me-mn').style.width = Math.max(0, Math.min(100, me[14] * 100)) + '%';
   $('me-mnt').textContent = me[14] >= 1 ? '¡ULTI LISTA!' : `Ulti ${Math.floor(me[14] * 100)}%`;
   $('hud-me').classList.toggle('ulti-lista', me[14] >= 1);
-  // Status activos
-  const st = ESTADOS.filter((e) => me[6] & e.bit).map((e) => `<i class="${e.bueno ? 'bueno' : 'malo'}">${e.nombre}</i>`).join('');
-  if ($('me-st').innerHTML !== st) $('me-st').innerHTML = st;
+  // Status activos: cuadritos con ícono a la izquierda (Seba 28-10: menos recuadros, más combate)
+  const st = ESTADOS.filter((e) => me[6] & e.bit).map((e) => `<div class="est ${e.bueno ? 'bueno' : 'malo'}" title="${e.nombre}"><img alt="${e.nombre}" src="${imgIcono(e.glifo, e.bueno ? 'estBueno' : 'estMalo', 2)}"><span>${e.nombre}</span></div>`).join('');
+  if (S.ultSt !== st) { $('hud-status').innerHTML = st; S.ultSt = st; }
   const ca = $('b-atk');
   ca.style.setProperty('--carga', Math.floor(me[13]));
   ca.querySelector('.key').textContent = '●'.repeat(Math.floor(me[13])) + '○'.repeat(3 - Math.floor(me[13]));
@@ -6669,7 +7453,7 @@ function frame(now) {
   lastFrame = now;
   const latest = S.buf.latest();
   renderer.myId = S.myId;
-  const view = S.buf.sample(now - (isAuth() ? 40 : 110), (ev) => { if (ev.k === 'anuncio') banner(ev.s, ev.chico); else renderer.addEvent(ev); });
+  const view = S.buf.sample(now - (isAuth() ? 40 : 110), (ev) => { if (ev.k === 'anuncio') boletin(ev.s, ev.chico ? 'racha' : ''); else if (ev.k === 'feedKill') boletin(ev.s, 'kill'); else renderer.addEvent(ev); });
   let pred = null;
   S.predPos = null;
   if (latest && (latest.ph === 'combat' || latest.ph === 'countdown')) {
