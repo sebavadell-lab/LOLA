@@ -699,6 +699,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
             <label class="field"><span>Seed (opcional)</span><input id="in-seed" maxlength="9" autocomplete="off" inputmode="numeric" placeholder="Al azar"></label>
           </div>
         </div>
+        <button class="btn" id="b-sonido">Sonido: sí</button>
         <p class="demo-note solo-pc"><b>Moverse</b> WASD · <b>Apuntar</b> con el mouse · <b>Atacar</b> clic o Espacio<br><b>Habilidades</b> 1 y 2 · <b>Ulti</b> 3 (se llena haciendo daño)<br>El ataque tiene 3 cargas que se recuperan solas.<br><b>1v1 y 2v2</b>: a los 25 s se abren los círculos (uno en el lado de cada equipo). Gana quien tenga el círculo rival y 10 kills a la vez.</p>
         <p class="demo-note solo-cel">Gira el celular en horizontal.<br><b>Moverse</b>: arrastra el dedo en la mitad izquierda.<br><b>Atacar</b>: arrastra el botón rojo para apuntar y suelta; tocar sin arrastrar apunta solo, pero gasta 1 de tus 3 cargas.<br><b>Ulti</b> (botón dorado): se llena haciendo daño.<br><b>1v1 y 2v2</b>: a los 25 s se abren los círculos (uno en el lado de cada equipo). Gana quien tenga el círculo rival y 10 kills a la vez.</p>
       </div>
@@ -868,6 +869,9 @@ const CONFIG = {
   CUCKO: { x: 0, y: 330, camara: 112, abertura: 38, vida: 1200, dano: 60, cd: 2, aviso: 0.8, area: 60, alcance: 175, vel: 80,
            aparece: 60, reaparece: 90, buff: { dur: 60, dano: 1.1, recibe: 0.9 } },
   PUNTOS_POR_RONDA: 0,          // rework combate: sin puntos por ahora (todas las habilidades desde el inicio)
+  // Seba (28-10): las ultis tienen recarga propia (cd en HABILIDADES) Y se llenan con daño; se necesitan las dos.
+  // Al empezar la partida todas parten llenas pero con 45 s de espera.
+  ULTI_INICIO: 45,
   CARGAS: 3,                    // cargas del ataque básico (todos los héroes)
   CADENCIA: 0.45,               // segundos mínimos entre dos disparos
   // Todos parten solo con el ataque básico. La ulti se aprende cuando ya tienes las otras dos.
@@ -943,10 +947,10 @@ const HEROES = {
   },
   biteroi: {
     nombre: 'Biteroi', rol: 'Daño · control', fondo: 'biteroi', arma: 'bombaMano',
-    desc: 'Bombardero loco. Bombas que caen donde apuntas, bombas que se pegan, minas escondidas y un bombazo que no perdona a nadie.',
+    desc: 'Bombardero loco. Bombas que caen donde apuntas, un jetpack para escapar dejando un pasillo de explosiones, minas escondidas y un bombazo que no perdona a nadie.',
     vida: 375, dano: 41, recarga: 1.8, ultiCarga: 280, velocidad: 146,   // Seba (28-10): +15 al ataque y +25 a las habilidades
     ataque: { tipo: 'parabola', alcance: 380, area: 45, vuelo: 0.6 },
-    habs: ['bombaPegajosa', 'mina', 'granBombazo'],
+    habs: ['jetpack', 'mina', 'granBombazo'],   // Seba (28-10): el Jetpack reemplaza a la Bomba pegajosa
     pasiva: null,
   },
   // Seba (28-10): dios del trueno que flota sobre una nube de tormenta
@@ -976,6 +980,15 @@ const HEROES = {
     habs: ['atraparPresa', 'tejer', 'mordida'],
     pasiva: 'sentidoAracnido',
   },
+  // Seba (28-10): tanque y control (daño en la ulti), troll del bosque con un mazo. Números (C).
+  trelgon: {
+    nombre: 'Trelgon', rol: 'Tanque · control', fondo: 'trelgon', arma: 'mazo',
+    desc: 'Troll del bosque con un mazo de tronco. Aturde a mazazos, protege a los suyos con musgo y crece hasta volverse un gigante que echa raíces.',
+    vida: 430, dano: 32, recarga: 1.3, ultiCarga: 330, velocidad: 155,
+    ataque: { tipo: 'melee', rango: 60, arco: 130 },
+    habs: ['mazazos', 'escudoMusgo', 'sobrecrecimiento'],
+    pasiva: 'furiaBosque',
+  },
 };
 
 // ---------------------------------------------------------------------
@@ -993,7 +1006,7 @@ const HABILIDADES = {
   terremoto:  { nombre: 'Terremoto', glifo: 'roca', cd: 12,
                 desc: (n) => `Durante ${n.dur} s, cada paso largo (un cuerpo y cuarto) que avanzas dispara 4 piedras: primero norte, sur, este y oeste, y en el siguiente paso las diagonales: ${n.dano} de daño, ${n.danoInv} a invocaciones.`,
                 n1: { dur: 3, dano: 23, danoInv: 46 }, n2: { dur: 3, dano: 32.5, danoInv: 65 }, paso: 45, alcancePiedra: 180 },   // Seba (28-10): menos piedras (antes cada 18 = medio cuerpo)
-  mayhem:     { nombre: 'Mayhem', glifo: 'remolinoBestia', cd: 0.5, ulti: true,
+  mayhem:     { nombre: 'Mayhem', glifo: 'remolinoBestia', cd: 40, ulti: true,
                 desc: (n) => `Te enrollas ${n.dur} s: +30% de velocidad y ${n.dano} de daño a cada enemigo que pisas (1 vez cada 2 s por enemigo). No puedes usar habilidades mientras ruedas.`,
                 n1: { dur: 5, dano: 47 }, n2: { dur: 5, dano: 65 } },
 
@@ -1004,7 +1017,7 @@ const HABILIDADES = {
   fuga:       { nombre: 'Fuga', glifo: 'bota', cd: 12,
                 desc: (n) => `Durante ${n.dur} s ganas ${Math.round(n.pct * 100)}% de velocidad de movimiento y de ataque.`,
                 n1: { pct: 0.3, dur: 3 }, n2: { pct: 0.39, dur: 3 } },
-  tiroBosque: { nombre: 'Tiro del bosque', glifo: 'flechaVerde', cd: 0.5, ulti: true,
+  tiroBosque: { nombre: 'Tiro del bosque', glifo: 'flechaVerde', cd: 45, ulti: true,
                 desc: (n) => `Flecha que busca héroes (ignora invocaciones): ${n.dano} al primero. Rebota 3 veces, cada rebote 25% menos (${Math.round(n.dano * 0.75)}, ${Math.round(n.dano * 0.5625)}, ${Math.round(n.dano * 0.421875)}). Rebota a otro enemigo cercano; si no hay, vuelve a golpear al mismo.`,
                 n1: { dano: 125 }, n2: { dano: 160 }, rebotes: 3, radioRebote: 320, baja: 0.75 },   // Seba (28-10): rework
 
@@ -1017,7 +1030,7 @@ const HABILIDADES = {
   maldicion:  { nombre: 'Maldición', glifo: 'espiral', cd: 14,
                 desc: (n) => `Onda en todas direcciones: los enemigos alcanzados reciben ${fmtN(n.dps)} de daño por segundo por 5 s y quedan silenciados ${n.silencio} s.`,
                 n1: { dps: 15, silencio: 2 }, n2: { dps: 19.5, silencio: 2 }, radio: 220 },
-  golem:      { nombre: 'Invocar gólem', glifo: 'calaveraPiedra', cd: 0.5, ulti: true,
+  golem:      { nombre: 'Invocar gólem', glifo: 'calaveraPiedra', cd: 50, ulti: true,
                 desc: (n) => `Gólem de ${n.vida} de vida que golpea en área cada 1,5 s por ${fmtN(n.dano)}. Te cura 25 por cada jugador que golpea. Dura ${n.dur} s o hasta morir.`,
                 n1: { vida: 280, dano: 30, dur: 12 }, n2: { vida: 360, dano: 32.5, dur: 14 } },   // Seba (27-10): el gólem dura 12 s
 
@@ -1028,7 +1041,7 @@ const HABILIDADES = {
   muro:       { nombre: 'Muro de hielo', glifo: 'muroHielo', cd: 14,
                 desc: (n) => `Muro de 3 cuerpos con ${n.vida} de vida por ${n.dur} s. Bloquea a los enemigos; tus disparos lo atraviesan. Si lo rompen, su recarga se reinicia.`,
                 n1: { vida: 100, dur: 6 }, n2: { vida: 130, dur: 6 } },
-  dragon:     { nombre: 'Invocar dragón', glifo: 'dragon', cd: 0.5, ulti: true,
+  dragon:     { nombre: 'Invocar dragón', glifo: 'dragon', cd: 40, ulti: true,
                 desc: (n) => `Dragón de ${n.vida} de vida que ataca solo (${fmtN(n.dano)} en área, 1,5 ataques/s). A los 5 s decae y pierdes 50% de tu vida actual; si se lo matan antes, no pierdes nada.`,
                 n1: { vida: 150, dano: 50 }, n2: { vida: 195, dano: 65 } },
 };
@@ -1042,7 +1055,7 @@ Object.assign(HABILIDADES, {
   orbeVida:   { nombre: 'Orbe', glifo: 'orbeVida', cd: 6,
                 desc: (n) => `Orbe lento que avanza en línea recta 4 s. Cada 0,5 s cura a los aliados cerca el ${fmtN(n.pct * 100)}% de su vida actual y quita a los enemigos cerca el ${fmtN(n.pct * 100)}% de su vida actual (a invocaciones y a The Cucko, máximo ${n.topeInv}).`,
                 n1: { pct: 0.1, topeInv: 30 }, n2: { pct: 0.13, topeInv: 39 }, radio: 70, vel: 90, dur: 4 },
-  bendicion:  { nombre: 'Bendición del camino', glifo: 'solVida', cd: 0.5, ulti: true,
+  bendicion:  { nombre: 'Bendición del camino', glifo: 'solVida', cd: 30, ulti: true,
                 desc: (n) => `Todos los aliados del mapa recuperan ${n.vida} de vida y ganan el status «Bendecido» por 4 s: +10% de daño de habilidades y sus cargas de ataque se recargan 10% más rápido. Monh también lo recibe.`,
                 n1: { vida: 100 }, n2: { vida: 130 } },
 });
@@ -1052,6 +1065,10 @@ Object.assign(HABILIDADES, {
   bombaPegajosa: { nombre: 'Bomba pegajosa', glifo: 'bomba', cd: 9, alcance: 420, area: 40, vuelo: 0.7,
                    desc: (n) => `Lanzas una bomba en parábola que cae donde apuntas. Si cae sobre un enemigo, se le queda pegada ${n.dur} s y lo enlentece 50%; al terminar, recibe ${n.dano} de daño.`,
                    n1: { dur: 2, dano: 106 }, n2: { dur: 2, dano: 155 } },
+  // Seba (28-10): reemplaza a la Bomba pegajosa. Para reposicionarse y escapar de Trelgon o The Beast.
+  jetpack:       { nombre: 'Jetpack', glifo: 'jetpack', cd: 12.5,
+                   desc: (n) => `Saltas con el jetpack hacia donde apuntas (${n.largo} de distancia, ${n.dur} s en el aire; si no apuntas, te alejas del enemigo más cercano). En el aire nada te daña. Sueltas ${n.bombas} bombas en el camino que estallan una tras otra cada ${fmtN(n.cada)} s: ${n.dano} de daño cada una, y al mismo enemigo cada bomba siguiente le hace ${n.extra} más (${n.dano}, ${n.dano + n.extra}, ${n.dano + 2 * n.extra}...).`,
+                   n1: { largo: 320, dur: 2, bombas: 5, cada: 0.75, dano: 70, extra: 15, radio: 60 }, n2: { largo: 320, dur: 2, bombas: 5, cada: 0.75, dano: 91, extra: 20, radio: 60 } },   // Seba (28-10): 100 → 70 (sube 15 por bomba al mismo héroe)
   mina:          { nombre: 'Mina antipersonal', glifo: 'mina', cd: 10, max: 2, armado: 1,
                    desc: (n) => `Plantas una mina en el suelo (los rivales solo ven un punto rojo parpadeante). Si un enemigo la pisa, recibe ${n.dano} de daño. Máximo 2.`,
                    n1: { dano: 106 }, n2: { dano: 155 } },
@@ -1062,7 +1079,7 @@ Object.assign(HABILIDADES, {
   manosRayo:     { nombre: 'Manos de rayo', glifo: 'manoRayo', cd: 12, radioRebote: 150,
                    desc: (n) => `Durante ${n.dur} s tus disparos hacen +${Math.round(n.dano * 100)}% de daño, tus cargas vuelven ${Math.round(n.ritmo * 100)}% más rápido y cada disparo que acierta rebota el ${Math.round(n.rebote * 100)}% de su daño al enemigo más cercano.`,
                    n1: { dur: 6, dano: 0.2, ritmo: 0.2, rebote: 0.25 }, n2: { dur: 6, dano: 0.26, ritmo: 0.26, rebote: 0.32 } },
-  tormenta:      { nombre: 'Tormenta eléctrica', glifo: 'nubeRayo', cd: 0.5, ulti: true, vel: 110, ancho: 90, cada: 0.9, descargas: 4,
+  tormenta:      { nombre: 'Tormenta eléctrica', glifo: 'nubeRayo', cd: 45, ulti: true, vel: 110, ancho: 90, cada: 0.9, descargas: 4,
                    desc: (n) => `Lanzas una nube de tormenta que avanza en línea recta. Cada 0,9 s suelta una descarga (${n.descargas} en total): ${n.dano} de daño a los enemigos bajo la nube. No daña a tus aliados.`,
                    n1: { dano: 100, descargas: 4 }, n2: { dano: 130, descargas: 4 } },
   // ---- Takichi (Seba, 28-10)
@@ -1072,7 +1089,7 @@ Object.assign(HABILIDADES, {
   humo:          { nombre: 'Bomba de humo', glifo: 'humo', cd: 14.17, sinEnemigos: 250,
                    desc: (n) => `Solo sin enemigos a menos de 250: te vuelves invisible hasta ${n.dur} s. Los rivales no te ven ni te apuntan solos, pero los tiros y las áreas te pegan. Atacar o usar una habilidad te revela; recibir daño no.`,
                    n1: { dur: 6 }, n2: { dur: 7 } },
-  danza:         { nombre: 'Danza silenciosa', glifo: 'clones', cd: 0.5, ulti: true, lado: 180,
+  danza:         { nombre: 'Danza silenciosa', glifo: 'clones', cd: 50, ulti: true, lado: 180,
                    desc: (n) => `Marcas un cuadrado donde estás con 5 clones (uno en cada esquina y uno al centro) por ${n.dur} s. Al aparecer, los 4 de las esquinas canalizan 0,5 s y cruzan en diagonal con un Sablazo (150 a todos los que atraviesan) hasta la esquina opuesta. Cada clon golpea por ${Math.round(n.mult * 100)}% de tu daño a los enemigos pegados a él, a tu mismo ritmo de ataque (si estás potenciado, ellos también). Los enemigos dentro quedan lentos ${Math.round(n.lento * 100)}%. Prefieren héroes antes que invocaciones.`,
                    n1: { dur: 6, mult: 0.5, lento: 0.35 }, n2: { dur: 6, mult: 0.65, lento: 0.35 } },
   // ---- Aracnida (Seba, 28-10)
@@ -1082,12 +1099,22 @@ Object.assign(HABILIDADES, {
   tejer:         { nombre: 'Tejer', glifo: 'telarana', cd: 25, radio: 130,
                    desc: (n) => `Tejes una tela de araña donde estás (solo 1 a la vez) por ${n.dur} s. Encima de ella ganas +${Math.round(n.buff * 100)}% de recarga de ataque y de velocidad, y recibes ${Math.round(n.buff * 100)}% menos de daño. Los enemigos que la pisan quedan lentos ${Math.round(n.lento * 100)}%.`,
                    n1: { dur: 25, buff: 0.15, lento: 0.2 }, n2: { dur: 25, buff: 0.2, lento: 0.25 } },
-  mordida:       { nombre: 'Mordida venenosa', glifo: 'colmillos', cd: 0.5, ulti: true, alcance: 120,
+  mordida:       { nombre: 'Mordida venenosa', glifo: 'colmillos', cd: 35, ulti: true, alcance: 120,
                    desc: (n) => `Saltas sobre el héroe enemigo más cercano (a menos de 120) y lo muerdes: ${n.dano} de daño y veneno de ${n.dps} por segundo durante ${n.dur} s. Si no hay nadie cerca, no se gasta.`,
                    n1: { dano: 100, dps: 25, dur: 5 }, n2: { dano: 130, dps: 32.5, dur: 5 } },
-  granBombazo:   { nombre: 'Gran bombazo', glifo: 'bombazo', cd: 0.5, ulti: true, alcance: 420, radio: 108, aviso: 2,
+  // ---- Trelgon (Seba, 28-10; nombres de las habilidades 1 y 2 y números propuestos por Claude)
+  mazazos:       { nombre: 'Mazazos', glifo: 'mazazo', cd: 13, radio: 110,
+                   desc: (n) => `Durante ${n.pulsos} s golpeas el suelo con el mazo una vez por segundo. Cada golpe hace ${fmtN(n.dano)} de daño y aturde ${fmtN(n.aturde)} s a los enemigos a tu alrededor (la zona te sigue).`,
+                   n1: { dano: 15, aturde: 0.5, pulsos: 4, cada: 1 }, n2: { dano: 19.5, aturde: 0.5, pulsos: 4, cada: 1 } },
+  escudoMusgo:   { nombre: 'Escudo de musgo', glifo: 'escudoMusgo', cd: 15, radio: 200,
+                   desc: (n) => `Te cubres de musgo: un escudo que absorbe ${n.escudo} de daño por ${n.dur} s. Los aliados cerca de ti (a menos de 200) reciben un escudo de ${n.aliado}.`,
+                   n1: { escudo: 140, aliado: 53, dur: 10 }, n2: { escudo: 182, aliado: 68, dur: 10 } },   // Seba (28-10): -30% (antes 200 / 75)
+  sobrecrecimiento: { nombre: 'Sobrecrecimiento', glifo: 'brote', cd: 55, ulti: true, radio: 130,
+                   desc: (n) => `Creces durante ${n.dur} s: +${n.vida} de vida, +${Math.round(n.rango * 100)}% de alcance del mazo y +${Math.round(n.dano * 100)}% de daño de ataque, y tus golpes barren media vuelta (pegan a todos los que tengas al frente). El enemigo que pase más de ${n.raiz} s cerca de ti (a menos de 130) queda atrapado por raíces y aturdido ${n.aturde} s, y se puede repetir. Al terminar pierdes lo que quede de la vida extra.`,
+                   n1: { dur: 8, vida: 250, rango: 0.5, dano: 0.45, raiz: 2, aturde: 1 }, n2: { dur: 8, vida: 325, rango: 0.5, dano: 0.55, raiz: 2, aturde: 1 } },   // Seba (28-10): daño 35% → 45%
+  granBombazo:   { nombre: 'Gran bombazo', glifo: 'bombazo', cd: 45, ulti: true, alcance: 420, radio: 108, aviso: 2,
                    desc: (n) => `Marcas una zona circular; a los 2 s cae un bombazo: ${n.dano} de daño a todos los jugadores dentro, incluidos tus aliados y tú.`,
-                   n1: { dano: 191 }, n2: { dano: 285 } },
+                   n1: { dano: 350 }, n2: { dano: 455 } },   // Seba (28-10): 191 → 350
 });
 
 const PASIVAS = {
@@ -1098,6 +1125,7 @@ const PASIVAS = {
   nubeVoladora: { nombre: 'Sobre la nube', glifo: 'nube', desc: 'Flotas sobre tu nube: pasas por encima de los obstáculos (muros de hielo y muros de la cámara de The Cucko).' },
   pasoSigiloso: { nombre: 'Paso sigiloso', glifo: 'bota', desc: '+10% de velocidad de movimiento si no recibiste daño en los últimos 3 s.' },
   sentidoAracnido: { nombre: 'Sentido arácnido', glifo: 'ojoArana', desc: 'Los enemigos invisibles o escondidos que pisan tu tela quedan a la vista de todos.' },
+  furiaBosque:  { nombre: 'Furia del bosque', glifo: 'huellaTroll', desc: '+3% de velocidad de movimiento por cada héroe enemigo a menos de 250 (máximo +30%).' },
   sangreReal:   { nombre: 'Sangre real', glifo: 'corona', desc: 'Recuperas 25 de vida cada vez que usas una habilidad.' },
 };
 
@@ -1125,6 +1153,10 @@ const fmtN = (v) => Number.isInteger(v) ? String(v) : String(Math.round(v * 10) 
 // Status: efectos con nombre que se ven sobre el personaje y en tu panel (Seba 28-10:
 // las fortalezas y resistencias se manejan como status, no como stats fijos).
 const ESTADOS = [
+  { bit: 1073741824, nombre: 'En el aire', glifo: 'jetpack', bueno: true },
+  { bit: 134217728, nombre: 'Sobrecrecimiento', glifo: 'brote', bueno: true },
+  { bit: 67108864, nombre: 'Escudo', glifo: 'escudoMusgo', bueno: true },
+  { bit: 268435456, nombre: 'Echando raíces', glifo: 'brote', bueno: false },
   { bit: 1048576, nombre: 'Cucko', glifo: 'corona', bueno: true },
   { bit: 8388608, nombre: 'Invisible', glifo: 'humo', bueno: true },
   { bit: 33554432, nombre: 'En su tela', glifo: 'telarana', bueno: true },
@@ -1151,9 +1183,10 @@ const GUIAS = {
   esqueletos: { tipo: 'propio', r: 50 }, maldicion: { tipo: 'propio', r: 220 }, golem: { tipo: 'propio', r: 50 },
   pulso: { tipo: 'punto', alcance: 420, r: 70 }, muro: { tipo: 'muro', alcance: 70, largo: 108 }, dragon: { tipo: 'propio', r: 50 },
   circulo: { tipo: 'punto', alcance: 200, r: 108 },
-  bombaPegajosa: { tipo: 'punto', alcance: 420, r: 40 }, mina: { tipo: 'propio', r: 20 }, granBombazo: { tipo: 'punto', alcance: 420, r: 108 }, orbeVida: { tipo: 'linea', alcance: 360, ancho: 70 },
+  bombaPegajosa: { tipo: 'punto', alcance: 420, r: 40 }, jetpack: { tipo: 'linea', alcance: 320, ancho: 60 }, mina: { tipo: 'propio', r: 20 }, granBombazo: { tipo: 'punto', alcance: 420, r: 108 }, orbeVida: { tipo: 'linea', alcance: 360, ancho: 70 },
   trueno: { tipo: 'linea', alcance: 420, ancho: 20 }, sablazo: { tipo: 'linea', alcance: 220, ancho: 34 }, humo: { tipo: 'propio', r: 250 }, danza: { tipo: 'propio', r: 90 },
   atraparPresa: { tipo: 'linea', alcance: 400, ancho: 20 }, tejer: { tipo: 'propio', r: 130 }, mordida: { tipo: 'propio', r: 120 }, manosRayo: { tipo: 'propio', r: 30 }, tormenta: { tipo: 'linea', alcance: 400, ancho: 90 }, bendicion: { tipo: 'propio', r: 40 },
+  mazazos: { tipo: 'propio', r: 110 }, escudoMusgo: { tipo: 'propio', r: 200 }, sobrecrecimiento: { tipo: 'propio', r: 130 },
 };
 
 // ---------------------------------------------------------------------
@@ -1179,100 +1212,120 @@ for (const u of Object.values(UNIDADES)) if (u.vel) u.vel = Math.round(u.vel * R
 
 // ===== matchups.js =====
 // Generado por tools/matchups.js (2026-10-28): % de duelos 1v1 que gana la fila contra la columna.
-// Medido con bots (apuntado automático), 120 duelos por par.
+// Medido con bots (apuntado automático), 200 duelos por par.
 const MATCHUPS = {
  "beast": {
-  "lire": 3,
-  "nigromante": 87,
-  "maidas": 13,
+  "lire": 45,
+  "nigromante": 100,
+  "maidas": 31,
   "monh": 100,
-  "biteroi": 61,
+  "biteroi": 11,
   "rasho": 0,
-  "takichi": 88,
-  "aracnida": 21
+  "takichi": 99,
+  "aracnida": 97,
+  "trelgon": 100
  },
  "lire": {
-  "beast": 97,
-  "nigromante": 83,
-  "maidas": 72,
-  "monh": 86,
-  "biteroi": 88,
-  "rasho": 97,
-  "takichi": 64,
-  "aracnida": 89
+  "beast": 56,
+  "nigromante": 40,
+  "maidas": 53,
+  "monh": 24,
+  "biteroi": 81,
+  "rasho": 94,
+  "takichi": 20,
+  "aracnida": 89,
+  "trelgon": 49
  },
  "nigromante": {
-  "beast": 13,
-  "lire": 17,
-  "maidas": 59,
-  "monh": 100,
-  "biteroi": 58,
-  "rasho": 66,
-  "takichi": 1,
-  "aracnida": 80
+  "beast": 0,
+  "lire": 60,
+  "maidas": 52,
+  "monh": 75,
+  "biteroi": 61,
+  "rasho": 87,
+  "takichi": 0,
+  "aracnida": 100,
+  "trelgon": 1
  },
  "maidas": {
-  "beast": 88,
-  "lire": 28,
-  "nigromante": 41,
-  "monh": 93,
-  "biteroi": 37,
-  "rasho": 78,
-  "takichi": 47,
-  "aracnida": 66
+  "beast": 69,
+  "lire": 48,
+  "nigromante": 49,
+  "monh": 76,
+  "biteroi": 68,
+  "rasho": 96,
+  "takichi": 46,
+  "aracnida": 76,
+  "trelgon": 23
  },
  "monh": {
   "beast": 0,
-  "lire": 14,
-  "nigromante": 0,
-  "maidas": 7,
-  "biteroi": 31,
-  "rasho": 66,
+  "lire": 76,
+  "nigromante": 25,
+  "maidas": 24,
+  "biteroi": 59,
+  "rasho": 93,
   "takichi": 0,
-  "aracnida": 8
+  "aracnida": 54,
+  "trelgon": 0
  },
  "biteroi": {
-  "beast": 39,
-  "lire": 13,
-  "nigromante": 42,
-  "maidas": 63,
-  "monh": 69,
-  "rasho": 73,
-  "takichi": 0,
-  "aracnida": 68
+  "beast": 90,
+  "lire": 19,
+  "nigromante": 39,
+  "maidas": 32,
+  "monh": 41,
+  "rasho": 66,
+  "takichi": 27,
+  "aracnida": 89,
+  "trelgon": 99
  },
  "rasho": {
   "beast": 100,
-  "lire": 3,
-  "nigromante": 34,
-  "maidas": 23,
-  "monh": 34,
-  "biteroi": 27,
-  "takichi": 75,
-  "aracnida": 74
+  "lire": 7,
+  "nigromante": 13,
+  "maidas": 5,
+  "monh": 8,
+  "biteroi": 35,
+  "takichi": 81,
+  "aracnida": 92,
+  "trelgon": 100
  },
  "takichi": {
-  "beast": 13,
-  "lire": 36,
-  "nigromante": 99,
-  "maidas": 53,
+  "beast": 2,
+  "lire": 80,
+  "nigromante": 100,
+  "maidas": 55,
   "monh": 100,
-  "biteroi": 100,
-  "rasho": 25,
-  "aracnida": 2
+  "biteroi": 74,
+  "rasho": 19,
+  "aracnida": 4,
+  "trelgon": 84
  },
  "aracnida": {
-  "beast": 79,
-  "lire": 11,
-  "nigromante": 20,
-  "maidas": 34,
-  "monh": 93,
-  "biteroi": 32,
-  "rasho": 26,
-  "takichi": 98
+  "beast": 4,
+  "lire": 12,
+  "nigromante": 1,
+  "maidas": 24,
+  "monh": 47,
+  "biteroi": 11,
+  "rasho": 8,
+  "takichi": 97,
+  "trelgon": 91
+ },
+ "trelgon": {
+  "beast": 0,
+  "lire": 52,
+  "nigromante": 100,
+  "maidas": 77,
+  "monh": 100,
+  "biteroi": 1,
+  "rasho": 0,
+  "takichi": 16,
+  "aracnida": 9
  }
 };
-const MATCHUPS_INFO = { fecha: '2026-10-28', duelos: 120 };
+const MATCHUPS_INFO = { fecha: '2026-10-28', duelos: 200 };
 
 // ===== sprites.js =====
 // =====================================================================
@@ -1751,7 +1804,44 @@ Object.assign(CAPAS, {
   }),
 });
 
+// Trelgon (Seba 28-10): troll de musgo — piel verde, musgo en los hombros, colmillos de abajo, ojos ámbar, más ancho que los demás.
+Object.assign(CAPAS, {
+  cabezaTroll: L({
+    5: '........gggg........',
+    6: '.......gllllg.......',
+    7: '......glllllGg......',
+    8: '.....glllllllGg.....',
+    9: '.....gGgggGgggGg....',
+    10: '.....glGyGllyGlGg...',
+    11: '.....gllllllllGg....',
+    12: '......gGqGGGGqGg....',
+    13: '.......gGGGGGGg.....',
+  }),
+  cuerpoTroll: L({
+    13: '...ggg.gGGGGGg.ggg..',
+    14: '..gGlGgllllllgGlGg..',
+    15: '..gllGlXzllllGllGg..',
+    16: '.gllGGlllXzllGGllGg.',
+    17: '.gGG.gllllXzlGg.GGg.',
+    18: '.gGg.wwwXXXXXww.gGg.',
+    19: '.ggg..gxXXXXxGg.ggg.',
+    20: '......gGG..GGg......',
+    21: '.....gggg..gggg.....',
+  }),
+  cuerpoTrollPaso: L({
+    20: '.....gGG....GGg.....',
+    21: '....gggg....gggg....',
+  }),
+});
+
 Object.assign(APARIENCIA, {
+  trelgon: {
+    piel: { P: 'l', p: 'G', W: 'g', m: 'G', w: 'g' },
+    back: [],
+    cuerpo: [['cuerpoTroll'], ['cuerpoTroll']],
+    cabeza: [['cabezaTroll'], ['cabezaTroll']],
+    paso: 'cuerpoTrollPaso',
+  },
   aracnida: {
     back: [['patasArana'], ['patasArana']],
     cuerpo: [['corseArana'], ['corseArana']],
@@ -1883,6 +1973,11 @@ const ARMAS_SPR = {
     '......nvn...', '....nnvn....', 'PPnnvnn.....', '.......n....',
     '........nq..', '.........q..', '............', '............'] },
   // Dos sables que salen del mismo puño (Takichi)
+  // Trelgon: mazo de tronco con raíces y piedras incrustadas
+  mazo: { g: [1, 6], rows: [
+    '............', '........ww..', '.......wWmw.', '......wW3Ww.',
+    '.....wWmW4mw', '..wwwwWmWWmw', 'wWWWWWWW3Wmw', '..wwwwWmWWWw',
+    '......wW3mWw', '.......wWgw.', '........g...', '............'] },
   sable: { g: [1, 6], rows: [
     '............', '..........4.', '........43..', '......43....',
     '....43......', '..y43.......', 'PPwy44444444', '............',
@@ -2032,6 +2127,11 @@ Object.assign(OTROS, {
 const GLIFOS = {
   corazon: ['.........', '.ee...RR.', 'eqeR.RRRr', 'eeRRRRRRr', '.RRRRRRr.', '..RRRRr..', '...RRr...', '....r....', '.........'],
   espada: ['........4', '.......43', '......43.', '.....43..', '..O.43...', '...O3....', '..WOO....', '.W..O....', 'W........'],
+  jetpack: ['..2...2..', '.232.232.', '.232.232.', '.232.232.', '.222.222.', '..f...f..', '.fyf.fyf.', '..f...f..', '...f...f.'],
+  mazazo: ['...wW....', '...wmW...', '....WmW..', '....WWmW.', '.....W...', '.....W...', '3.2.W.2.3', '.3223223.', '2.......2'],
+  escudoMusgo: ['.GGGGGGG.', 'GlllGlllG', 'GlGGGGGlG', 'GlGgGgGlG', 'GlGGgGGlG', '.GlGGGlG.', '..GlGlG..', '...GlG...', '....G....'],
+  brote: ['....l....', '...lGl...', '..lGlGl..', '....G..l.', '.l..G.lG.', '.Gl.G.G..', '..GGGG...', '..wWWWw..', '.wWWWWWw.'],
+  huellaTroll: ['.G.G.G...', '.G.G.G...', '.........', '.GGGGG...', 'GGGGGGG..', 'GGGGGGG..', '.GGGGG...', '..GGG....', '.........'],
   bota: ['.........', '..WWW....', '..WmW....', '..WmW....', '..WmW....', '..WmWW...', '..WmmmWW.', '..wwwwww.', '.........'],
   rayo: ['....yy...', '...yy....', '..yy.....', '.yyyyy...', '...yy....', '..yy.....', '.yy......', '.y.......', '.........'],
   colmillo: ['.........', '.rrrrrrr.', '.rRRRRRr.', '.qq...qq.', '.qq...qq.', '..q...q..', '..q...q..', '.........', '.........'],
@@ -2183,9 +2283,11 @@ function personaje(look, frame = 0) {
   const m = matrizVacia(20, 22);
   const t = Math.min(look.ropa, 1);
   for (const capa of (ap.back[t] || [])) pintar(m, CAPAS[capa], map);
-  pintar(m, BASE, map);
-  if (frame === 1) pintar(m, PIERNAS_PASO, map);
+  const mapB = ap.piel ? { ...map, ...ap.piel } : map;   // Trelgon: piel verde
+  pintar(m, BASE, mapB);
+  if (frame === 1) pintar(m, PIERNAS_PASO, mapB);
   for (const capa of (ap.cuerpo[t] || [])) pintar(m, CAPAS[capa], map);
+  if (frame === 1 && ap.paso) pintar(m, CAPAS[ap.paso], map);
   for (const capa of (ap.cabeza[t] || [])) pintar(m, CAPAS[capa], map);
   if (look.arbol && ap.arbol && ap.arbol[look.arbol]) for (const capa of ap.arbol[look.arbol]) pintar(m, CAPAS[capa], map);
   if (look.botas) {
@@ -2265,7 +2367,7 @@ const FONDOS = {
   mago: ['n', 'v'], caballero: ['b', 'B'], arquero: ['g', 'G'], nigromante: ['k', '1'],
   fuego: ['r', 'R'], rayo: ['b', 'B'], barbaro: ['w', 'W'], real: ['o', 'O'],
   cazador: ['g', 'G'], trampero: ['w', 'm'], nigromaster: ['1', '2'], brujo: ['n', 'v'],
-  beast: ['w', 'W'], lire: ['g', 'G'], maidas: ['n', 'v'], monh: ['1', '2'], biteroi: ['r', 'R'], rasho: ['n', '2'], takichi: ['k', 'n'], aracnida: ['n', 'v'],
+  beast: ['w', 'W'], lire: ['g', 'G'], maidas: ['n', 'v'], monh: ['1', '2'], biteroi: ['r', 'R'], rasho: ['n', '2'], takichi: ['k', 'n'], aracnida: ['n', 'v'], trelgon: ['w', 'G'],
   estBueno: ['o', 'O'], estMalo: ['r', 'R'],
   bloqueado: ['1', '1'],
 };
@@ -2438,6 +2540,8 @@ const _debug = { CAPAS, GLIFOS, VARIANTES, BASE };
 const TAU = Math.PI * 2;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const r1 = (v) => Math.round(v * 10) / 10;
+
+const NEGATIVOS = new Set(['aturdido', 'slow', 'silence', 'arrastre', 'burn', 'dot', 'veneno', 'marcado', 'bombaPegada', 'vuln', 'enraizando']);
 
 function nuevaBuild() { return { heroe: null, niv: [1, 1, 1] }; }   // rework: todas las habilidades desde el inicio
 
@@ -2667,9 +2771,10 @@ class Game {
       }
       p.moveX = Math.cos(p.facing); p.moveY = Math.sin(p.facing);
       p.st = statsDe(p.build);
-      p.hp = p.st.vidaMax; p.cargas = CONFIG.CARGAS; p.ulti = 0;   // cargas llenas y ulti vacía al empezar la ronda
+      p.hp = p.st.vidaMax; p.cargas = CONFIG.CARGAS; p.ulti = 1;   // cargas llenas; ulti llena pero con 45 s de espera (ver abajo)
       p.alive = true;
-      p.cd = [0, 0, 0, 0, 0];
+      p.cd = [0, 0, 0, CONFIG.ULTI_INICIO || 0, 0];   // Seba (28-10): ulti en espera 45 s al empezar
+      p.ultiAvisada = false;
       p.fx = {};
       p.kbx = p.kby = 0;
       p.hidden = false; p.revelado = 0;
@@ -2679,6 +2784,7 @@ class Game {
       p.input = { mx: 0, my: 0, atk: false, s: p.input.s.slice(), d: p.input.d, da: null };
       p.seen = p.input.s.slice();
       p.seenD = p.input.d; p.disparo = null;
+      p.sincronizar = true;   // el primer input de la partida solo fija los contadores (no dispara ni lanza nada)
     });
     this.projectiles = []; this.units = [];
     this.deathOrder = [];
@@ -2706,6 +2812,8 @@ class Game {
     if (Number.isFinite(inp.q)) p.ack = inp.q;
     // Disparo del ataque básico (contador + ángulo; null = apuntado automático)
     if (Number.isFinite(inp.d)) { p.input.d = inp.d; p.input.da = Number.isFinite(inp.da) ? inp.da : null; p.input.dd = Number.isFinite(inp.dd) ? inp.dd : null; }
+    // Bug (Seba 28-10): los contadores del control vienen de la partida anterior; al empezar, se toman como punto de partida
+    if (p.sincronizar) { p.sincronizar = false; p.seen = p.input.s.slice(); p.seenD = p.input.d; }
     // Apuntado manual (mouse o arrastre): a = ataque básico; sa/sd = habilidades
     p.input.a = Number.isFinite(inp.a) ? inp.a : null;
     if (Array.isArray(inp.sa)) p.input.sa = inp.sa.map(v => Number.isFinite(v) ? v : null);
@@ -2768,6 +2876,7 @@ class Game {
     const esJugador = !target.esUnidad;
     if (esJugador && target.hidden && o.tipo !== 'puro') return 0;
     if (!esJugador && UNIDADES[target.kind].invulnerable) return 0;
+    if (esJugador && target.fx && target.fx.jetpack) return 0;   // Biteroi en el aire: nada lo daña (Seba)
     // Escudo frontal (escudero): bloquea lo que viene de frente
     if (target.escudo && o.tipo !== 'puro' && !o.silencioso) {
       const d = o.desde || src;
@@ -2788,6 +2897,21 @@ class Game {
     if (amt <= 0) return 0;
 
     const atacante = src ? (src.esUnidad ? this.players.get(src.owner) : src) : null;
+
+    // Escudo de musgo (Trelgon): absorbe el daño antes que la vida (la tormenta lo atraviesa)
+    let absorbido = 0;
+    if (esJugador && target.fx && target.fx.escudo && o.tipo !== 'puro') {
+      const e = target.fx.escudo;
+      absorbido = Math.min(e.v, amt);
+      e.v -= absorbido; amt -= absorbido;
+      if (e.v <= 0.01) { delete target.fx.escudo; this.emit({ k: 'escudoRoto', x: target.x | 0, y: target.y | 0 }); }
+      target.ultimoDano = this.combatTime;
+      if (absorbido > 0) {
+        if (!o.silencioso) this.emit({ k: 'hit', x: target.x | 0, y: target.y | 0, v: Math.round(absorbido), s: atacante ? atacante.id : null, t: target.id, esc: 1 });
+        if (atacante && atacante !== target && this.teamOf(atacante.id) !== this.teamOf(target.id)) this.cargarUlti(atacante, absorbido, src, o);
+      }
+      if (amt <= 0) return absorbido;
+    }
 
     if (!esJugador) {
       if (atacante && target.enemigo) this.sumarStat(atacante, 'dano', Math.min(amt, Math.max(0, target.hp)));
@@ -2859,6 +2983,7 @@ class Game {
 
   aplicarEfecto(t, key, val) {
     if (!t.fx) t.fx = {};
+    if (t.fx.jetpack && NEGATIVOS.has(key)) return;   // en el aire no le afecta nada
     // Un aturdimiento corta la canalización del Sablazo
     if (key === 'aturdido' && t.fx.canalSablazo) {
       const z = t.fx.canalSablazo.zona; if (z) { z.cancelado = true; z.t = 0; }
@@ -2869,6 +2994,7 @@ class Game {
   }
 
   kill(p, src) {
+    this.quitarSobre(p);
     if (this.modo === 'pve') { this.caer(p); return; }
     p.hp = 0; p.alive = false; p.hidden = false;
     p.muertes = (p.muertes || 0) + 1;
@@ -2920,6 +3046,16 @@ class Game {
 
   // ================================================================ ataques básicos (daño físico)
   // Ritmo de recarga de las cargas (Fuga y Bendición lo aceleran)
+  // Trelgon: al terminar el Sobrecrecimiento (o al morir) pierde lo que quede de la vida extra
+  quitarSobre(p) {
+    if (p.sobreVida) {
+      p.st = { ...p.st, vidaMax: p.st.vidaMax - p.sobreVida };
+      p.hp = Math.min(p.hp, p.st.vidaMax);
+      p.sobreVida = 0;
+    }
+    if (p.fx) delete p.fx.sobre;
+  }
+
   ritmoRecarga(p) { return (p.fx.fuga ? 1 + p.fx.fuga.pct : 1) * (p.fx.bendecido ? 1.1 : 1) * (p.fx.manosRayo ? 1 + p.fx.manosRayo.n.ritmo : 1) * (p.fx.enTela ? 1 + p.fx.enTela.buff : 1); }
 
   // Carga de la ulti: daño hecho (y en Monh también curación a aliados). Lo que hace la propia ulti no la carga.
@@ -2928,10 +3064,9 @@ class Game {
     if (o.ulti || (src && src.deUlti)) return;
     const antes = p.ulti;
     p.ulti = Math.min(1, p.ulti + cant / p.st.ultiCarga);
-    if (antes < 1 && p.ulti >= 1) this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ULTI LISTA', id: p.id });
   }
   velocidadDe(p) {
-    if (p.fx.aturdido || p.fx.canalSablazo) return 0;
+    if (p.fx.aturdido || p.fx.canalSablazo || p.fx.jetpack) return 0;
     if (p.build && HEROES[p.build.heroe]?.pasiva === 'pasoSigiloso' && this.combatTime - (p.ultimoDano ?? -99) >= 3) return this.velocidadBase(p) * 1.1;   // Takichi
     return this.velocidadBase(p);
   }
@@ -2940,6 +3075,11 @@ class Game {
     if (p.fx.enTela) v *= 1 + p.fx.enTela.buff;   // Aracnida sobre su tela
     if (p.fx.fuga) v *= 1 + p.fx.fuga.pct;
     if (p.fx.mayhem) v *= 1.3;
+    if (p.build && HEROES[p.build.heroe]?.pasiva === 'furiaBosque') {   // Trelgon: +3% por héroe enemigo cerca (máx. 30%)
+      let n = 0;
+      for (const q of this.players.values()) if (q.alive && q !== p && this.teamOf(q.id) !== this.teamOf(p.id) && dist(q, p) < 250) n++;
+      v *= 1 + Math.min(0.3, 0.03 * n);
+    }
     if (p.fx.slow) v *= p.fx.slow.mult;
     return v;
   }
@@ -2957,9 +3097,11 @@ class Game {
     if (Number.isFinite(ang)) this._apunte = { a: ang, d: dd };
     else if (Number.isFinite(p.input.a)) this._apunte = { a: p.input.a };
     if (at.tipo === 'melee') {
-      const { a } = this.aim(p, at.rango + 150);
+      const so = p.fx.sobre;   // Trelgon gigante: más alcance y más daño
+      const rango = so ? at.rango * (1 + so.n.rango) : at.rango;
+      const { a } = this.aim(p, rango + 150);
       p.facing = a;
-      this.meleeArc(p, a, at.rango, at.arco, p.st.dano);
+      this.meleeArc(p, a, rango, so ? 180 : at.arco, p.st.dano * (so ? 1 + so.n.dano : 1));   // Seba (28-10): gigante barre media vuelta
     } else if (at.tipo === 'parabola') {
       // Biteroi: bomba que cae en el punto apuntado (pasa por encima de todo) y explota en área chica
       let a, largo;
@@ -3007,7 +3149,7 @@ class Game {
 
   meleeArc(p, a, rango, arcoDeg, dmg) {
     const half = (arcoDeg * Math.PI / 180) / 2;
-    this.emit({ k: 'slash', id: p.id, x: p.x | 0, y: p.y | 0, a: +a.toFixed(2), r: rango, w: +(half * 2).toFixed(2), c: p.colorIdx, h: p.build.heroe });
+    this.emit({ k: 'slash', id: p.id, x: p.x | 0, y: p.y | 0, a: +a.toFixed(2), r: rango, w: +(half * 2).toFixed(2), c: p.colorIdx, h: p.build.heroe, gr: p.fx.sobre ? 1 : 0 });
     for (const q of this.enemigos(p.id)) {
       const pt = puntoDe(q, p);
       const d = dist(pt, p);
@@ -3179,7 +3321,8 @@ class Game {
       this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ENEMIGOS CERCA', id: p.id });
       return;
     }
-    if (p.fx.mayhem) return;   // Seba (28-10): rodando no lanza nada
+    if (p.fx.mayhem || p.fx.jetpack) return;   // Seba (28-10): rodando (o volando) no lanza nada
+    if (key === 'escudoMusgo' && p.fx.sobre) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'NO MIENTRAS CRECE', id: p.id }); return; }   // Seba (28-10)
     if (h.ulti && p.ulti < 1) return;   // la ulti necesita la carga completa
     const n = numerosHab(key, p.build.niv[slot]);
     p.cd[slot + 1] = h.cd;
@@ -3213,6 +3356,30 @@ class Game {
         this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'TORMENTA' });
         break;
       }
+      // ---------------------------------------------------------- Trelgon
+      case 'mazazos':
+        this.aplicarEfecto(p, 'mazazos', { t: n.pulsos * n.cada + 0.05, prox: 0, restan: n.pulsos, n });
+        break;
+      case 'escudoMusgo': {
+        this.aplicarEfecto(p, 'escudo', { t: n.dur, v: n.escudo, max: n.escudo, de: p.id });
+        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: h.radio, c: 'musgo' });
+        for (const q of this.players.values()) {
+          if (q === p || !q.alive || this.teamOf(q.id) !== this.teamOf(p.id) || dist(q, p) > h.radio) continue;
+          if (!(q.fx.escudo && q.fx.escudo.v > n.aliado)) this.aplicarEfecto(q, 'escudo', { t: n.dur, v: n.aliado, max: n.aliado, de: p.id });
+          this.emit({ k: 'bolt', x1: p.x | 0, y1: p.y | 0, x2: q.x | 0, y2: q.y | 0, c: 'bosque' });
+        }
+        break;
+      }
+      case 'sobrecrecimiento':
+        this.quitarSobre(p);
+        p.sobreVida = n.vida;
+        p.st = { ...p.st, vidaMax: p.st.vidaMax + n.vida };
+        p.hp += n.vida;
+        this.aplicarEfecto(p, 'sobre', { t: n.dur, n, raiz: {} });
+        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: h.radio, c: 'musgo' });
+        this.emit({ k: 'boom', x: p.x | 0, y: p.y | 0, r: 60, c: 'piedra' });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'SOBRECRECIMIENTO' });
+        break;
       // ---------------------------------------------------------- Aracnida
       case 'atraparPresa': {
         const { a } = this.aim(p, h.alcance + 30);
@@ -3401,6 +3568,22 @@ class Game {
         break;
       }
       // ---------------------------------------------------------- Biteroi
+      case 'jetpack': {
+        let a;
+        if (this._apunte) a = this._apunte.a;
+        else {   // sin apuntar: se aleja del enemigo más cercano
+          const q = this.nearestEnemy(p, 400);
+          a = q ? Math.atan2(p.y - q.y, p.x - q.x) : p.facing;
+        }
+        p.facing = a;
+        const fin = { x: p.x + Math.cos(a) * n.largo, y: p.y + Math.sin(a) * n.largo };
+        this.clampWall(fin);
+        p.disparo = null;
+        this.aplicarEfecto(p, 'jetpack', { t: n.dur, n, x0: p.x, y0: p.y, x1: fin.x, y1: fin.y, soltadas: 0, cast: { golpes: {} } });
+        this.emit({ k: 'humo', x: p.x | 0, y: p.y | 0, chico: true });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'JETPACK' });
+        break;
+      }
       case 'bombaPegajosa': {
         // Seba (27-10): tiro en parábola, como el ataque básico
         let a, largo;
@@ -3480,6 +3663,7 @@ class Game {
     const fx = e.fx;
     for (const k of Object.keys(fx)) {
       const f = fx[k];
+      if (!f) continue;   // se borró en esta misma vuelta (ej. murió y perdió el Sobrecrecimiento)
       f.t -= dt;
       if ((k === 'burn' || k === 'dot' || k === 'veneno') && e.alive) this.damage(e, f.dps * dt, this.players.get(f.src), { tipo: 'mag', silencioso: true, ulti: k === 'veneno' });
       // Atrapar presa: arrastre hasta los pies de Aracnida
@@ -3490,6 +3674,7 @@ class Game {
       }
       if (f.t <= 0) {
         delete fx[k];
+        if (k === 'sobre') { this.quitarSobre(e); this.emit({ k: 'poof', x: e.x | 0, y: e.y | 0, c: 'vida' }); }
         if (k === 'bombaPegada' && e.alive) {
           this.emit({ k: 'boom', x: e.x | 0, y: e.y | 0, r: 40 });
           this.damage(e, f.dano, this.players.get(f.src), { tipo: 'mag' });
@@ -3727,6 +3912,10 @@ class Game {
     for (const p of alive) {
       if (p.bot) botThink(this, p, dt);
       for (let i = 0; i < 5; i++) p.cd[i] = Math.max(0, p.cd[i] - dt);
+      // Ulti lista = carga llena Y recarga terminada (Seba 28-10)
+      const ultiLista = p.ulti >= 1 && p.cd[3] <= 0;
+      if (ultiLista && !p.ultiAvisada) this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ULTI LISTA', id: p.id });
+      p.ultiAvisada = ultiLista;
       this.tickEfectos(p, dt);
       if (!p.alive) continue;
       const heroe = HEROES[p.build.heroe];
@@ -3749,7 +3938,30 @@ class Game {
       const decay = Math.exp(-7 * dt);
       p.kbx *= decay; p.kby *= decay;
       this.clampWall(p);
-      const vuela = HEROES[p.build.heroe]?.pasiva === 'nubeVoladora';   // Rasho flota sobre los obstáculos
+      // Biteroi en el jetpack: sigue la trayectoria y suelta las bombas
+      if (p.fx.jetpack) {
+        const f = p.fx.jetpack, n = f.n;
+        const prog = Math.min(1, 1 - Math.max(0, f.t) / n.dur);
+        const e = prog < 0.5 ? 2 * prog * prog : 1 - Math.pow(-2 * prog + 2, 2) / 2;   // sale suave y aterriza suave
+        p.x = f.x0 + (f.x1 - f.x0) * e; p.y = f.y0 + (f.y1 - f.y0) * e;
+        p.kbx = p.kby = 0;
+        while (f.soltadas < n.bombas && prog >= (f.soltadas + 0.5) / n.bombas) {
+          f.soltadas++;
+          const i = f.soltadas, bx = p.x, by = p.y, cast = f.cast;
+          const espera = Math.max(0.15, n.cada * i - (n.dur - f.t));
+          this.zones.push({ id: this.nextId++, kind: 'bombaJet', x: bx, y: by, r: n.radio, t: espera, total: espera, fin: () => {
+            this.emit({ k: 'boom', x: bx | 0, y: by | 0, r: n.radio });
+            for (const q of this.enemigos(p.id)) {
+              if (distA(q, { x: bx, y: by }) > n.radio + (q.esUnidad ? 10 : R)) continue;
+              const veces = cast.golpes[q.id] || 0;
+              this.damage(q, n.dano + n.extra * veces, p, { tipo: 'mag', desde: { x: bx, y: by } });
+              if (!q.esUnidad) cast.golpes[q.id] = veces + 1;
+              this.knock(q, bx, by, 60);
+            }
+          } });
+        }
+      }
+      const vuela = HEROES[p.build.heroe]?.pasiva === 'nubeVoladora' || !!p.fx.jetpack;   // Rasho flota; Biteroi vuela con el jetpack
       if (!vuela) this.chocarMuros(p, p.id);
       if (this.modo === 'equipos' && !vuela) this.chocarCamara(p);
       const avance = Math.hypot(p.x - x0, p.y - y0);
@@ -3781,6 +3993,38 @@ class Game {
         }
       }
 
+      // Trelgon: Mazazos (un golpe al suelo por segundo, la zona lo sigue)
+      if (p.fx.mazazos) {
+        const f = p.fx.mazazos, H = HABILIDADES.mazazos;
+        f.prox -= dt;
+        if (f.prox <= 0 && f.restan > 0) {
+          f.prox += f.n.cada; f.restan--;
+          this.emit({ k: 'mazazo', x: p.x | 0, y: p.y | 0, r: H.radio });
+          for (const e of this.enemigos(p.id, false)) {
+            if (e.kind === 'cucko' || dist(e, p) > H.radio + (e.esUnidad ? 10 : R)) continue;
+            this.damage(e, f.n.dano, p, { tipo: 'mag' });
+            if (e.alive && !(e.esUnidad && UNIDADES[e.kind]?.invulnerable)) this.aplicarEfecto(e, 'aturdido', { t: f.n.aturde });
+          }
+        }
+      }
+      // Trelgon: Sobrecrecimiento (raíces a quien se queda cerca más de 2 s)
+      if (p.fx.sobre) {
+        const f = p.fx.sobre, H = HABILIDADES.sobrecrecimiento;
+        for (const q of this.players.values()) {
+          if (q === p || !q.alive || this.teamOf(q.id) === this.teamOf(p.id)) continue;
+          if (dist(q, p) > H.radio + R) { f.raiz[q.id] = 0; continue; }
+          if (q.fx.aturdido) continue;   // cuenta de nuevo cuando se suelta
+          f.raiz[q.id] = (f.raiz[q.id] || 0) + dt;
+          if (f.raiz[q.id] >= f.n.raiz) {
+            f.raiz[q.id] = 0;
+            this.aplicarEfecto(q, 'aturdido', { t: f.n.aturde });
+            this.emit({ k: 'raiz', x: q.x | 0, y: q.y | 0 });
+          } else if (f.raiz[q.id] >= f.n.raiz * 0.4) {
+            this.aplicarEfecto(q, 'enraizando', { t: 0.12 });
+          }
+        }
+      }
+
       // Camuflaje (todos): bajo un árbol eres invisible, salvo que ataques o un enemigo esté bajo el mismo árbol
       p.revelado = Math.max(0, (p.revelado || 0) - dt);
       let oculto = this.bajoArbol(p) && p.revelado <= 0;
@@ -3789,12 +4033,12 @@ class Game {
       p.hidden = oculto;
 
       // Acciones
-      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !p.fx.canalSablazo) this.basicAttack(p);   // bots
+      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !p.fx.canalSablazo && !p.fx.jetpack) this.basicAttack(p);   // bots
       // Jugadores: un disparo por toque o clic; si llega durante la cadencia, se guarda un instante
       if (p.input.d !== undefined && p.input.d !== p.seenD) { p.seenD = p.input.d; p.disparo = { a: p.input.da, d: p.input.dd, t: 0.4 }; }
       if (p.disparo) {
         p.disparo.t -= dt;
-        if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido || p.fx.canalSablazo) p.disparo = null;
+        if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido || p.fx.canalSablazo || p.fx.jetpack) p.disparo = null;
         else if (p.cd[0] <= 0 && p.cargas >= 1) { this.basicAttack(p, p.disparo.a, p.disparo.d); p.disparo = null; }
         else if (p.cargas < 1 && p.cd[0] <= 0) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'SIN CARGAS', id: p.id }); p.disparo = null; }
       }
@@ -4107,9 +4351,10 @@ class Game {
       const flags = (p.alive ? 1 : 0) | (p.hidden ? 8 : 0)
         | (fx.burn || fx.dot ? 16 : 0) | (fx.slow ? 32 : 0) | (fx.silence ? 64 : 0) | (fx.aturdido ? 2048 : 0)
         | (fx.vuln ? 256 : 0) | (fx.mayhem ? 4096 : 0) | (fx.terremoto ? 8192 : 0) | (fx.fuga ? 16384 : 0)
-        | (p.caido ? 32768 : 0) | (fx.marcado ? 65536 : 0) | 0 | (fx.bendecido ? 262144 : 0) | (fx.bombaPegada ? 524288 : 0) | (fx.cucko ? 1048576 : 0) | (fx.manosRayo ? 2097152 : 0) | (fx.canalSablazo ? 4194304 : 0) | (fx.invisible && !fx.expuesto ? 8388608 : 0) | (fx.veneno ? 16777216 : 0) | (fx.enTela ? 33554432 : 0);
+        | (p.caido ? 32768 : 0) | (fx.marcado ? 65536 : 0) | 0 | (fx.bendecido ? 262144 : 0) | (fx.bombaPegada ? 524288 : 0) | (fx.cucko ? 1048576 : 0) | (fx.manosRayo ? 2097152 : 0) | (fx.canalSablazo ? 4194304 : 0) | (fx.invisible && !fx.expuesto ? 8388608 : 0) | (fx.veneno ? 16777216 : 0) | (fx.enTela ? 33554432 : 0)
+        | (fx.escudo ? 67108864 : 0) | (fx.sobre ? 134217728 : 0) | (fx.enraizando ? 268435456 : 0) | (fx.mazazos ? 536870912 : 0) | (fx.jetpack ? 1073741824 : 0);
       ps.push([p.id, Math.round(p.x), Math.round(p.y), r1(p.hp), p.st.vidaMax, +p.facing.toFixed(2), flags,
-        +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3)]);
+        +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3), fx.escudo ? Math.ceil(fx.escudo.v) : 0]);
     }
     return {
       t: 's', ph: this.phase, tm: +Math.max(0, this.timer).toFixed(1), ar: Math.round(this.arenaR),
@@ -4291,6 +4536,9 @@ function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
       case 'sablazo': si = d < 210 && d > 40; break;
       case 'atraparPresa': si = d < 430 && d > 90; break;
       case 'tejer': si = d < 320; break;
+      case 'mazazos': si = d < 105; break;
+      case 'escudoMusgo': si = !p.fx.sobre && (d < 300 || vida < 0.7); break;
+      case 'sobrecrecimiento': si = d < 200; break;
       case 'mordida': si = d < 130; break;
       case 'humo': si = d > 260; break;
       case 'danza': si = d < 70; break;
@@ -4315,6 +4563,7 @@ function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
       }
       case 'orbeVida': si = d < 450; break;
       case 'bombaPegajosa': si = d < 400; break;
+      case 'jetpack': si = d < 150 || (vida < 0.4 && d < 300); break;
       case 'mina': si = d < 260 || (game.objetivos && game.objetivos.some(o => o.lado === game.teamOf(p.id) && Math.hypot(o.x - p.x, o.y - p.y) < 80)); break;
       case 'granBombazo': si = d > 150 && d < 480; break;
       case 'bendicion': si = [...game.players.values()].some(q => q.alive && game.teamOf(q.id) === game.teamOf(p.id) && q.hp / q.st.vidaMax < 0.4); break;
@@ -4578,6 +4827,7 @@ Object.assign(Game.prototype, {
 
   caer(p) {
     if (p.caido || !p.alive) return;
+    this.quitarSobre(p);
     p.hp = 0; p.alive = false; p.caido = true; p.revive = 0; p.hidden = false; p.fx = {};
     this.emit({ k: 'death', x: p.x | 0, y: p.y | 0, c: p.colorIdx });
     this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'CAÍDO' });
@@ -5068,6 +5318,358 @@ class ClientSession {
   }
 }
 
+// ===== audio.js =====
+// =====================================================================
+//  SONIDO — efectos simples generados con Web Audio (sin archivos).
+//  Estilo chiptune, para que calce con el pixel art. Los sonidos del
+//  mundo se oyen más bajo cuanto más lejos de la cámara, y a la izquierda
+//  o derecha según dónde pasan. Se apaga y prende con el botón del menú
+//  (o la tecla M en PC). Rama "sonido", 28-10 (Claude).
+// =====================================================================
+
+class Sonido {
+  constructor() {
+    this.ctx = null;
+    this.on = true;
+    try { this.on = localStorage.getItem('lola-sonido') !== '0'; } catch (e) { /* sin storage */ }
+    this.vol = 0.55;
+    this.ultimo = new Map();      // clave -> ms del último sonido (para no saturar)
+    this.lx = 0; this.ly = 0;     // oyente (cámara)
+    this.myId = null;
+    this.nombre = '';
+    this.vistosP = new Set(); this.vistosZ = new Set();
+    this.prevHp = null; this.latido = 0; this.prevVivo = null;
+  }
+
+  // El navegador solo deja sonar después de un toque o tecla del jugador.
+  desbloquear() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!this.ctx) {
+      this.ctx = new AC();
+      this.comp = this.ctx.createDynamicsCompressor();
+      this.comp.threshold.value = -14; this.comp.ratio.value = 6;
+      this.master = this.ctx.createGain();
+      this.master.gain.value = this.on ? this.vol : 0;
+      this.master.connect(this.comp); this.comp.connect(this.ctx.destination);
+      const n = this.ctx.sampleRate;
+      this.ruidoBuf = this.ctx.createBuffer(1, n, n);
+      const d = this.ruidoBuf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+  }
+
+  setOn(v) {
+    this.on = v;
+    try { localStorage.setItem('lola-sonido', v ? '1' : '0'); } catch (e) { /* sin storage */ }
+    if (this.master) this.master.gain.setTargetAtTime(v ? this.vol : 0, this.ctx.currentTime, 0.02);
+  }
+
+  listo() { return this.on && this.ctx && this.ctx.state === 'running'; }
+
+  // ---------------------------------------------------------- piezas básicas
+  _salida(vol, pan, t0, dur) {
+    const g = this.ctx.createGain();
+    g.gain.value = 0;
+    let nodo = g;
+    if (pan && this.ctx.createStereoPanner) {
+      const p = this.ctx.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan));
+      g.connect(p); nodo = p;
+    }
+    nodo.connect(this.master);
+    return g;
+  }
+
+  _env(g, t0, vol, at, dur) {
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + at);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  }
+
+  tono({ f = 440, f2 = null, dur = 0.1, tipo = 'square', vol = 0.2, at = 0.004, pan = 0, d = 0 }) {
+    const c = this.ctx, t0 = c.currentTime + d;
+    const o = c.createOscillator(); o.type = tipo;
+    o.frequency.setValueAtTime(f, t0);
+    if (f2) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t0 + dur);
+    const g = this._salida(vol, pan, t0, dur);
+    this._env(g, t0, vol, at, dur);
+    o.connect(g); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+
+  ruido({ dur = 0.1, vol = 0.2, filtro = 'bandpass', f = 1200, f2 = null, q = 1, at = 0.003, pan = 0, d = 0 }) {
+    const c = this.ctx, t0 = c.currentTime + d;
+    const s = c.createBufferSource(); s.buffer = this.ruidoBuf;
+    s.playbackRate.value = 0.8 + Math.random() * 0.4;
+    const fl = c.createBiquadFilter(); fl.type = filtro; fl.Q.value = q;
+    fl.frequency.setValueAtTime(f, t0);
+    if (f2) fl.frequency.exponentialRampToValueAtTime(Math.max(30, f2), t0 + dur);
+    const g = this._salida(vol, pan, t0, dur);
+    this._env(g, t0, vol, at, dur);
+    s.connect(fl); fl.connect(g);
+    s.start(t0, Math.random() * 0.5); s.stop(t0 + dur + 0.02);
+  }
+
+  notas(lista, { tipo = 'square', vol = 0.12, paso = 0.07, dur = 0.09, pan = 0 } = {}) {
+    lista.forEach((f, i) => this.tono({ f, dur, tipo, vol, pan, d: i * paso }));
+  }
+
+  // ---------------------------------------------------------- reproducir
+  // o: { x, y } para sonidos del mundo; sin x, suena al centro y fuerte.
+  play(nombre, o = {}) {
+    if (!this.listo()) return;
+    const rec = RECETAS[nombre];
+    if (!rec) return;
+    const ahora = performance.now();
+    const clave = nombre + (o.clave || '');
+    const min = rec.min !== undefined ? rec.min : 40;
+    if (ahora - (this.ultimo.get(clave) || 0) < min) return;
+    let vol = 1, pan = 0;
+    if (o.x !== undefined) {
+      const dx = o.x - this.lx, dy = o.y - this.ly, dist = Math.hypot(dx, dy);
+      vol = dist < 260 ? 1 : Math.max(0, 1 - (dist - 260) / 640);
+      if (vol < 0.06) return;
+      pan = Math.max(-1, Math.min(1, dx / 520)) * 0.7;
+    }
+    this.ultimo.set(clave, ahora);
+    try { rec.fn(this, { v: vol * (o.vol || 1), pan, ...o }); } catch (e) { /* nunca romper el juego por un sonido */ }
+  }
+
+  // ---------------------------------------------------------- eventos de la simulación
+  evento(ev) {
+    if (!this.listo()) return;
+    const yo = this.myId;
+    const pos = { x: ev.x, y: ev.y };
+    switch (ev.k) {
+      case 'slash': {
+        const h = ev.h;
+        this.play(h === 'beast' ? 'zarpazo' : h === 'takichi' ? 'tajoX' : h === 'aracnida' ? 'patas' : h === 'trelgon' ? 'mazo' : 'golpe', { ...pos, vol: ev.id === yo ? 1 : 0.8 });
+        break;
+      }
+      case 'hit':
+        if (ev.esc) { this.play('escudoGolpe', pos); break; }
+        if (ev.t && ev.t === yo) this.play('dolor');
+        else if (ev.s && ev.s === yo) this.play('acierto', pos);
+        else this.play('impacto', pos);
+        break;
+      case 'cura': if (ev.id === yo && ev.v >= 15) this.play('cura'); break;   // la regeneración chica no suena
+      case 'heal': this.play('sanar', pos); break;
+      case 'boom': {
+        const r = ev.r || 40, gr = Math.min(1.3, 0.6 + r / 120);
+        const c = ev.c;
+        this.play(c === 'piedra' ? 'golpeTierra' : c === 'rayo' ? 'chasquido' : c === 'verde' ? 'blop' : c === 'oro' ? 'boomOro' : 'explosion', { ...pos, vol: gr, clave: c || 'f' });
+        break;
+      }
+      case 'ring': {
+        const m = { musgo: 'escudo', vida: 'campanita', magia: 'brillo', rayo: 'zap', oro: 'poder', seda: 'hilo', fuego: 'fuego', acero: 'captura', grito: 'captura' };
+        this.play(m[ev.c] || 'brillo', { ...pos, clave: ev.c });
+        break;
+      }
+      case 'bolt': this.play(ev.c === 'rayo' || !ev.c ? 'rayo' : 'zap', { x: ev.x2, y: ev.y2 }); break;
+      case 'tajo': this.play('sablazo', { x: ev.x1, y: ev.y1 }); break;
+      case 'humo': this.play('humo', { ...pos, vol: ev.chico ? 0.5 : 1 }); break;
+      case 'seda': this.play('hilo', { x: ev.x1, y: ev.y1 }); break;
+      case 'mordida': this.play('mordida', pos); break;
+      case 'poof': this.play(ev.c === 'hielo' ? 'hielo' : 'puf', { ...pos, clave: ev.c || '' }); break;
+      case 'death': this.play('muerte', pos); break;
+      case 'block': this.play('bloqueo', pos); break;
+      // Trelgon (rama trelgon, 28-10)
+      case 'mazazo': this.play('golpeTierra', { ...pos, vol: 1.3 }); break;
+      case 'raiz': this.play('raices', pos); break;
+      case 'escudoRoto': this.play('escudoRoto', pos); break;
+      case 'txt': this.texto(ev); break;
+    }
+  }
+
+  texto(ev) {
+    const s = ev.s || '', pos = { x: ev.x, y: ev.y };
+    if (ev.id && ev.id !== this.myId) return;
+    if (s === 'ULTI LISTA') return this.play('ultiLista');
+    if (s === 'SIN CARGAS' || s === 'SIN PRESA CERCA' || s === 'ENEMIGOS CERCA' || s === 'NO MIENTRAS CRECE') return this.play('error');
+    if (s === 'ATURDIDO') return this.play('aturdido', pos);
+    if (s === 'LENTO') return this.play('lento', pos);
+    if (s === 'SILENCIO') return this.play('silencio', pos);
+    if (s === '¡MINA!') return this.play('mina', pos);
+    if (s === '¡BOMBA PEGADA!') return this.play('pegada', pos);
+    if (s === '¡ATRAPADO!') return this.play('atrapado', pos);
+    if (s === 'ENVENENADO') return this.play('veneno', pos);
+    if (s === 'CORTADO') return this.play('error', pos);
+    if (s === 'MARCADO') return this.play('marca', pos);
+    if (s === 'SOBRECRECIMIENTO') return this.play('crecer', pos);
+    if (s === 'JETPACK') return this.play('jet', pos);
+    if (s === 'MAYHEM' || s === 'TORMENTA' || s === 'DANZA SILENCIOSA' || s === 'MANOS DE RAYO') return this.play('ulti', pos);
+    this.play('blip', pos);
+  }
+
+  anuncio(s, tipo) {
+    if (!this.listo()) return;
+    const txt = String(s || '');
+    if (/CUCKO/i.test(txt)) return this.play('cucko');
+    if (tipo === 'kill') return this.play(this.nombre && txt.startsWith(this.nombre) ? 'miKill' : 'kill');
+    this.play('fanfarria');
+  }
+
+  // ---------------------------------------------------------- lo que se ve en pantalla
+  // Proyectiles y zonas nuevas, vida baja, morir y reaparecer.
+  vista(view, myId) {
+    this.myId = myId;
+    if (!view || !this.ctx) return;
+    const nuevosP = new Set();
+    for (const p of view.projs) {
+      const id = p.id !== undefined ? p.id : null;
+      if (id === null) continue;
+      nuevosP.add(id);
+      if (!this.vistosP.has(id)) this.play('d_' + (p.spr || 'x'), { x: p.x, y: p.y, vol: p.owner === myId ? 1 : 0.75, clave: p.spr });
+    }
+    this.vistosP = nuevosP;
+    const nuevosZ = new Set();
+    for (const z of view.zones) {
+      if (z.id === undefined) continue;
+      nuevosZ.add(z.id);
+      if (!this.vistosZ.has(z.id) && this.iniciado) this.play('z_' + z.kind, { x: z.x, y: z.y, clave: z.kind });
+    }
+    this.vistosZ = nuevosZ;
+    this.iniciado = true;
+    const me = view.players.find(p => p.id === myId);
+    if (me) {
+      const vivo = !!(me.flags & 1);
+      if (this.prevVivo === false && vivo) this.play('reaparecer');
+      this.prevVivo = vivo;
+      const ahora = performance.now();
+      if (vivo && me.mh && me.hp / me.mh < 0.25 && ahora - this.latido > 850) { this.latido = ahora; this.play('latido'); }
+    }
+  }
+
+  reiniciar() { this.vistosP = new Set(); this.vistosZ = new Set(); this.iniciado = false; this.prevVivo = null; }
+}
+
+// ---------------------------------------------------------- recetas
+// Cada receta recibe (s, o): s = Sonido, o.v = volumen 0..1, o.pan = izquierda/derecha.
+const RECETAS = {
+  // Interfaz
+  ui:        { min: 30, fn: (s, o) => s.tono({ f: 880, dur: 0.045, vol: 0.08 * o.v }) },
+  uiOk:      { fn: (s, o) => s.notas([660, 990], { vol: 0.09 * o.v, paso: 0.06, dur: 0.07 }) },
+  cuenta:    { fn: (s, o) => s.tono({ f: 520, dur: 0.12, vol: 0.13 * o.v }) },
+  pelear:    { fn: (s, o) => { s.notas([523, 659, 784], { vol: 0.12, paso: 0.06 }); s.tono({ f: 1047, dur: 0.3, vol: 0.12, d: 0.18 }); } },
+  victoria:  { fn: (s) => { s.notas([523, 659, 784, 1047], { vol: 0.13, paso: 0.11, dur: 0.14 }); s.notas([784, 1047], { vol: 0.1, paso: 0.0, dur: 0.5, tipo: 'triangle' }); } },
+  derrota:   { fn: (s) => s.notas([392, 330, 262, 196], { vol: 0.12, paso: 0.16, dur: 0.2, tipo: 'triangle' }) },
+  error:     { min: 150, fn: (s, o) => { s.tono({ f: 140, dur: 0.12, vol: 0.12 * o.v, pan: o.pan }); s.tono({ f: 110, dur: 0.1, vol: 0.1 * o.v, pan: o.pan, d: 0.08 }); } },
+  blip:      { min: 80, fn: (s, o) => s.tono({ f: 760, f2: 980, dur: 0.06, vol: 0.06 * o.v, pan: o.pan }) },
+
+  // Golpes cuerpo a cuerpo
+  golpe:     { min: 50, fn: (s, o) => s.ruido({ dur: 0.12, f: 2600, f2: 700, q: 1.2, vol: 0.22 * o.v, pan: o.pan }) },
+  zarpazo:   { min: 60, fn: (s, o) => {
+    for (let i = 0; i < 3; i++) s.ruido({ dur: 0.09, f: 1800, f2: 500, q: 1.5, vol: 0.2 * o.v, pan: o.pan, d: i * 0.03 });
+    s.tono({ f: 120, f2: 70, dur: 0.14, tipo: 'sawtooth', vol: 0.07 * o.v, pan: o.pan });
+  } },
+  tajoX:     { min: 60, fn: (s, o) => {
+    s.ruido({ dur: 0.1, filtro: 'highpass', f: 4000, vol: 0.14 * o.v, pan: o.pan });
+    s.tono({ f: 2400, f2: 1600, dur: 0.08, vol: 0.05 * o.v, pan: o.pan });
+    s.ruido({ dur: 0.1, filtro: 'highpass', f: 3500, vol: 0.12 * o.v, pan: o.pan, d: 0.05 });
+  } },
+  patas:     { min: 60, fn: (s, o) => { s.ruido({ dur: 0.035, f: 3200, q: 6, vol: 0.3 * o.v, pan: o.pan }); s.ruido({ dur: 0.035, f: 2600, q: 6, vol: 0.3 * o.v, pan: o.pan, d: 0.07 }); } },
+
+  // Impactos
+  impacto:   { min: 45, fn: (s, o) => s.ruido({ dur: 0.05, f: 1400, q: 2, vol: 0.1 * o.v, pan: o.pan }) },
+  acierto:   { min: 45, fn: (s, o) => { s.tono({ f: 900, f2: 600, dur: 0.05, vol: 0.1 * o.v, pan: o.pan }); s.ruido({ dur: 0.04, f: 1800, q: 2, vol: 0.12 * o.v, pan: o.pan }); } },
+  dolor:     { min: 90, fn: (s) => { s.tono({ f: 240, f2: 110, dur: 0.12, vol: 0.16 }); s.ruido({ dur: 0.08, filtro: 'lowpass', f: 900, vol: 0.18 }); } },
+  bloqueo:   { fn: (s, o) => { s.tono({ f: 1500, dur: 0.06, vol: 0.1 * o.v, pan: o.pan }); s.tono({ f: 2300, dur: 0.08, vol: 0.07 * o.v, pan: o.pan, d: 0.02 }); } },
+  muerte:    { min: 100, fn: (s, o) => { s.tono({ f: 330, f2: 60, dur: 0.5, tipo: 'sawtooth', vol: 0.12 * o.v, pan: o.pan }); s.ruido({ dur: 0.4, filtro: 'lowpass', f: 1200, f2: 150, vol: 0.2 * o.v, pan: o.pan }); } },
+  latido:    { min: 500, fn: (s) => { s.tono({ f: 70, f2: 45, dur: 0.12, tipo: 'sine', vol: 0.35 }); s.tono({ f: 65, f2: 42, dur: 0.12, tipo: 'sine', vol: 0.25, d: 0.17 }); } },
+  reaparecer:{ fn: (s) => s.notas([392, 523, 659, 784], { vol: 0.1, paso: 0.06, tipo: 'triangle' }) },
+
+  // Curas y buffs
+  cura:      { min: 250, fn: (s) => s.notas([784, 1047], { vol: 0.07, paso: 0.07, tipo: 'sine', dur: 0.15 }) },
+  sanar:     { min: 200, fn: (s, o) => s.notas([523, 659, 784], { vol: 0.08 * o.v, paso: 0.06, tipo: 'sine', dur: 0.18, pan: o.pan }) },
+  // Pulso de curación (orbe y círculo de Monh): suave porque se repite seguido
+  campanita: { min: 400, fn: (s, o) => s.tono({ f: 1047, dur: 0.18, tipo: 'sine', vol: 0.045 * o.v, pan: o.pan }) },
+  brillo:    { min: 150, fn: (s, o) => { s.tono({ f: 600, f2: 1300, dur: 0.3, tipo: 'sine', vol: 0.1 * o.v, pan: o.pan }); s.tono({ f: 900, f2: 1900, dur: 0.3, tipo: 'triangle', vol: 0.06 * o.v, pan: o.pan, d: 0.04 }); } },
+  poder:     { fn: (s, o) => s.notas([392, 523, 659, 1047], { vol: 0.1 * o.v, paso: 0.05, pan: o.pan }) },
+  ulti:      { min: 200, fn: (s, o) => {
+    s.ruido({ dur: 0.5, f: 300, f2: 3000, q: 1.5, vol: 0.18 * o.v, pan: o.pan });
+    s.tono({ f: 110, f2: 220, dur: 0.45, tipo: 'sawtooth', vol: 0.1 * o.v, pan: o.pan });
+    s.tono({ f: 165, f2: 330, dur: 0.45, tipo: 'square', vol: 0.06 * o.v, pan: o.pan });
+  } },
+  ultiLista: { min: 500, fn: (s) => s.notas([523, 659, 784, 1047], { vol: 0.1, paso: 0.07, dur: 0.1 }) },
+
+  // Estados
+  aturdido:  { fn: (s, o) => { s.tono({ f: 300, f2: 120, dur: 0.1, vol: 0.12 * o.v, pan: o.pan }); s.notas([1400, 1700, 1400, 1700], { tipo: 'sine', vol: 0.05 * o.v, paso: 0.08, dur: 0.07, pan: o.pan }); } },
+  lento:     { fn: (s, o) => s.tono({ f: 500, f2: 180, dur: 0.3, tipo: 'triangle', vol: 0.08 * o.v, pan: o.pan }) },
+  silencio:  { fn: (s, o) => s.ruido({ dur: 0.35, filtro: 'lowpass', f: 700, f2: 150, vol: 0.15 * o.v, pan: o.pan }) },
+  veneno:    { fn: (s, o) => { for (let i = 0; i < 3; i++) s.tono({ f: 300 + i * 120, f2: 600 + i * 150, dur: 0.06, tipo: 'sine', vol: 0.08 * o.v, pan: o.pan, d: i * 0.07 }); } },
+  marca:     { fn: (s, o) => s.tono({ f: 1320, dur: 0.15, tipo: 'triangle', vol: 0.08 * o.v, pan: o.pan }) },
+
+  // Áreas y explosiones
+  explosion: { min: 70, fn: (s, o) => { s.ruido({ dur: 0.45, filtro: 'lowpass', f: 1600, f2: 120, vol: 0.32 * o.v, pan: o.pan }); s.tono({ f: 80, f2: 30, dur: 0.35, tipo: 'sine', vol: 0.3 * o.v, pan: o.pan }); } },
+  golpeTierra:{ min: 60, fn: (s, o) => { s.ruido({ dur: 0.22, filtro: 'lowpass', f: 500, f2: 120, vol: 0.3 * o.v, pan: o.pan }); s.tono({ f: 90, f2: 45, dur: 0.18, tipo: 'sine', vol: 0.25 * o.v, pan: o.pan }); } },
+  chasquido: { min: 60, fn: (s, o) => { s.ruido({ dur: 0.18, filtro: 'highpass', f: 2200, vol: 0.2 * o.v, pan: o.pan }); s.ruido({ dur: 0.3, filtro: 'lowpass', f: 400, vol: 0.15 * o.v, pan: o.pan, d: 0.03 }); } },
+  blop:      { min: 60, fn: (s, o) => s.tono({ f: 320, f2: 90, dur: 0.16, tipo: 'sine', vol: 0.2 * o.v, pan: o.pan }) },
+  boomOro:   { fn: (s, o) => { s.ruido({ dur: 0.3, filtro: 'lowpass', f: 1400, f2: 200, vol: 0.25 * o.v, pan: o.pan }); s.tono({ f: 784, dur: 0.4, tipo: 'triangle', vol: 0.08 * o.v, pan: o.pan }); } },
+  zap:       { min: 60, fn: (s, o) => { s.tono({ f: 1300, f2: 300, dur: 0.12, vol: 0.09 * o.v, pan: o.pan }); s.ruido({ dur: 0.1, f: 3000, q: 2, vol: 0.12 * o.v, pan: o.pan }); } },
+  rayo:      { min: 70, fn: (s, o) => {
+    for (let i = 0; i < 3; i++) s.ruido({ dur: 0.06, filtro: 'highpass', f: 1800, vol: 0.22 * o.v, pan: o.pan, d: i * 0.045 });
+    s.ruido({ dur: 0.5, filtro: 'lowpass', f: 300, f2: 60, vol: 0.2 * o.v, pan: o.pan, d: 0.05 });
+  } },
+  sablazo:   { fn: (s, o) => { s.ruido({ dur: 0.28, filtro: 'highpass', f: 3000, vol: 0.2 * o.v, pan: o.pan }); s.tono({ f: 2200, f2: 500, dur: 0.22, vol: 0.07 * o.v, pan: o.pan }); } },
+  humo:      { fn: (s, o) => s.ruido({ dur: 0.55, filtro: 'lowpass', f: 900, f2: 150, vol: 0.25 * o.v, pan: o.pan }) },
+  hilo:      { min: 80, fn: (s, o) => s.tono({ f: 400, f2: 1700, dur: 0.12, tipo: 'sine', vol: 0.12 * o.v, pan: o.pan }) },
+  mordida:   { fn: (s, o) => { s.ruido({ dur: 0.07, f: 700, q: 2, vol: 0.3 * o.v, pan: o.pan }); s.ruido({ dur: 0.07, f: 500, q: 2, vol: 0.3 * o.v, pan: o.pan, d: 0.09 }); s.tono({ f: 160, f2: 90, dur: 0.15, tipo: 'sawtooth', vol: 0.08 * o.v, pan: o.pan }); } },
+  puf:       { min: 60, fn: (s, o) => s.ruido({ dur: 0.18, filtro: 'lowpass', f: 1200, f2: 200, vol: 0.16 * o.v, pan: o.pan }) },
+  hielo:     { fn: (s, o) => { s.ruido({ dur: 0.3, filtro: 'highpass', f: 5000, vol: 0.18 * o.v, pan: o.pan }); s.notas([2093, 1760, 2349], { tipo: 'triangle', vol: 0.05 * o.v, paso: 0.04, dur: 0.12, pan: o.pan }); } },
+  fuego:     { fn: (s, o) => s.ruido({ dur: 0.4, filtro: 'lowpass', f: 500, f2: 2000, vol: 0.2 * o.v, pan: o.pan }) },
+  captura:   { min: 400, fn: (s, o) => s.notas([659, 880], { tipo: 'triangle', vol: 0.08 * o.v, paso: 0.08, pan: o.pan }) },
+  mina:      { fn: (s, o) => { s.tono({ f: 1200, dur: 0.05, vol: 0.12 * o.v, pan: o.pan }); s.tono({ f: 1200, dur: 0.05, vol: 0.12 * o.v, pan: o.pan, d: 0.09 }); } },
+  pegada:    { fn: (s, o) => { for (let i = 0; i < 4; i++) s.tono({ f: 1000, dur: 0.03, vol: 0.1 * o.v, pan: o.pan, d: i * 0.12 }); } },
+  atrapado:  { fn: (s, o) => { s.tono({ f: 1600, f2: 300, dur: 0.18, tipo: 'sine', vol: 0.14 * o.v, pan: o.pan }); s.ruido({ dur: 0.08, filtro: 'lowpass', f: 600, vol: 0.2 * o.v, pan: o.pan, d: 0.15 }); } },
+  kill:      { min: 200, fn: (s) => s.notas([880, 1175], { vol: 0.07, paso: 0.07 }) },
+  miKill:    { min: 200, fn: (s) => s.notas([784, 988, 1319], { vol: 0.11, paso: 0.07, dur: 0.11 }) },
+  fanfarria: { min: 400, fn: (s) => s.notas([523, 784, 1047], { vol: 0.1, paso: 0.09, dur: 0.14, tipo: 'triangle' }) },
+  cucko:     { min: 1000, fn: (s) => {
+    s.tono({ f: 1500, f2: 900, dur: 0.3, tipo: 'sawtooth', vol: 0.12 });
+    s.tono({ f: 1700, f2: 800, dur: 0.4, tipo: 'square', vol: 0.08, d: 0.25 });
+    s.ruido({ dur: 0.6, filtro: 'lowpass', f: 400, vol: 0.2, d: 0.1 });
+  } },
+
+  // Biteroi: jetpack
+  jet:         { fn: (s, o) => { s.ruido({ dur: 2, filtro: 'bandpass', f: 500, f2: 1600, q: 0.8, vol: 0.18 * o.v, pan: o.pan, at: 0.08 }); s.tono({ f: 90, f2: 160, dur: 1.8, tipo: 'sawtooth', vol: 0.05 * o.v, pan: o.pan }); } },
+  z_bombaJet:  { min: 60, fn: (s, o) => s.tono({ f: 900, f2: 400, dur: 0.18, tipo: 'square', vol: 0.06 * o.v, pan: o.pan }) },
+  // Trelgon
+  mazo:        { min: 60, fn: (s, o) => { s.ruido({ dur: 0.14, f: 900, f2: 300, q: 1, vol: 0.2 * o.v, pan: o.pan }); s.tono({ f: 110, f2: 50, dur: 0.16, tipo: 'sine', vol: 0.28 * o.v, pan: o.pan, d: 0.05 }); } },
+  escudo:      { fn: (s, o) => { s.notas([392, 523, 659], { tipo: 'triangle', vol: 0.09 * o.v, paso: 0.05, dur: 0.18, pan: o.pan }); s.ruido({ dur: 0.3, filtro: 'lowpass', f: 700, vol: 0.12 * o.v, pan: o.pan }); } },
+  escudoGolpe: { min: 60, fn: (s, o) => s.tono({ f: 300, f2: 220, dur: 0.07, tipo: 'triangle', vol: 0.1 * o.v, pan: o.pan }) },
+  escudoRoto:  { fn: (s, o) => { s.ruido({ dur: 0.25, filtro: 'highpass', f: 1800, vol: 0.18 * o.v, pan: o.pan }); s.tono({ f: 500, f2: 150, dur: 0.25, tipo: 'triangle', vol: 0.1 * o.v, pan: o.pan }); } },
+  raices:      { fn: (s, o) => { for (let i = 0; i < 3; i++) s.ruido({ dur: 0.08, f: 400 + i * 150, q: 4, vol: 0.25 * o.v, pan: o.pan, d: i * 0.06 }); s.tono({ f: 90, f2: 60, dur: 0.3, tipo: 'sawtooth', vol: 0.08 * o.v, pan: o.pan }); } },
+  crecer:      { fn: (s, o) => { s.tono({ f: 60, f2: 140, dur: 0.7, tipo: 'sawtooth', vol: 0.14 * o.v, pan: o.pan }); s.ruido({ dur: 0.7, filtro: 'lowpass', f: 200, f2: 900, vol: 0.2 * o.v, pan: o.pan }); s.notas([196, 262, 392], { tipo: 'square', vol: 0.06 * o.v, paso: 0.15, dur: 0.2, pan: o.pan }); } },
+
+  // Disparos (al aparecer un proyectil), por sprite
+  d_flecha:        { min: 50, fn: (s, o) => { s.tono({ f: 900, f2: 320, dur: 0.08, tipo: 'triangle', vol: 0.14 * o.v, pan: o.pan }); s.ruido({ dur: 0.05, filtro: 'highpass', f: 3000, vol: 0.06 * o.v, pan: o.pan }); } },
+  d_virote:        { min: 50, fn: (s, o) => s.tono({ f: 1100, f2: 450, dur: 0.07, tipo: 'triangle', vol: 0.1 * o.v, pan: o.pan }) },
+  d_flechaBosque:  { fn: (s, o) => { s.tono({ f: 600, f2: 1500, dur: 0.22, tipo: 'triangle', vol: 0.16 * o.v, pan: o.pan }); s.tono({ f: 1200, f2: 2400, dur: 0.2, tipo: 'sine', vol: 0.06 * o.v, pan: o.pan, d: 0.03 }); } },
+  d_sombra:        { min: 50, fn: (s, o) => { s.tono({ f: 320, f2: 160, dur: 0.18, tipo: 'sine', vol: 0.14 * o.v, pan: o.pan }); s.tono({ f: 330, f2: 170, dur: 0.18, tipo: 'triangle', vol: 0.06 * o.v, pan: o.pan }); } },
+  d_orbe:          { min: 50, fn: (s, o) => s.tono({ f: 520, f2: 780, dur: 0.12, tipo: 'sine', vol: 0.12 * o.v, pan: o.pan }) },
+  d_orbeFuego:     { min: 50, fn: (s, o) => { s.ruido({ dur: 0.2, filtro: 'lowpass', f: 600, f2: 1600, vol: 0.18 * o.v, pan: o.pan }); s.tono({ f: 140, f2: 90, dur: 0.15, tipo: 'sine', vol: 0.1 * o.v, pan: o.pan }); } },
+  d_bolaFuego:     { fn: (s, o) => { s.ruido({ dur: 0.35, filtro: 'lowpass', f: 400, f2: 2000, vol: 0.26 * o.v, pan: o.pan }); s.tono({ f: 110, f2: 70, dur: 0.3, tipo: 'sawtooth', vol: 0.08 * o.v, pan: o.pan }); } },
+  d_rayoBola:      { min: 50, fn: (s, o) => { s.tono({ f: 1400, f2: 500, dur: 0.09, vol: 0.08 * o.v, pan: o.pan }); s.ruido({ dur: 0.06, f: 3500, q: 3, vol: 0.1 * o.v, pan: o.pan }); } },
+  d_rayoBolaCargada:{ min: 50, fn: (s, o) => { s.tono({ f: 1800, f2: 400, dur: 0.12, vol: 0.1 * o.v, pan: o.pan }); s.ruido({ dur: 0.1, filtro: 'highpass', f: 2500, vol: 0.14 * o.v, pan: o.pan }); } },
+  d_trueno:        { fn: (s, o) => { s.ruido({ dur: 0.25, f: 2800, q: 1, vol: 0.22 * o.v, pan: o.pan }); s.tono({ f: 90, f2: 50, dur: 0.25, tipo: 'square', vol: 0.08 * o.v, pan: o.pan }); } },
+  d_piedra:        { min: 60, fn: (s, o) => s.ruido({ dur: 0.1, filtro: 'lowpass', f: 500, vol: 0.15 * o.v, pan: o.pan }) },
+  d_rocaGrande:    { fn: (s, o) => { s.ruido({ dur: 0.2, filtro: 'lowpass', f: 400, f2: 900, vol: 0.22 * o.v, pan: o.pan }); s.tono({ f: 90, f2: 55, dur: 0.2, tipo: 'sine', vol: 0.2 * o.v, pan: o.pan }); } },
+  d_telaGancho:    { fn: (s, o) => s.tono({ f: 350, f2: 1800, dur: 0.15, tipo: 'sine', vol: 0.14 * o.v, pan: o.pan }) },
+  d_x:             { min: 60, fn: (s, o) => s.ruido({ dur: 0.07, f: 1500, q: 1.5, vol: 0.1 * o.v, pan: o.pan }) },
+
+  // Zonas que aparecen
+  z_bomba:       { min: 60, fn: (s, o) => s.tono({ f: 300, f2: 800, dur: 0.18, tipo: 'square', vol: 0.07 * o.v, pan: o.pan }) },
+  z_mina:        { fn: (s, o) => s.tono({ f: 900, dur: 0.05, vol: 0.08 * o.v, pan: o.pan }) },
+  z_circuloVida: { fn: (s, o) => s.notas([523, 784], { tipo: 'sine', vol: 0.08 * o.v, paso: 0.08, dur: 0.2, pan: o.pan }) },
+  z_orbeVida:    { fn: (s, o) => s.tono({ f: 660, f2: 990, dur: 0.25, tipo: 'sine', vol: 0.1 * o.v, pan: o.pan }) },
+  z_nubeTormenta:{ fn: (s, o) => s.ruido({ dur: 1.0, filtro: 'lowpass', f: 250, vol: 0.25 * o.v, pan: o.pan, at: 0.15 }) },
+  z_tela:        { fn: (s, o) => { s.tono({ f: 300, f2: 1200, dur: 0.15, tipo: 'sine', vol: 0.1 * o.v, pan: o.pan }); s.tono({ f: 400, f2: 1500, dur: 0.15, tipo: 'sine', vol: 0.08 * o.v, pan: o.pan, d: 0.1 }); } },
+  z_clon:        { min: 150, fn: (s, o) => s.tono({ f: 900, f2: 300, dur: 0.15, tipo: 'triangle', vol: 0.06 * o.v, pan: o.pan }) },
+  z_tajo:        { fn: (s, o) => s.tono({ f: 250, f2: 900, dur: 0.6, tipo: 'sawtooth', vol: 0.06 * o.v, pan: o.pan }) },
+};
+
+const sonido = new Sonido();
+
 // ===== input.js =====
 // =====================================================================
 //  CONTROLES — joystick táctil + botones con skill shots, y teclado/mouse en PC.
@@ -5320,7 +5922,7 @@ class StateBuffer {
     const pa = new Map(a.s.p.map(p => [p[0], p]));
     const players = b.s.p.map(pb => {
       const q = pa.get(pb[0]) || pb;
-      return { id: pb[0], x: lerp(q[1], pb[1], k), y: lerp(q[2], pb[2], k), hp: pb[3], mh: pb[4], f: lerpAng(q[5], pb[5], k), flags: pb[6], cd: pb.slice(7, 12), ack: pb[12], cargas: pb[13], ulti: pb[14] };
+      return { id: pb[0], x: lerp(q[1], pb[1], k), y: lerp(q[2], pb[2], k), hp: pb[3], mh: pb[4], f: lerpAng(q[5], pb[5], k), flags: pb[6], cd: pb.slice(7, 12), ack: pb[12], cargas: pb[13], ulti: pb[14], esc: pb[15] || 0 };
     });
     const ua = new Map((a.s.u || []).map(u => [u[0], u]));
     const units = (b.s.u || []).map(ub => {
@@ -5330,9 +5932,9 @@ class StateBuffer {
     const pra = new Map(a.s.pr.map(p => [p[0], p]));
     const projs = b.s.pr.map(pb => {
       const q = pra.get(pb[0]);
-      return { x: q ? lerp(q[1], pb[1], k) : pb[1], y: q ? lerp(q[2], pb[2], k) : pb[2], spr: pb[3], c: pb[4], a: pb[5], owner: pb[6] };
+      return { id: pb[0], x: q ? lerp(q[1], pb[1], k) : pb[1], y: q ? lerp(q[2], pb[2], k) : pb[2], spr: pb[3], c: pb[4], a: pb[5], owner: pb[6] };
     });
-    const zones = (b.s.z || []).map(z => ({ x: z[1], y: z[2], r: z[3], kind: z[4], prog: z[5], a: z[6], w: z[7], ox: z[8], oy: z[9] }));
+    const zones = (b.s.z || []).map(z => ({ id: z[0], x: z[1], y: z[2], r: z[3], kind: z[4], prog: z[5], a: z[6], w: z[7], ox: z[8], oy: z[9] }));
     return { players, units, projs, zones, ar: lerp(a.s.ar, b.s.ar, k), zo: b.s.zo || null };
   }
 }
@@ -5590,8 +6192,8 @@ class Renderer {
   gy(y) { return Math.round(y * ESC) + this.oy; }
 
   addEvent(ev) {
-    const dur = { cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
-    const f = { ...ev, age: 0, dur };
+    const dur = { mazazo: 0.45, raiz: 0.9, escudoRoto: 0.5, cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
+    const f = { ...ev, age: 0, dur: ev.k === 'slash' && ev.h === 'trelgon' ? 0.32 : dur };
     if (ev.k === 'death' || ev.k === 'heal' || ev.k === 'poof') {
       f.parts = Array.from({ length: ev.k === 'death' ? 16 : 7 }, (_, i) => ({ a: hash(i, ev.x | 0, ev.y | 0) * TAU, v: 20 + hash(i, 9, ev.x | 0) * (ev.k === 'death' ? 70 : 30) }));
     }
@@ -5701,6 +6303,15 @@ class Renderer {
         for (let k = 4; k <= rr; k += 3) this.arc(cx, cy - 2, k, z.a - z.w / 2, z.a + z.w / 2, PALETA.carmesi1, 1);
         this.arc(cx, cy - 2, r, z.a - z.w / 2, z.a + z.w / 2, parpadeo ? PALETA.pergamino2 : PALETA.carmesi2, 1);
         for (const s of [-1, 1]) this.linea(cx, cy - 2, Math.round(cx + Math.cos(z.a + s * z.w / 2) * r), Math.round(cy - 2 + Math.sin(z.a + s * z.w / 2) * r), PALETA.carmesi2);
+      } else if (z.kind === 'bombaJet') {
+        // Bomba del Jetpack en el suelo: zona roja que se llena + bomba con mecha que parpadea
+        const R0 = Math.round(z.r * ESC);
+        this.ring(cx, cy, R0, PALETA.tinta, 1, 3);
+        this.ring(cx, cy, R0, parpadeo ? PALETA.oro2 : PALETA.carmesi2, 1, 1);
+        this.ring(cx, cy, Math.max(2, Math.round(R0 * z.prog)), PALETA.carmesi1, 0.6, 1);
+        const sb = otro('bombaLob', Math.floor(this.time * 12));
+        this.g.drawImage(sb, cx - (sb.width >> 1), cy - sb.height + 3);
+        if (parpadeo) { this.g.fillStyle = PALETA.oro2; this.g.fillRect(cx + 2, cy - sb.height + 1, 2, 2); }
       } else if (z.kind === 'bomba') {
         // Sombra donde va a caer: crece a medida que baja la bomba
         const rr = Math.max(1, Math.round(2 + z.prog * 4));
@@ -5906,7 +6517,37 @@ class Renderer {
     // Rasho flota: sube y baja suave sobre su nube
     const flota = meta.build.heroe === 'rasho';
     const bob = flota ? Math.round(Math.sin(this.time * 3 + (p.id.length % 5)) * 1.5) - 3 : 0;
-    const sx = cx - 11, sy = cy - 16 + bob;
+    // Trelgon en Sobrecrecimiento: 1,5 veces más grande (los pies quedan en el mismo lugar)
+    const gigante = (p.flags & 134217728) ? 1.6 : meta.build.heroe === 'trelgon' ? 1.15 : 1;   // Trelgon es más grande que el resto
+    const enAire = p.flags & 1073741824;   // Biteroi con el jetpack: sube y deja sombra y llamas
+    const sx = Math.round(cx - 11 * gigante), sy = Math.round(cy + 8 - 24 * gigante) + bob - (enAire ? 16 : 0);
+    if (enAire) {
+      g.globalAlpha = 0.35; this.discDither(cx, cy + 6, 7, PALETA.tinta, 2, 0); g.globalAlpha = this.alphaPj || 1;
+      const t = Math.floor(this.time * 20);
+      for (let i = 0; i < 4; i++) {
+        const fx = cx - 4 + i * 3, fh = 4 + ((t + i * 3) % 5);
+        g.fillStyle = PALETA.tinta; g.fillRect(fx - 1, sy + 22, 3, fh + 1);
+        g.fillStyle = i % 2 ? PALETA.antorcha : PALETA.oro2; g.fillRect(fx, sy + 22, 1, fh);
+      }
+    }
+    // Zonas de Trelgon bajo los pies (avisos claros para los rivales)
+    if (p.flags & 536870912) {   // Mazazos activos: anillo de piedra que late
+      const r = Math.round(110 * ESC), on = Math.floor(this.time * 4) % 2;
+      this.ring(cx, cy, r, PALETA.tinta, 1, 3);
+      this.ring(cx, cy, r, on ? PALETA.pergamino2 : PALETA.piedra3, 1, 1);
+    }
+    if (p.flags & 134217728) {   // Sobrecrecimiento: círculo de raíces con brotes que crecen
+      const r = Math.round(130 * ESC);
+      this.ring(cx, cy, r, PALETA.tinta, 1, 4);
+      this.ring(cx, cy, r, PALETA.madera2, 1, 2);
+      for (let i = 0; i < 12; i++) {   // brotes con hoja a lo largo del borde
+        const a = (i / 12) * TAU + this.time * 0.3, h = 4 + ((Math.floor(this.time * 5) + i) % 3);
+        const x = Math.round(cx + Math.cos(a) * r), y = Math.round(cy + Math.sin(a) * r);
+        g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - h - 2, 4, h + 3); g.fillRect(x - 2, y - h - 2, 6, 3);
+        g.fillStyle = PALETA.madera2; g.fillRect(x, y - h, 2, h);
+        g.fillStyle = PALETA.bosque2; g.fillRect(x - 1, y - h - 1, 4, 1);
+      }
+    }
     if (flota) this.nubeViva(cx, sy + 20, 1, true);
 
     // arma
@@ -5919,7 +6560,7 @@ class Renderer {
       verArma = true;
     }
     if (p.flags & 128) { ang = this.time * 18; verArma = true; } // Locura: gira
-    const hx = sx + (izq ? 21 - (MANO.x + 1) : MANO.x + 1), hy = sy + MANO.y + 1;
+    const hx = sx + Math.round((izq ? 21 - (MANO.x + 1) : MANO.x + 1) * gigante), hy = sy + Math.round((MANO.y + 1) * gigante);
     const arma = verArma ? armaRotada(key, idxAng(ang)) : null;
     const detras = Math.sin(ang) < -0.4;
     // Montado: el caballo va debajo y el jinete sube 7 píxeles
@@ -5930,9 +6571,34 @@ class Renderer {
     }
     const sube = montado ? 11 : 0;
     const atras = montado ? (izq ? 6 : -6) : 0; // el jinete va sobre el lomo, no tapa la cabeza del caballo
-    if (arma && detras) g.drawImage(arma, hx - 14 + atras, hy - 14 - sube);
-    g.drawImage(spr, sx + atras, sy - sube);
-    if (arma && !detras) g.drawImage(arma, hx - 14 + atras, hy - 14 - sube);
+    const dibArma = () => gigante === 1 ? g.drawImage(arma, hx - 14 + atras, hy - 14 - sube)
+      : g.drawImage(arma, Math.round(hx - 14 * gigante), Math.round(hy - 14 * gigante), Math.round(arma.width * gigante), Math.round(arma.height * gigante));
+    if (arma && detras) dibArma();
+    if (gigante === 1) g.drawImage(spr, sx + atras, sy - sube);
+    else g.drawImage(spr, sx, sy, Math.round(spr.width * gigante), Math.round(spr.height * gigante));
+    if (arma && !detras) dibArma();
+    // Escudo de musgo: burbuja verde con hojas que giran
+    if (p.flags & 67108864) {
+      const rr = Math.round(15 * gigante), yy = Math.round(cy - 6 * gigante);
+      this.ring(cx, yy, rr, PALETA.tinta, 1, 4);
+      this.ring(cx, yy, rr, Math.floor(this.time * 4) % 2 ? PALETA.bosque2 : PALETA.pergamino2, 1, 2);
+      for (let i = 0; i < 4; i++) {
+        const a = this.time * 2.5 + i * (TAU / 4);
+        const x = Math.round(cx + Math.cos(a) * rr), y = Math.round(yy + Math.sin(a) * rr);
+        g.fillStyle = PALETA.tinta; g.fillRect(x - 2, y - 1, 4, 3);
+        g.fillStyle = i % 2 ? PALETA.bosque2 : PALETA.bosque1; g.fillRect(x - 1, y, 2, 1);
+      }
+    }
+    // Echando raíces (cerca de Trelgon gigante): raíces que suben por los pies como aviso
+    if (p.flags & 268435456) {
+      const t = Math.floor(this.time * 10);
+      for (let i = 0; i < 5; i++) {
+        const x = cx - 8 + i * 4, h = 3 + ((t + i * 2) % 5);
+        g.fillStyle = PALETA.tinta; g.fillRect(x - 1, cy + 7 - h, 3, h + 1);
+        g.fillStyle = i % 2 ? PALETA.madera2 : PALETA.bosque1; g.fillRect(x, cy + 7 - h, 1, h);
+      }
+      if (Math.floor(this.time * 8) % 2) { this.ring(cx, cy + 6, 12, PALETA.tinta, 1, 3); this.ring(cx, cy + 6, 12, PALETA.oro2, 1, 1); }
+    }
     if (flota) this.nubeViva(cx, sy + 20, 1, false);
     // Envenenado (mordida de Aracnida): burbujas verdes que suben
     if (p.flags & 16777216) {
@@ -6005,11 +6671,13 @@ class Renderer {
     const bw = 26, bh = 7, by = sy - 4, bx = Math.round(cx - bw / 2);
     g.fillStyle = PALETA.tinta; g.fillRect(bx - 1, by - 5, bw + 2, bh + 2);
     g.fillStyle = PALETA.carmesi0; g.fillRect(bx, by - 4, bw, bh);
-    const pct = Math.max(0, Math.min(1, p.hp / p.mh));
+    const totalB = Math.max(p.mh, p.hp + (p.esc || 0));   // con escudo, la barra se reparte entre vida y escudo
+    const pct = Math.max(0, Math.min(1, p.hp / totalB));
     const colVida = isMe ? PALETA.bosque1 : eq ? (eq === 'A' ? PALETA.acero1 : PALETA.carmesi1) : PALETA.carmesi1;
     g.fillStyle = colVida; g.fillRect(bx, by - 4, Math.round(bw * pct), bh);
     g.fillStyle = isMe ? PALETA.bosque2 : eq === 'A' ? PALETA.acero2 : PALETA.carmesi2; g.fillRect(bx, by - 4, Math.round(bw * pct), 1);
-    const num = texto(String(Math.max(0, Math.ceil(p.hp))), PALETA.pergamino2);
+    if (p.esc > 0) { const x0 = bx + Math.round(bw * pct), w = Math.max(1, Math.round(bw * p.esc / totalB)); g.fillStyle = PALETA.pergamino2; g.fillRect(x0, by - 4, Math.min(w, bx + bw - x0), bh); g.fillStyle = PALETA.bosque2; g.fillRect(x0, by + bh - 5, Math.min(w, bx + bw - x0), 1); }
+    const num = texto(String(Math.max(0, Math.ceil(p.hp))) + (p.esc > 0 ? '+' + p.esc : ''), PALETA.pergamino2);
     g.drawImage(num, Math.round(cx - num.width / 2), by - 5);
     // Cargas del ataque: 3 segmentos naranjos bajo la vida (solo las propias, como en Brawl Stars)
     if (isMe && p.cargas !== undefined) {
@@ -6024,7 +6692,7 @@ class Renderer {
       }
     }
     // Ulti lista: brillo dorado alrededor del nombre
-    if (p.ulti >= 1 && Math.floor(this.time * 4) % 2) this.ring(cx, cy - 4, 15, PALETA.oro2, 0.5);
+    if (p.ulti >= 1 && !(p.cd[3] > 0) && Math.floor(this.time * 4) % 2) this.ring(cx, cy - 4, 15, PALETA.oro2, 0.5);
     const colNombre = isMe ? PALETA.oro2 : eq ? (eq === 'A' ? PALETA.acero2 : PALETA.carmesi2) : PALETA.pergamino2;
     const nombre = texto(meta.name, colNombre);
     g.drawImage(nombre, cx - (nombre.width >> 1), by - 13);
@@ -6379,6 +7047,27 @@ class Renderer {
       switch (f.k) {
         case 'slash': {
           // Golpes característicos por héroe (Seba 28-10)
+          if (f.h === 'trelgon') {
+            // Mazazo de Trelgon: el mazo cae desde arriba y deja un cráter con polvo donde pega
+            const R0 = (f.r + CONFIG.RADIO_JUGADOR * 0.5) * ESC, ca = Math.cos(f.a), sa = Math.sin(f.a);
+            const px = Math.round(cx + ca * R0 * 0.8), py = Math.round(cy + sa * R0 * 0.8);
+            const prog = Math.min(1, t * 3), gr = f.gr ? 1.5 : 1;
+            if (f.gr) {   // gigante: barrido de media vuelta bien visible
+              const rr = Math.round((f.r + CONFIG.RADIO_JUGADOR * 0.6) * ESC), a0 = f.a - f.w / 2, pr = Math.min(1, t * 2.2);
+              this.arc(cx, cy - 4, rr, a0, a0 + f.w * pr, PALETA.tinta, 5);
+              this.arc(cx, cy - 4, rr, a0, a0 + f.w * pr, t < 0.5 ? PALETA.pergamino2 : PALETA.madera2, 3);
+            }
+            if (prog < 1) {
+              const ax = Math.round(cx + ca * 4), ay = Math.round(cy - 18 * gr);
+              const ex = Math.round(ax + (px - ax) * prog), ey = Math.round(ay + (py - ay) * prog);
+              this.linea(ax, ay, ex, ey, PALETA.tinta, 0, 0, Math.round(5 * gr)); this.linea(ax, ay, ex, ey, PALETA.madera2, 0, 0, Math.round(3 * gr));
+            } else {
+              const rr = Math.round((5 + t * 10) * gr);
+              this.ring(px, py, rr, PALETA.piedra3, 1 - t, 2);
+              for (let i = 0; i < 6; i++) { const a = i * 1.05 + 0.3, d = rr * (0.6 + hash(i, 3, 3) * 0.6); g.fillStyle = PALETA.tinta; g.fillRect(Math.round(px + Math.cos(a) * d) - 1, Math.round(py + Math.sin(a) * d * 0.6) - 1, 3, 3); g.fillStyle = i % 2 ? PALETA.madera2 : PALETA.piedra2; g.fillRect(Math.round(px + Math.cos(a) * d), Math.round(py + Math.sin(a) * d * 0.6), 1, 1); }
+            }
+            break;
+          }
           if (f.h === 'beast' || f.h === 'takichi' || f.h === 'aracnida') {
             const R0 = (f.r + CONFIG.RADIO_JUGADOR * 0.5) * ESC, ca = Math.cos(f.a), sa = Math.sin(f.a);
             const px = Math.round(cx + ca * R0 * 0.75), py = Math.round(cy - 6 + sa * R0 * 0.75);
@@ -6415,6 +7104,39 @@ class Renderer {
           if (t < 0.6) this.arc(cx, cy - 4, r - 2, f.a - f.w / 2, f.a - f.w / 2 + f.w * prog, f.c === 'morado' ? PALETA.pergamino2 : colJ, 1);
           break;
         }
+        case 'mazazo': {
+          // Golpe al suelo de los Mazazos: onda de piedra del tamaño de la zona + grietas
+          const r = Math.max(20, Math.round(f.r * ESC * (0.25 + Math.min(1, t * 1.6) * 0.75)));
+          this.ring(cx, cy, r, PALETA.tinta, 1 - t * 0.5, 4);
+          this.ring(cx, cy, r, t < 0.5 ? PALETA.pergamino2 : PALETA.piedra3, 1 - t * 0.6, 2);
+          for (let i = 0; i < 8; i++) {
+            const a = i * (TAU / 8) + 0.2, l0 = 18, l = l0 + Math.round(f.r * ESC * 0.5 * Math.min(1, t * 2.5));
+            this.linea(Math.round(cx + Math.cos(a) * l0), Math.round(cy + Math.sin(a) * l0 * 0.7), Math.round(cx + Math.cos(a) * l), Math.round(cy + Math.sin(a) * l * 0.7), PALETA.tinta, 1, i, 2);
+          }
+          break;
+        }
+        case 'raiz': {
+          // Raíces que brotan del suelo y atrapan
+          const h = Math.round(16 * Math.min(1, t * 4) * (t > 0.75 ? (1 - t) * 4 : 1));
+          for (let i = 0; i < 6; i++) {
+            const x = cx - 12 + i * 5, hh = h - (i % 2) * 3;
+            if (hh <= 0) continue;
+            const curva = (i % 2 ? 1 : -1) * Math.round(hh / 5);
+            g.fillStyle = PALETA.tinta; g.fillRect(x - 1, cy + 6 - hh, 4, hh + 1);
+            g.fillStyle = i % 3 ? PALETA.madera2 : PALETA.bosque1; g.fillRect(x, cy + 6 - hh, 2, hh);
+            g.fillStyle = PALETA.bosque2; g.fillRect(x + curva, cy + 5 - hh, 2, 2);
+          }
+          if (t < 0.5) this.ring(cx, cy + 4, 14, PALETA.bosque2, 1, 2);
+          break;
+        }
+        case 'escudoRoto': {
+          for (let i = 0; i < 8; i++) {
+            const a = i * (TAU / 8), d = 6 + t * 22;
+            const x = Math.round(cx + Math.cos(a) * d), y = Math.round(cy - 8 + Math.sin(a) * d * 0.7 + t * 8);
+            g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 4, 3); g.fillStyle = i % 2 ? PALETA.bosque2 : PALETA.pergamino2; g.fillRect(x, y, 2, 1);
+          }
+          break;
+        }
         case 'cono': {
           const r = Math.round(f.r * ESC * (0.4 + t * 0.6));
           for (let k = 0; k < 3; k++) if (r - k * 6 > 4) this.arc(cx, cy - 4, r - k * 6, f.a - f.w / 2, f.a + f.w / 2, k === 0 ? PALETA.carmesi2 : PALETA.pergamino2, 1);
@@ -6430,6 +7152,8 @@ class Renderer {
           let s;
           if (f.k === 'cura') {
             s = f.id === this.myId ? etiqueta('+' + v, PALETA.bosque2, 'corazon', PALETA.bosque2) : etiqueta('+' + v, PALETA.bosque1, null);
+          } else if (f.esc) {
+            s = etiqueta(v, PALETA.acero2, null);   // daño que se comió un escudo
           } else if (f.t && f.t === this.myId) {
             s = etiqueta('-' + v, PALETA.carmesi2, 'roto', PALETA.carmesi2);
           } else if (f.s && f.s === this.myId) {
@@ -6456,7 +7180,7 @@ class Renderer {
           break;
         }
         case 'ring': {
-          const col = { fuego: PALETA.antorcha, acero: PALETA.acero2, grito: PALETA.carmesi2, oro: PALETA.oro2, magia: PALETA.magia, vida: PALETA.bosque2, rayo: PALETA.acero2, seda: PALETA.pergamino2 }[f.c] || PALETA.pergamino2;
+          const col = { fuego: PALETA.antorcha, acero: PALETA.acero2, grito: PALETA.carmesi2, oro: PALETA.oro2, magia: PALETA.magia, vida: PALETA.bosque2, rayo: PALETA.acero2, seda: PALETA.pergamino2, musgo: PALETA.bosque2 }[f.c] || PALETA.pergamino2;
           const r = Math.round(f.r * ESC * (0.3 + t * 0.7));
           this.ring(cx, cy, r, col, 1 - t * 0.7, f.c === 'fuego' ? 2 : 1);
           if (f.c === 'fuego' && t < 0.5) this.ring(cx, cy, Math.max(1, r - 3), PALETA.oro2, 0.5);
@@ -6631,7 +7355,8 @@ function onPhase(ph) {
   const combate = ph === 'countdown' || ph === 'combat';
   $('zone').classList.toggle('hidden', !combate);
   controls.setEnabled(ph === 'combat');
-  if (ph === 'countdown') S.lastCount = null;
+  if (ph === 'countdown') { S.lastCount = null; sonido.reiniciar(); }
+  if (ph === 'results' || ph === 'gameover') sonido.fin = true; else sonido.fin = false;
   if (ph === 'lobby') showScreen('scr-lobby');
   else if (ph === 'draft') showScreen('scr-draft');
   if (ph !== 'draft' && fichaAbierta) cerrarFicha();
@@ -7133,7 +7858,7 @@ function abrirFicha(k) {
   const P = PASIVAS[h.pasiva];
   const habs = h.habs.map((hk, i) => {
     const H = HABILIDADES[hk];
-    const meta = H.ulti ? `Ulti · se llena con ${h.ultiCarga} de daño${h.pasiva === 'eco' ? ' (o curación a aliados)' : ''}` : `Habilidad ${i + 1} · recarga ${fmt(H.cd)} s`;
+    const meta = H.ulti ? `Ulti · recarga ${fmt(H.cd)} s y se llena con ${h.ultiCarga} de daño${h.pasiva === 'eco' ? ' (o curación a aliados)' : ''} · la primera, a los ${CONFIG.ULTI_INICIO} s` : `Habilidad ${i + 1} · recarga ${fmt(H.cd)} s`;
     return `<div class="fi-hab"><img alt="" src="${imgIcono(H.glifo, k, 3)}"><div><div class="fi-hn">${i + 1}. ${esc(H.nombre)}</div><div class="fi-meta">${meta}</div><p>${esc(H.desc(H.n1))}</p></div></div>`;
   }).join('');
   const mu = resumenMatchups(k);
@@ -7234,7 +7959,7 @@ function renderMejoras() {
     el.className = 'mej' + (niv >= 2 ? ' n2' : niv === 0 ? ' n0' : '');
     el.innerHTML = `<img alt="" src="${imgIcono(niv === 0 ? 'candado' : H.glifo, niv === 0 ? 'bloqueado' : me.build.heroe, 3)}">
       <div><div class="nm">${i + 1}. ${esc(H.nombre)}${H.ulti ? ' · ULTI' : ''}</div>
-      <div class="lv">${H.ulti ? `se carga con ${h.ultiCarga} de daño` : `recarga ${H.cd} s`} · tecla ${TECLA[i]}</div>
+      <div class="lv">${H.ulti ? `recarga ${H.cd} s y ${h.ultiCarga} de daño` : `recarga ${H.cd} s`} · tecla ${TECLA[i]}</div>
       <div class="ds">${esc(H.desc(niv >= 2 ? H.n2 : H.n1))}</div>
 
       ${ultiBloq ? '<div class="req">Se aprende cuando ya tienes las habilidades 1 y 2.</div>' : ''}</div>`;
@@ -7265,6 +7990,7 @@ function renderResults() {
   if (S.meta.modo === 'equipos' && r.marcador) {
     const miEq = S.meta.equipos[S.myId];
     $('rs-title').textContent = r.ganador ? (r.ganador === miEq ? '¡Ganó tu equipo!' : 'Ganaron los rivales') : 'Empate';
+    if (S.sonoFin !== r) { S.sonoFin = r; sonido.play(r.ganador === miEq ? 'victoria' : 'derrota'); }
     $('rs-mult').classList.remove('hidden');
     $('rs-mult').textContent = `${r.ganador ? (r.porObjetivos ? `Círculo rival tomado y ${r.meta} kills` : 'Se acabó el tiempo: más kills') + ' · ' : 'Tiempo agotado, igualados · '}Kills: Azul ${r.marcador.A} – ${r.marcador.B} Rojo`;
     $('rs-list').innerHTML = '';
@@ -7272,6 +7998,7 @@ function renderResults() {
     return;
   }
   $('rs-title').textContent = `Ronda ${r.round}`;
+  { const yo = r.list.find(x => x.id === S.myId); if (S.sonoFin !== r && yo) { S.sonoFin = r; sonido.play(yo.place === 1 ? 'victoria' : 'derrota'); } }
   $('rs-mult').classList.add('hidden');
   const cab = `<li class="cab"><span class="pl">#</span><span class="nm">Jugador</span><span class="k">Kills</span><span class="d">Daño</span><span class="g">Héroe</span><span class="l">Vidas</span></li>`;
   $('rs-list').innerHTML = cab + r.list.map(x => {
@@ -7362,11 +8089,13 @@ function updateHud(latest, now) {
     cdEl.classList.remove('hidden');
     if (S.lastCount !== n) {
       S.lastCount = n;
+      sonido.play('cuenta');
       cdEl.textContent = n;
       cdEl.classList.remove('pop'); void cdEl.offsetWidth; cdEl.classList.add('pop');
     }
   } else if (S.lastCount !== 0 && S.lastCount !== null) {
     S.lastCount = 0;
+    sonido.play('pelear');
     cdEl.textContent = '¡A pelear!';
     cdEl.classList.remove('pop'); void cdEl.offsetWidth; cdEl.classList.add('pop');
     setTimeout(() => { if (S.lastCount === 0) cdEl.classList.add('hidden'); }, 700);
@@ -7423,11 +8152,12 @@ function updateHud(latest, now) {
   $('hud-me').classList.toggle('hidden', !vivo);
   if (!me) return;
   $('me-hp').style.width = Math.max(0, Math.min(100, me[3] / me[4] * 100)) + '%';
-  $('me-hpt').textContent = `${Math.ceil(Math.max(0, me[3]))} / ${me[4]}`;
+  $('me-hpt').textContent = `${Math.ceil(Math.max(0, me[3]))} / ${me[4]}` + (me[15] > 0 ? ` +${me[15]}` : '');
   // Barra de ulti y cargas del ataque
   $('me-mn').style.width = Math.max(0, Math.min(100, me[14] * 100)) + '%';
-  $('me-mnt').textContent = me[14] >= 1 ? '¡ULTI LISTA!' : `Ulti ${Math.floor(me[14] * 100)}%`;
-  $('hud-me').classList.toggle('ulti-lista', me[14] >= 1);
+  const ultiCd = me[10] || 0, ultiOk = me[14] >= 1 && ultiCd <= 0;   // ulti: carga Y recarga
+  $('me-mnt').textContent = ultiOk ? '¡ULTI LISTA!' : `Ulti ${Math.floor(Math.min(1, me[14]) * 100)}%` + (ultiCd > 0 ? ` · ${Math.ceil(ultiCd)} s` : '');
+  $('hud-me').classList.toggle('ulti-lista', ultiOk);
   // Status activos: cuadritos con ícono a la izquierda (Seba 28-10: menos recuadros, más combate)
   const st = ESTADOS.filter((e) => me[6] & e.bit).map((e) => `<div class="est ${e.bueno ? 'bueno' : 'malo'}" title="${e.nombre}"><img alt="${e.nombre}" src="${imgIcono(e.glifo, e.bueno ? 'estBueno' : 'estMalo', 2)}"><span>${e.nombre}</span></div>`).join('');
   if (S.ultSt !== st) { $('hud-status').innerHTML = st; S.ultSt = st; }
@@ -7451,10 +8181,11 @@ function updateHud(latest, now) {
     const cd = btn.querySelector('.cd'), cdn = btn.querySelector('.cdn');
     if (H.ulti) {
       // La ulti se llena desde abajo a medida que haces daño
+      // y además tiene recarga propia: mientras corre, se muestran los segundos
       const falta = 1 - Math.min(1, me[14]);
-      cd.style.setProperty('--p', Math.round(falta * 16) / 16 * 100 + '%');
-      btn.classList.toggle('lista', me[14] >= 1);
-      if (cdn) cdn.textContent = me[14] >= 1 ? '' : Math.floor(me[14] * 100) + '%';
+      cd.style.setProperty('--p', Math.round(Math.max(falta, restante > 0 ? 1 : 0) * 16) / 16 * 100 + '%');
+      btn.classList.toggle('lista', me[14] >= 1 && !(restante > 0));
+      if (cdn) cdn.textContent = restante > 0 ? Math.ceil(restante) + ' s' : me[14] >= 1 ? '' : Math.floor(me[14] * 100) + '%';
       continue;
     }
     if (restante > 0) {
@@ -7474,7 +8205,10 @@ function frame(now) {
   lastFrame = now;
   const latest = S.buf.latest();
   renderer.myId = S.myId;
-  const view = S.buf.sample(now - (isAuth() ? 40 : 110), (ev) => { if (ev.k === 'anuncio') boletin(ev.s, ev.chico ? 'racha' : ''); else if (ev.k === 'feedKill') boletin(ev.s, 'kill'); else renderer.addEvent(ev); });
+  const view = S.buf.sample(now - (isAuth() ? 40 : 110), (ev) => { if (ev.k === 'anuncio') { boletin(ev.s, ev.chico ? 'racha' : ''); sonido.anuncio(ev.s, ev.chico ? 'racha' : ''); } else if (ev.k === 'feedKill') { boletin(ev.s, 'kill'); sonido.anuncio(ev.s, 'kill'); } else { renderer.addEvent(ev); sonido.evento(ev); } });
+  sonido.lx = renderer.cam.x; sonido.ly = renderer.cam.y;
+  { const mm = S.metaById && S.metaById.get(S.myId); sonido.nombre = mm ? mm.name : ''; }
+  if (view && latest && (latest.ph === 'combat' || latest.ph === 'countdown')) sonido.vista(view, S.myId);
   let pred = null;
   S.predPos = null;
   if (latest && (latest.ph === 'combat' || latest.ph === 'countdown')) {
@@ -7549,6 +8283,24 @@ if (document.fonts && document.fonts.load) {
 }
 
 window.__lola = S;
+
+// ------------------------------------------------------------ sonido (rama sonido, 28-10)
+(() => {
+  const desbloquear = () => sonido.desbloquear();
+  for (const ev of ['pointerdown', 'touchend', 'keydown']) document.addEventListener(ev, desbloquear, { capture: true, passive: true });
+  // Clic de botones de menú (los botones de combate tienen sus propios sonidos)
+  document.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest && e.target.closest('button, .heroe, select');
+    if (b && !b.classList.contains('act')) { sonido.desbloquear(); sonido.play(b.classList.contains('gold') ? 'uiOk' : 'ui'); }
+  }, { capture: true });
+  const btn = $('b-sonido');
+  const pintar = () => { if (btn) btn.textContent = sonido.on ? 'Sonido: sí' : 'Sonido: no'; };
+  if (btn) btn.onclick = () => { sonido.setOn(!sonido.on); pintar(); };
+  pintar();
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'm' || e.key === 'M') && !e.shiftKey && e.target.tagName !== 'INPUT') { sonido.setOn(!sonido.on); pintar(); }
+  });
+})();
 
 </script>
 
