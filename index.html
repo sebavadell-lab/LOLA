@@ -871,7 +871,7 @@ const CONFIG = {
   PUNTOS_POR_RONDA: 0,          // rework combate: sin puntos por ahora (todas las habilidades desde el inicio)
   // Seba (28-10): las ultis tienen recarga propia (cd en HABILIDADES) Y se llenan con daño; se necesitan las dos.
   // Al empezar la partida todas parten llenas pero con 45 s de espera.
-  ULTI_INICIO: 45,
+  ULTI_INICIO: 35,   // Seba (28-10): 45 → 35
   CARGAS: 3,                    // cargas del ataque básico (todos los héroes)
   CADENCIA: 0.45,               // segundos mínimos entre dos disparos
   // Todos parten solo con el ataque básico. La ulti se aprende cuando ya tienes las otras dos.
@@ -964,11 +964,12 @@ const HEROES = {
   },
   // Seba (28-10): asesino silencioso, samurái errante y sombrío con dos sables
   takichi: {
-    nombre: 'Takichi', rol: 'Asesino', fondo: 'takichi', arma: 'sable',
+    nombre: 'Takichi', rol: 'Asesino', fondo: 'takichi', arma: 'sable1',
     desc: 'Samurái errante y sombrío con dos sables. Entra de un sablazo, desaparece en humo y castiga a los mal parados.',
     vida: 365, dano: 40, recarga: 1.0, ultiCarga: 300, velocidad: 170,
     ataque: { tipo: 'melee', rango: 55, arco: 100 },
     habs: ['sablazo', 'humo', 'danza'],
+    dosArmas: true,   // Seba (28-10): un sable en cada mano
     pasiva: 'pasoSigiloso',
   },
   // Seba (28-10): control, mujer araña que caza con seda y veneno
@@ -978,7 +979,7 @@ const HEROES = {
     vida: 395, dano: 30, recarga: 1.0, ultiCarga: 290, velocidad: 160,
     ataque: { tipo: 'melee', rango: 55, arco: 110 },
     habs: ['atraparPresa', 'tejer', 'mordida'],
-    pasiva: 'sentidoAracnido',
+    pasiva: 'festin',   // Seba (28-10): reemplaza a Sentido arácnido
   },
   // Seba (28-10): tanque y control (daño en la ulti), troll del bosque con un mazo. Números (C).
   trelgon: {
@@ -1036,8 +1037,8 @@ const HABILIDADES = {
 
   // ---- Maidas
   pulso:      { nombre: 'Pulso de fuego', glifo: 'llama', cd: 6,
-                desc: (n) => `Orbe que estalla donde apuntas: ${fmtN(n.dano)} de daño en área y quema ${fmtN(n.dps)} por segundo por 3 s (no se acumula).`,
-                n1: { dano: 25, dps: 25 }, n2: { dano: 32.5, dps: 32.5 }, alcance: 420, radio: 70 },
+                desc: (n) => `Orbe que estalla donde apuntas: ${fmtN(n.dano)} de daño en área y quema ${fmtN(n.dps)} por segundo por ${n.quema} s (no se acumula).`,
+                n1: { dano: 17.5, dps: 25, quema: 2 }, n2: { dano: 22.75, dps: 32.5, quema: 2 }, alcance: 420, radio: 70 },   // Seba (28-10): golpe -30%, quema 3 → 2 s
   muro:       { nombre: 'Muro de hielo', glifo: 'muroHielo', cd: 14,
                 desc: (n) => `Muro de 3 cuerpos con ${n.vida} de vida por ${n.dur} s. Bloquea a los enemigos; tus disparos lo atraviesan. Si lo rompen, su recarga se reinicia.`,
                 n1: { vida: 100, dur: 6 }, n2: { vida: 130, dur: 6 } },
@@ -1124,6 +1125,7 @@ const PASIVAS = {
   eco:          { nombre: 'Eco del camino', glifo: 'gotaAzul', desc: 'Curar a tus aliados también carga tu ulti.' },
   nubeVoladora: { nombre: 'Sobre la nube', glifo: 'nube', desc: 'Flotas sobre tu nube: pasas por encima de los obstáculos (muros de hielo y muros de la cámara de The Cucko).' },
   pasoSigiloso: { nombre: 'Paso sigiloso', glifo: 'bota', desc: '+10% de velocidad de movimiento si no recibiste daño en los últimos 3 s.' },
+  festin:       { nombre: 'Festín', glifo: 'colmillos', desc: 'Cuando muere un héroe enemigo al que dañaste en los últimos 1,5 s, recuperas 100 de vida.' },
   sentidoAracnido: { nombre: 'Sentido arácnido', glifo: 'ojoArana', desc: 'Los enemigos invisibles o escondidos que pisan tu tela quedan a la vista de todos.' },
   furiaBosque:  { nombre: 'Furia del bosque', glifo: 'huellaTroll', desc: '+3% de velocidad de movimiento por cada héroe enemigo a menos de 250 (máximo +30%).' },
   sangreReal:   { nombre: 'Sangre real', glifo: 'corona', desc: 'Recuperas 25 de vida cada vez que usas una habilidad.' },
@@ -1972,7 +1974,11 @@ const ARMAS_SPR = {
     '............', '............', '........n...', '.......nvn..',
     '......nvn...', '....nnvn....', 'PPnnvnn.....', '.......n....',
     '........nq..', '.........q..', '............', '............'] },
-  // Dos sables que salen del mismo puño (Takichi)
+  // Un sable por mano (Takichi, Seba 28-10)
+  sable1: { g: [1, 6], rows: [
+    '............', '............', '............', '............',
+    '............', '...y........', 'PPwy44444443', '...y........',
+    '............', '............', '............', '............'] },
   // Trelgon: mazo de tronco con raíces y piedras incrustadas
   mazo: { g: [1, 6], rows: [
     '............', '........ww..', '.......wWmw.', '......wW3Ww.',
@@ -2117,6 +2123,7 @@ function filasBola(fase) {
 Object.assign(OTROS, {
   piedra: ['.34.', '3443', '2332', '.22.'],
   orbeVida: ['..ll..', '.lqql.', 'lqllql', 'lqllql', '.lqql.', '..ll..'],
+  orbeVidaRojo: ['..ee..', '.eqqe.', 'eqeeqe', 'eqeeqe', '.eqqe.', '..ee..'],   // Orbe de Monh enemigo
   bombaLob: [['...f..', '..W...', '.nnn..', 'n2nnn.', 'nnnnn.', '.nnn..'], ['..y...', '..W...', '.nnn..', 'n2nnn.', 'nnnnn.', '.nnn..']],
   mina: ['.1111.', '12e221', '1e3e21', '122221', '.1111.'],
   bolaBestia: [filasBola(0), filasBola(1)],
@@ -2923,6 +2930,8 @@ class Game {
     }
 
     const real = Math.min(amt, Math.max(0, target.hp));
+    // Festín (Aracnida): recuerda quién la dañó hace poco
+    if (atacante && atacante !== target && HEROES[atacante.build?.heroe]?.pasiva === 'festin') (target.golpesFestin = target.golpesFestin || {})[atacante.id] = this.combatTime;
     target.hp -= amt;
     target.ultimoDano = this.combatTime;
     this.numero(target, amt, src, o.silencioso);
@@ -3005,6 +3014,17 @@ class Game {
       }
     }
     p.mordidaDe = null;
+    // Festín (Seba 28-10): Aracnida recupera 100 si este héroe recibió su daño en los últimos 1,5 s
+    if (p.golpesFestin) {
+      for (const [id, t] of Object.entries(p.golpesFestin)) {
+        const ar = this.players.get(id);
+        if (!ar || !ar.alive || this.combatTime - t > HABILIDADES.mordida.ventanaKill) continue;
+        this.heal(ar, 100, ar);
+        this.emit({ k: 'heal', x: ar.x | 0, y: ar.y | 0 });
+        this.emit({ k: 'txt', x: ar.x | 0, y: ar.y | 0, s: 'FESTIN +100', id: ar.id });
+      }
+      p.golpesFestin = null;
+    }
     if (this.modo === 'pve') { this.caer(p); return; }
     p.hp = 0; p.alive = false; p.hidden = false;
     p.muertes = (p.muertes || 0) + 1;
@@ -3194,7 +3214,7 @@ class Game {
         for (const e of this.enemigos(pr.owner)) {
           if (distA(e, pr) > R + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) continue;
           this.damage(e, pr.dmg, owner, { tipo: 'mag', desde: pr });
-          if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'burn', { t: 3, dps: pr.extra, src: pr.owner });
+          if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'burn', { t: HABILIDADES.pulso.n1.quema || 3, dps: pr.extra, src: pr.owner });
         }
         return;
       }
@@ -5509,6 +5529,7 @@ class Sonido {
     if (s === 'SOBRECRECIMIENTO') return this.play('crecer', pos);
     if (s === 'JETPACK') return this.play('jet', pos);
     if (s === 'RECARGA -50%') return this.play('poder', pos);
+    if (s === 'FESTIN +100') return this.play('sanar', pos);
     if (s === 'MAYHEM' || s === 'TORMENTA' || s === 'DANZA SILENCIOSA' || s === 'MANOS DE RAYO') return this.play('ulti', pos);
     this.play('blip', pos);
   }
@@ -6585,10 +6606,13 @@ class Renderer {
     const atras = montado ? (izq ? 6 : -6) : 0; // el jinete va sobre el lomo, no tapa la cabeza del caballo
     const dibArma = () => gigante === 1 ? g.drawImage(arma, hx - 14 + atras, hy - 14 - sube)
       : g.drawImage(arma, Math.round(hx - 14 * gigante), Math.round(hy - 14 * gigante), Math.round(arma.width * gigante), Math.round(arma.height * gigante));
-    if (arma && detras) dibArma();
+    // Takichi: el segundo sable en la otra mano, con el mismo ángulo (se mueven juntos)
+    const dosArmas = arma && HEROES[meta.build.heroe]?.dosArmas;
+    const sable2 = () => g.drawImage(arma, hx - (izq ? -3 : 3) - 14, hy + 4 - 14 - sube);   // segundo sable, paralelo y un poco más abajo
+    if (arma && detras) { dibArma(); if (dosArmas) sable2(); }
     if (gigante === 1) g.drawImage(spr, sx + atras, sy - sube);
     else g.drawImage(spr, sx, sy, Math.round(spr.width * gigante), Math.round(spr.height * gigante));
-    if (arma && !detras) dibArma();
+    if (arma && !detras) { dibArma(); if (dosArmas) sable2(); }
     // Escudo de musgo: burbuja verde con hojas que giran
     if (p.flags & 67108864) {
       const rr = Math.round(15 * gigante), yy = Math.round(cy - 6 * gigante);
@@ -6685,9 +6709,11 @@ class Renderer {
     g.fillStyle = PALETA.carmesi0; g.fillRect(bx, by - 4, bw, bh);
     const totalB = Math.max(p.mh, p.hp + (p.esc || 0));   // con escudo, la barra se reparte entre vida y escudo
     const pct = Math.max(0, Math.min(1, p.hp / totalB));
-    const colVida = isMe ? PALETA.bosque1 : eq ? (eq === 'A' ? PALETA.acero1 : PALETA.carmesi1) : PALETA.carmesi1;
+    // Seba (28-10): barra verde para ti y tus aliados, roja para los enemigos (el aro de los pies sigue marcando el equipo)
+    const aliadoB = isMe || (eq && this.equipos && eq === this.equipos[this.myId]);
+    const colVida = aliadoB ? PALETA.bosque1 : PALETA.carmesi1;
     g.fillStyle = colVida; g.fillRect(bx, by - 4, Math.round(bw * pct), bh);
-    g.fillStyle = isMe ? PALETA.bosque2 : eq === 'A' ? PALETA.acero2 : PALETA.carmesi2; g.fillRect(bx, by - 4, Math.round(bw * pct), 1);
+    g.fillStyle = aliadoB ? PALETA.bosque2 : PALETA.carmesi2; g.fillRect(bx, by - 4, Math.round(bw * pct), 1);
     if (p.esc > 0) { const x0 = bx + Math.round(bw * pct), w = Math.max(1, Math.round(bw * p.esc / totalB)); g.fillStyle = PALETA.pergamino2; g.fillRect(x0, by - 4, Math.min(w, bx + bw - x0), bh); g.fillStyle = PALETA.bosque2; g.fillRect(x0, by + bh - 5, Math.min(w, bx + bw - x0), 1); }
     const num = texto(String(Math.max(0, Math.ceil(p.hp))) + (p.esc > 0 ? '+' + p.esc : ''), PALETA.pergamino2);
     g.drawImage(num, Math.round(cx - num.width / 2), by - 5);
@@ -6765,8 +6791,10 @@ class Renderer {
     g.fillStyle = CHAR[col.X]; g.fillRect(cx - 3, cy + 8, 7, 1);
     const bw = 18, by = cy - s.height + 2;
     g.fillStyle = PALETA.tinta; g.fillRect(cx - bw / 2 - 1, by - 1, bw + 2, 4);
+    // Seba (28-10): aliado (o tú) en verde, enemigo en rojo
+    const aliado = isMe || (this.equipos && this.equipos[p.id] && this.equipos[p.id] === this.equipos[this.myId]);
     g.fillStyle = PALETA.carmesi0; g.fillRect(cx - bw / 2, by, bw, 2);
-    g.fillStyle = PALETA.carmesi2; g.fillRect(cx - bw / 2, by, Math.round(bw * Math.max(0, Math.min(1, p.hp / p.mh))), 2);
+    g.fillStyle = aliado ? PALETA.bosque2 : PALETA.carmesi2; g.fillRect(cx - bw / 2, by, Math.round(bw * Math.max(0, Math.min(1, p.hp / p.mh))), 2);
     const nombre = texto(meta.name, isMe ? PALETA.oro2 : PALETA.pergamino2);
     g.drawImage(nombre, cx - (nombre.width >> 1), by - 9);
   }
@@ -6994,7 +7022,8 @@ class Renderer {
       return;
     }
     if (u.kind === 'orbeVida') {
-      const s = otro('orbeVida');
+      const propio = u.owner === this.myId || (this.equipos && this.equipos[u.owner] && this.equipos[u.owner] === this.equipos[this.myId]);
+      const s = otro(propio ? 'orbeVida' : 'orbeVidaRojo');   // Seba (28-10): el orbe enemigo se ve rojo
       const cx = this.gx(u.x), cy = this.gy(u.y), b = Math.round(Math.sin(this.time * 8) * 1);
       this.g.drawImage(s, cx - s.width, cy - s.height - 8 + b, s.width * 2, s.height * 2);
       return;
