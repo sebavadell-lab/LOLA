@@ -1010,6 +1010,15 @@ const HEROES = {
     habs: ['atraparPresa', 'tejer', 'mordida'],
     pasiva: 'festin',   // Seba (28-10): reemplaza a Sentido arácnido
   },
+  // Seba (29-10): lancero nómade renegado, daño y tanque (luchador). Números (C).
+  kazaro: {
+    nombre: 'Kazaro', rol: 'Luchador', fondo: 'kazaro', arma: 'lanzaKazaro',
+    desc: 'Lancero nómade renegado de tatuajes azules. Arroja su lanza y salta a ella, gira entre enemigos sin que nada lo detenga y encierra a sus presas en una arena de fuego azul.',
+    vida: 385, dano: 33, recarga: 1.2, ultiCarga: 300, velocidad: 160,   // Seba (29-10): vida 410 → 365 → 385
+    ataque: { tipo: 'melee', rango: 61, arco: 100 },   // Seba (29-10): alcance 72 → 61 (−15%)
+    habs: ['lanzaErrante', 'decimar', 'llamaEstepa'],
+    pasiva: 'ultimoAliento',
+  },
   // Seba (28-10): tanque y control (daño en la ulti), troll del bosque con un mazo. Números (C).
   trelgon: {
     nombre: 'Trelgon', rol: 'Tanque · control', fondo: 'trelgon', arma: 'mazo',
@@ -1142,6 +1151,17 @@ Object.assign(HABILIDADES, {
   sobrecrecimiento: { nombre: 'Sobrecrecimiento', glifo: 'brote', cd: 55, ulti: true, radio: 130,
                    desc: (n) => `Creces durante ${n.dur} s: +${n.vida} de vida, +${Math.round(n.rango * 100)}% de alcance del mazo y +${Math.round(n.dano * 100)}% de daño de ataque, y tus golpes barren media vuelta (pegan a todos los que tengas al frente). El enemigo que pase más de ${n.raiz} s cerca de ti (a menos de 130) queda atrapado por raíces y aturdido ${n.aturde} s, y se puede repetir. Al terminar pierdes lo que quede de la vida extra.`,
                    n1: { dur: 8, vida: 250, rango: 0.5, dano: 0.45, raiz: 2, aturde: 1 }, n2: { dur: 8, vida: 325, rango: 0.5, dano: 0.55, raiz: 2, aturde: 1 } },   // Seba (28-10): daño 35% → 45%
+  // ---- Kazaro (Seba, 29-10; números (C))
+  lanzaErrante:  { nombre: 'Lanza errante', glifo: 'lanza', cd: 10, cdFijo: true, alcance: 380, vel: 760, ancho: 26, clavada: 2, radioCura: 120,
+                   desc: (n) => `Arrojas la lanza en línea recta: ${n.dano} a todos los enemigos que atraviesa. Queda clavada 2 s. Si vuelves a presionar en ese tiempo, saltas hasta ella y recuperas ${n.cura} de vida por cada héroe enemigo a menos de 120 de la lanza. Si no, vuelve a tus manos y hace ${n.dano} a todos los enemigos que cruza.`,
+                   n1: { dano: 75, cura: 50 }, n2: { dano: 97.5, cura: 65 } },
+  decimar:       { nombre: 'Decimar', glifo: 'decimar', cd: 18, cdFijo: true, radio: 110,
+                   desc: (n) => `Durante ${fmtN(n.dur)} s giras la lanza: ${n.dano} de daño cada ${fmtN(n.cada)} s a los enemigos cerca (${Math.round(n.dano * n.dur / n.cada)} en total). Mientras giras eres inmune a todo control (arrastres, silencios, lentos, aturdimientos). Te puedes mover, pero no atacar.`,
+                   n1: { dur: 3.5, cada: 0.35, dano: 20 }, n2: { dur: 3.5, cada: 0.35, dano: 26 } },   // Seba (29-10): 25 → 20 por golpe
+  // Seba (29-10): rework — arena de fuego azul que encierra (radio, canalización quieto y efectos (C))
+  llamaEstepa:   { nombre: 'Llama de la estepa', glifo: 'llamaAzul', cd: 50, ulti: true, canal: 1, radio: 150,
+                   desc: (n) => `Canalizas 1 s quieto (un aturdimiento o un silencio lo corta) y levantas una arena de fuego azul a tu alrededor por ${n.dur} s: los enemigos no pueden entrar ni salir. Dentro recuperas ${n.cura} de vida por segundo y los enemigos arden con «Fuego azul» (${n.fuego} por segundo). Con más héroes dentro arde más: +50% por cada héroe (aliado o enemigo) más allá del primero, sin contarte a ti.`,
+                   n1: { dur: 8, cura: 25, fuego: 20, extra: 0.5 }, n2: { dur: 8, cura: 32.5, fuego: 26, extra: 0.5 } },   // Seba (29-10): dura 8 s, fuego 20, +50% por héroe extra dentro
   granBombazo:   { nombre: 'Gran bombazo', glifo: 'bombazo', cd: 45, ulti: true, alcance: 420, radio: 108, aviso: 2,
                    desc: (n) => `Marcas una zona circular; a los 2 s cae un bombazo: ${n.dano} de daño a todos los jugadores dentro, incluidos tus aliados y tú.`,
                    n1: { dano: 350 }, n2: { dano: 455 } },   // Seba (28-10): 191 → 350
@@ -1157,6 +1177,7 @@ const PASIVAS = {
   festin:       { nombre: 'Festín', glifo: 'colmillos', desc: 'Cuando muere un héroe enemigo al que dañaste en los últimos 1,5 s, recuperas 100 de vida.' },
   sentidoAracnido: { nombre: 'Sentido arácnido', glifo: 'ojoArana', desc: 'Los enemigos invisibles o escondidos que pisan tu tela quedan a la vista de todos.' },
   furiaBosque:  { nombre: 'Furia del bosque', glifo: 'huellaTroll', desc: '+3% de velocidad de movimiento por cada héroe enemigo a menos de 250 (máximo +30%).' },
+  ultimoAliento: { nombre: 'Último aliento', glifo: 'corazonVerde', desc: 'Por debajo del 30% de vida, tus habilidades se recargan 25% más rápido.' },
   sangreReal:   { nombre: 'Sangre real', glifo: 'corona', desc: 'Recuperas 25 de vida cada vez que usas una habilidad.' },
 };
 
@@ -1174,6 +1195,8 @@ const UNIDADES = {
   orbeVida:  { vel: 0, invulnerable: true },
   circuloVida: { vel: 0, invulnerable: true },
   mina: { vel: 0, invulnerable: true },
+  lanza: { vel: 0, invulnerable: true },
+  arenaEstepa: { vel: 0, invulnerable: true },
   enemigo:   { vel: 0 },
 };
 
@@ -1204,6 +1227,9 @@ const ESTADOS = [
   { bit: 65536,  nombre: 'Marcado', glifo: 'diana', bueno: false },
   { bit: 524288, nombre: 'Bomba pegada', glifo: 'bomba', bueno: false },
   { bit: 256,    nombre: 'Vulnerable', glifo: 'grito', bueno: false },
+  { bit: 512,    nombre: 'Levantando la arena', glifo: 'llamaAzul', bueno: true },
+  { bit: 128,    nombre: 'Decimar (inmune a control)', glifo: 'decimar', bueno: true },
+  { bit: 1024,   nombre: 'Fuego azul', glifo: 'llamaAzul', bueno: false },
   { bit: 64,     nombre: 'Silenciado', glifo: 'espiral', bueno: false },
   { bit: 4,      nombre: 'Maldito', glifo: 'calavera', bueno: false },
   { bit: 2,      nombre: 'Invulnerable', glifo: 'solVida', bueno: true },
@@ -1220,6 +1246,7 @@ const GUIAS = {
   bombaPegajosa: { tipo: 'punto', alcance: 420, r: 40 }, jetpack: { tipo: 'linea', alcance: 320, ancho: 60 }, mina: { tipo: 'propio', r: 20 }, granBombazo: { tipo: 'punto', alcance: 420, r: 108 }, orbeVida: { tipo: 'linea', alcance: 360, ancho: 70 },
   trueno: { tipo: 'linea', alcance: 420, ancho: 20 }, sablazo: { tipo: 'linea', alcance: 220, ancho: 34 }, humo: { tipo: 'propio', r: 250 }, danza: { tipo: 'propio', r: 90 },
   atraparPresa: { tipo: 'linea', alcance: 400, ancho: 20 }, tejer: { tipo: 'propio', r: 130 }, mordida: { tipo: 'propio', r: 120 }, manosRayo: { tipo: 'propio', r: 30 }, tormenta: { tipo: 'linea', alcance: 400, ancho: 180 }, bendicion: { tipo: 'propio', r: 40 },
+  lanzaErrante: { tipo: 'linea', alcance: 380, ancho: 26 }, decimar: { tipo: 'propio', r: 110 }, llamaEstepa: { tipo: 'propio', r: 150 },
   mazazos: { tipo: 'propio', r: 110 }, escudoMusgo: { tipo: 'propio', r: 200 }, sobrecrecimiento: { tipo: 'propio', r: 130 },
 };
 
@@ -1245,121 +1272,143 @@ for (const hb of Object.values(HABILIDADES)) {
 for (const u of Object.values(UNIDADES)) if (u.vel) u.vel = Math.round(u.vel * RITMO.movimiento);
 
 // ===== matchups.js =====
-// Generado por tools/matchups.js (2026-10-28): % de duelos 1v1 que gana la fila contra la columna.
+// Generado por tools/matchups.js (2026-10-29): % de duelos 1v1 que gana la fila contra la columna.
 // Medido con bots (apuntado automático), 200 duelos por par.
 const MATCHUPS = {
  "beast": {
   "lire": 41,
-  "nigromante": 96,
-  "maidas": 30,
+  "nigromante": 97,
+  "maidas": 32,
   "monh": 100,
-  "biteroi": 0,
+  "biteroi": 1,
   "rasho": 0,
   "takichi": 98,
-  "aracnida": 100,
-  "trelgon": 99
+  "aracnida": 99,
+  "kazaro": 72,
+  "trelgon": 100
  },
  "lire": {
   "beast": 60,
-  "nigromante": 31,
+  "nigromante": 36,
   "maidas": 72,
-  "monh": 39,
-  "biteroi": 82,
-  "rasho": 93,
-  "takichi": 31,
-  "aracnida": 83,
-  "trelgon": 66
+  "monh": 35,
+  "biteroi": 80,
+  "rasho": 94,
+  "takichi": 24,
+  "aracnida": 89,
+  "kazaro": 79,
+  "trelgon": 65
  },
  "nigromante": {
-  "beast": 5,
-  "lire": 69,
-  "maidas": 95,
+  "beast": 4,
+  "lire": 64,
+  "maidas": 96,
   "monh": 100,
-  "biteroi": 86,
-  "rasho": 88,
-  "takichi": 67,
+  "biteroi": 81,
+  "rasho": 84,
+  "takichi": 63,
   "aracnida": 100,
+  "kazaro": 18,
   "trelgon": 6
  },
  "maidas": {
-  "beast": 70,
+  "beast": 68,
   "lire": 28,
-  "nigromante": 6,
-  "monh": 61,
+  "nigromante": 4,
+  "monh": 55,
   "biteroi": 63,
-  "rasho": 70,
-  "takichi": 23,
-  "aracnida": 76,
-  "trelgon": 17
+  "rasho": 68,
+  "takichi": 21,
+  "aracnida": 82,
+  "kazaro": 52,
+  "trelgon": 21
  },
  "monh": {
   "beast": 0,
-  "lire": 62,
+  "lire": 66,
   "nigromante": 0,
-  "maidas": 40,
-  "biteroi": 57,
-  "rasho": 54,
+  "maidas": 45,
+  "biteroi": 51,
+  "rasho": 62,
   "takichi": 0,
-  "aracnida": 44,
-  "trelgon": 1
+  "aracnida": 45,
+  "kazaro": 1,
+  "trelgon": 2
  },
  "biteroi": {
   "beast": 100,
-  "lire": 19,
-  "nigromante": 14,
-  "maidas": 37,
-  "monh": 43,
-  "rasho": 45,
+  "lire": 21,
+  "nigromante": 20,
+  "maidas": 38,
+  "monh": 49,
+  "rasho": 56,
   "takichi": 100,
   "aracnida": 100,
-  "trelgon": 32
+  "kazaro": 100,
+  "trelgon": 35
  },
  "rasho": {
   "beast": 100,
   "lire": 7,
-  "nigromante": 13,
-  "maidas": 30,
-  "monh": 47,
-  "biteroi": 55,
-  "takichi": 62,
-  "aracnida": 99,
+  "nigromante": 16,
+  "maidas": 32,
+  "monh": 39,
+  "biteroi": 44,
+  "takichi": 55,
+  "aracnida": 98,
+  "kazaro": 93,
   "trelgon": 100
  },
  "takichi": {
-  "beast": 3,
-  "lire": 70,
-  "nigromante": 34,
-  "maidas": 78,
+  "beast": 2,
+  "lire": 76,
+  "nigromante": 37,
+  "maidas": 80,
   "monh": 100,
   "biteroi": 0,
-  "rasho": 39,
-  "aracnida": 3,
-  "trelgon": 85
+  "rasho": 46,
+  "aracnida": 1,
+  "kazaro": 67,
+  "trelgon": 80
  },
  "aracnida": {
-  "beast": 1,
-  "lire": 17,
+  "beast": 2,
+  "lire": 11,
   "nigromante": 1,
-  "maidas": 25,
+  "maidas": 19,
   "monh": 56,
   "biteroi": 0,
-  "rasho": 1,
-  "takichi": 97,
+  "rasho": 2,
+  "takichi": 99,
+  "kazaro": 24,
   "trelgon": 85
+ },
+ "kazaro": {
+  "beast": 28,
+  "lire": 22,
+  "nigromante": 83,
+  "maidas": 49,
+  "monh": 100,
+  "biteroi": 0,
+  "rasho": 8,
+  "takichi": 34,
+  "aracnida": 76,
+  "trelgon": 80
  },
  "trelgon": {
   "beast": 1,
-  "lire": 34,
-  "nigromante": 94,
-  "maidas": 83,
-  "monh": 100,
-  "biteroi": 68,
+  "lire": 36,
+  "nigromante": 95,
+  "maidas": 79,
+  "monh": 98,
+  "biteroi": 65,
   "rasho": 0,
-  "takichi": 16,
-  "aracnida": 15
+  "takichi": 21,
+  "aracnida": 16,
+  "kazaro": 20
  }
 };
-const MATCHUPS_INFO = { fecha: '2026-10-28', duelos: 200 };
+const MATCHUPS_INFO = { fecha: '2026-10-29', duelos: 200 };
 
 // ===== sprites.js =====
 // =====================================================================
@@ -1838,6 +1887,37 @@ Object.assign(CAPAS, {
   }),
 });
 
+// Kazaro (Seba 29-10): lancero nómade renegado — torso descubierto, piel pálida grisácea, tatuajes azules simétricos, pelo largo castaño.
+Object.assign(CAPAS, {
+  peloLargoKazaro: L({
+    5: '........WWWW........',
+    6: '.......WmWWWW.......',
+    7: '......WmmWWWWW......',
+    8: '.....WWW............',
+    9: '....WWW.............',
+    10: '....WWW.............',
+    11: '....WWm.............',
+    12: '....WW..............',
+    13: '....Wm..............',
+    14: '....W...............',
+  }),
+  torsoKazaro: L({
+    14: '......4c4444c4......',
+    15: '.....44c4BB4c44.....',
+    16: '.....3c44cc44c3.....',
+    17: '......wwXXXXww......',
+    18: '......xXXXXXXx......',
+  }),
+});
+Object.assign(APARIENCIA, {
+  kazaro: {
+    piel: { P: '4', p: '3' },
+    back: [],
+    cuerpo: [['torsoKazaro'], ['torsoKazaro']],
+    cabeza: [['peloLargoKazaro'], ['peloLargoKazaro']],
+  },
+});
+
 // Trelgon (Seba 28-10): troll de musgo — piel verde, musgo en los hombros, colmillos de abajo, ojos ámbar, más ancho que los demás.
 Object.assign(CAPAS, {
   cabezaTroll: L({
@@ -1979,6 +2059,12 @@ const ARMAS_SPR = {
     '............', '............', '............', '............',
     '.........qq.', '........qqqq', 'qqqqqqqqqkqk', '........qqqq',
     '.........q.q', '............', '............', '............'] },
+  // Lanza-espada de Kazaro: bastón largo de madera con cuchilla de acero al final
+  // Seba (29-10): cuchilla más larga, que sobrepase levemente su cabeza
+  lanzaKazaro: { g: [2, 6], rows: [
+    '...............', '...............', '...............', '...............',
+    '...............', '.......3ccccc..', 'mWWWWWW34cccc4q', '.......3ccccc..',
+    '...............', '...............', '...............', '...............'] },
   garras: { g: [1, 6], rows: [
     '............', '............', '............', '........q...',
     '.....PPPqq..', '...PPPPP....', '..PPPPPPPqq.', '...PPPPP....',
@@ -2202,6 +2288,8 @@ const GLIFOS = {
   telarana: ['q...q...q', '.q..q..q.', '..qqqqq..', '.qq.q.qq.', 'qqqqqqqqq', '.qq.q.qq.', '..qqqqq..', '.q..q..q.', 'q...q...q'],
   colmillos: ['.nnnnnnn.', 'nkkkkkkkn', 'nkq.k.qkn', 'nkq...qkn', 'nk.q.q.kn', '.....l...', '....l.l..', '.........', '.........'],
   ojoArana: ['.........', '..e...e..', '.eee.eee.', '..e...e..', '.........', '...e.e...', '..eee.ee.', '...e.e...', '.........'],
+  lanza: ['.......c4', '......3cc', '.....W3c.', '....W....', '...W.....', '..W......', '.W.......', 'W........', '.........'],
+  decimar: ['..c...c..', '.c.....W.', 'c...W..W.', '...W.....', '..W.4.W..', '.....W...', '.W..W...c', '.W.....c.', '..c...c..'],
   sablazo: ['.......vv', '......vvq', '.....vvq.', '....vvq..', '...vvq...', '..vvq....', '.vvq.....', 'vvq......', '.........'],
   humo: ['..33..3..', '.3443343.', '344443443', '.34444433', '..3333333', '...v..v..', '..v....v.', '.........', '.........'],
   clones: ['v.......v', 'vv.....vv', '.........', '....v....', '...vvv...', '.........', 'v.......v', 'vv.....vv', '.........'],
@@ -2231,6 +2319,7 @@ const VARIANTES = {
   calaveraPiedra: ['calavera', { q: '3', k: '1' }],
   cuernosRojos: ['cuernos', { 2: 'R' }],
   remolinoBestia: ['remolino', { v: 'm' }],
+  llamaAzul: ['llama', { f: 'B', y: 'c', q: 'q' }],
   gotaAzul: ['gota', { R: 'B', e: 'c', r: 'b' }],
   flechaVerde: ['flecha', { 3: 'l', W: 'G', e: 'l' }],
 };
@@ -2349,7 +2438,8 @@ function armaRotada(key, idx) {
   const k = key + '|' + idx;
   if (cacheArma.has(k)) return cacheArma.get(k);
   const def = ARMAS_SPR[key];
-  const src = matrizVacia(12, 12);
+  const W = def.rows[0].length;   // Kazaro: su lanza es más larga (15 de ancho)
+  const src = matrizVacia(W, 12);
   pintar(src, def.rows);
   const S = 27, C = 13;
   const dst = matrizVacia(S, S);
@@ -2360,7 +2450,7 @@ function armaRotada(key, idx) {
     // rotación inversa
     const sx = Math.round(dx * ca + dy * sa + def.g[0]);
     const sy = Math.round(-dx * sa + dy * ca + def.g[1]);
-    if (sx >= 0 && sx < 12 && sy >= 0 && sy < 12 && src[sy][sx]) dst[y][x] = src[sy][sx];
+    if (sx >= 0 && sx < W && sy >= 0 && sy < 12 && src[sy][sx]) dst[y][x] = src[sy][sx];
   }
   const c = aCanvas(contornear(dst));
   cacheArma.set(k, c);
@@ -2406,7 +2496,7 @@ const FONDOS = {
   mago: ['n', 'v'], caballero: ['b', 'B'], arquero: ['g', 'G'], nigromante: ['k', '1'],
   fuego: ['r', 'R'], rayo: ['b', 'B'], barbaro: ['w', 'W'], real: ['o', 'O'],
   cazador: ['g', 'G'], trampero: ['w', 'm'], nigromaster: ['1', '2'], brujo: ['n', 'v'],
-  beast: ['w', 'W'], lire: ['g', 'G'], maidas: ['n', 'v'], monh: ['1', '2'], biteroi: ['r', 'R'], rasho: ['n', '2'], takichi: ['k', 'n'], aracnida: ['n', 'v'], trelgon: ['w', 'G'],
+  beast: ['w', 'W'], lire: ['g', 'G'], maidas: ['n', 'v'], monh: ['1', '2'], biteroi: ['r', 'R'], rasho: ['n', '2'], takichi: ['k', 'n'], aracnida: ['n', 'v'], trelgon: ['w', 'G'], kazaro: ['b', 'B'],
   estBueno: ['o', 'O'], estMalo: ['r', 'R'],
   bloqueado: ['1', '1'],
 };
@@ -2580,7 +2670,9 @@ const TAU = Math.PI * 2;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const r1 = (v) => Math.round(v * 10) / 10;
 
-const NEGATIVOS = new Set(['aturdido', 'slow', 'silence', 'arrastre', 'burn', 'dot', 'veneno', 'marcado', 'bombaPegada', 'vuln', 'enraizando']);
+const NEGATIVOS = new Set(['aturdido', 'slow', 'silence', 'arrastre', 'burn', 'dot', 'veneno', 'marcado', 'bombaPegada', 'vuln', 'enraizando', 'fuegoAzul']);
+// Kazaro (Seba 29-10): durante Decimar es inmune a todo control
+const CONTROL = new Set(['aturdido', 'silence', 'slow', 'arrastre', 'enraizando']);
 
 function nuevaBuild() { return { heroe: null, niv: [1, 1, 1] }; }   // rework: todas las habilidades desde el inicio
 
@@ -2931,7 +3023,8 @@ class Game {
     if (target.fx && target.fx.marcado && src && src.enemigo) amt *= target.fx.marcado.mult;
     { const at = src ? (src.esUnidad ? this.players.get(src.owner) : src) : null;
       if (o.tipo !== 'puro' && at && at.fx && at.fx.bendecido) amt *= 1 + (at.fx.bendecido.dano || 0);   // Seba (28-10): +25% a habilidades y ataques
-      if (at && at.fx && at.fx.cucko) amt *= CONFIG.CUCKO.buff.dano; }
+      if (at && at.fx && at.fx.cucko) amt *= CONFIG.CUCKO.buff.dano;
+      if (at && at === src && at.fx && at.fx.llama && !o.fuegoAzul && o.tipo !== 'puro') amt *= 1 + at.fx.llama.n.extra; }   // Kazaro: +50% con la lanza en fuego azul
     if (esJugador && target.fx && target.fx.cucko) amt *= CONFIG.CUCKO.buff.recibe;
     if (esJugador && target.fx && target.fx.enTela) amt *= 1 - target.fx.enTela.buff;   // Aracnida sobre su tela
     if (amt <= 0) return 0;
@@ -2956,6 +3049,7 @@ class Game {
     if (!esJugador) {
       if (atacante && target.enemigo) this.sumarStat(atacante, 'dano', Math.min(amt, Math.max(0, target.hp)));
       if (atacante && this.teamOf(atacante.id) !== this.teamOf(target.owner) && target.kind !== 'muro') this.cargarUlti(atacante, Math.min(amt, Math.max(0, target.hp)), src, o);
+      if (atacante && atacante.fx && atacante.fx.llama && this.teamOf(atacante.id) !== this.teamOf(target.owner)) atacante.fx.llama.dano += Math.min(amt, Math.max(0, target.hp));
       target.hp -= amt;
       this.numero(target, amt, src, o.silencioso);
       if (target.hp <= 0) this.killUnit(target, atacante, true);
@@ -2968,7 +3062,7 @@ class Game {
     target.hp -= amt;
     target.ultimoDano = this.combatTime;
     this.numero(target, amt, src, o.silencioso);
-    if (atacante && atacante !== target && this.teamOf(atacante.id) !== this.teamOf(target.id)) { atacante.dmgRound += real; this.cargarUlti(atacante, real, src, o); }
+    if (atacante && atacante !== target && this.teamOf(atacante.id) !== this.teamOf(target.id)) { atacante.dmgRound += real; this.cargarUlti(atacante, real, src, o); if (atacante.fx && atacante.fx.llama) atacante.fx.llama.dano += real; }
     if (target.hp <= 0) this.kill(target, src);
     return amt;
   }
@@ -3025,10 +3119,11 @@ class Game {
 
   aplicarEfecto(t, key, val) {
     if (!t.fx) t.fx = {};
-    if ((t.fx.jetpack || t.fx.renacer) && NEGATIVOS.has(key)) return;   // en el aire (o recién reaparecido) no le afecta nada
+    if ((t.fx.jetpack || t.fx.renacer) && NEGATIVOS.has(key)) return;
+    if (t.fx.decimar && CONTROL.has(key)) return;   // Kazaro girando   // en el aire (o recién reaparecido) no le afecta nada
     // Un aturdimiento corta la canalización del Sablazo
     // Seba (28-10): aturdimiento y silencio cortan las canalizaciones (Sablazo y Jetpack)
-    const canal = (key === 'aturdido' || key === 'silence') && (t.fx.canalSablazo ? 'canalSablazo' : t.fx.canalJet ? 'canalJet' : null);
+    const canal = (key === 'aturdido' || key === 'silence') && (t.fx.canalSablazo ? 'canalSablazo' : t.fx.canalJet ? 'canalJet' : t.fx.canalArena ? 'canalArena' : null);
     if (canal) {
       const z = t.fx[canal].zona; if (z) { z.cancelado = true; z.t = 0; }
       delete t.fx[canal];
@@ -3121,6 +3216,19 @@ class Game {
     if (p.fx) delete p.fx.sobre;
   }
 
+  // Kazaro: con la Llama de la estepa, sus habilidades dejan «Fuego azul»
+  fuegoAzulEn(p, e) {
+    if (!p.fx || !p.fx.llama || !e.alive || e.kind === 'muro') return;
+    this.aplicarEfecto(e, 'fuegoAzul', { t: 5, dps: p.fx.llama.n.fuego, src: p.id });
+  }
+  // Kazaro: salta hasta su lanza clavada (0,2 s) y se cura por cada héroe enemigo cerca de ella
+  saltarALanza(p, l) {
+    l.estado = 'saltando';
+    this.aplicarEfecto(p, 'saltoLanza', { t: 99, el: 0, total: 0.2, x0: p.x, y0: p.y, x1: l.x, y1: l.y, lanza: l });
+    p.disparo = null;
+    this.emit({ k: 'humo', x: p.x | 0, y: p.y | 0, chico: true });
+  }
+
   // Cargas que le quedan a la habilidad con cargas (Torreta); -1 si el héroe no tiene ninguna
   cargasHab(p) {
     const habs = habilidadesDe(p.build);
@@ -3143,7 +3251,7 @@ class Game {
     p.ulti = Math.min(1, p.ulti + cant / p.st.ultiCarga);
   }
   velocidadDe(p) {
-    if (p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.jetpack) return 0;
+    if (p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.canalArena || p.fx.jetpack || p.fx.saltoLanza) return 0;
     if (p.build && HEROES[p.build.heroe]?.pasiva === 'pasoSigiloso' && this.combatTime - (p.ultimoDano ?? -99) >= 3) return this.velocidadBase(p) * 1.1;   // Takichi
     return this.velocidadBase(p);
   }
@@ -3381,7 +3489,12 @@ class Game {
     const key = habs[slot];
     if (!key || p.build.niv[slot] < 1) return;
     const h = HABILIDADES[key];
-    if (p.cd[slot + 1] > 0 || p.fx.silence || p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.renacer) return;
+    // Kazaro: con la lanza clavada, volver a presionar salta hasta ella (no mira la recarga)
+    if (key === 'lanzaErrante') {
+      const l = this.units.find(u => u.alive && u.kind === 'lanza' && u.owner === p.id && u.estado === 'clavada');
+      if (l) { if (!p.fx.silence && !p.fx.aturdido && !p.fx.renacer && !p.fx.saltoLanza) this.saltarALanza(p, l); return; }
+    }
+    if (p.cd[slot + 1] > 0 || p.fx.silence || p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.canalArena || p.fx.renacer) return;
     // Aracnida: la mordida necesita un héroe enemigo cerca (si no, no se gasta)
     if (key === 'mordida') {
       if (p.ulti < 1) return;
@@ -3448,6 +3561,44 @@ class Game {
           x: p.x + Math.cos(a) * 30, y: p.y + Math.sin(a) * 30, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
           hp: 1, maxHp: 0, cd: h.cada, t: 0, dur: h.cada * n.descargas + 0.2, facing: a, fx: {}, n, descargas: 0, deUlti: true });
         this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'TORMENTA' });
+        break;
+      }
+      // ---------------------------------------------------------- Kazaro
+      case 'lanzaErrante': {
+        const { a } = this.aim(p, h.alcance + 40);
+        p.facing = a;
+        const v = h.vel * RITMO.proyectil;
+        this.units.push({ id: this.nextId++, kind: 'lanza', owner: p.id, esUnidad: true, alive: true, sinCuerpo: true,
+          x: p.x + Math.cos(a) * 20, y: p.y + Math.sin(a) * 20, vx: Math.cos(a) * v, vy: Math.sin(a) * v, recorrido: 0,
+          hp: 1, maxHp: 0, cd: 0, t: 0, dur: 0, facing: a, fx: {}, n, estado: 'vuela', golpes: {}, fuego: !!p.fx.llama });
+        break;
+      }
+      case 'decimar':
+        this.aplicarEfecto(p, 'decimar', { t: n.dur, prox: 0, n });
+        for (const k of CONTROL) delete p.fx[k];   // al empezar a girar se suelta de todo control
+        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: h.radio, c: 'acero' });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'DECIMAR' });
+        break;
+      case 'llamaEstepa': {
+        // Seba (29-10): 1 s de canalización quieto (se corta con aturdimiento o silencio); luego la arena
+        p.disparo = null;
+        const zona = { id: this.nextId++, kind: 'nada', x: p.x, y: p.y, r: 0, t: h.canal, total: h.canal,
+          fin: (z) => {
+            if (z.cancelado || !p.alive || !p.fx.canalArena) return;
+            delete p.fx.canalArena;
+            this.limitar(p, 'arenaEstepa', 0);
+            const u = { id: this.nextId++, kind: 'arenaEstepa', owner: p.id, esUnidad: true, alive: true, sinCuerpo: true, deUlti: true,
+              x: p.x, y: p.y, hp: 1, maxHp: 0, cd: 0, t: 0, dur: n.dur, facing: 0, fx: {}, n, r: h.radio, dentro: new Set() };
+            // Quién quedó encerrado y quién afuera (los enemigos no pueden cruzar el borde)
+            for (const q of this.players.values()) if (q.alive && this.teamOf(q.id) !== this.teamOf(p.id) && dist(q, u) < u.r) u.dentro.add(q.id);
+            for (const q of this.units) if (q.alive && !q.sinCuerpo && q.kind !== 'muro' && q.kind !== 'cucko' && this.teamOf(q.owner) !== this.teamOf(p.id) && dist(q, u) < u.r) u.dentro.add('u' + q.id);
+            this.units.push(u);
+            this.emit({ k: 'boom', x: p.x | 0, y: p.y | 0, r: h.radio, c: 'azul' });
+            this.emit({ k: 'anuncio', s: '¡ARENA DE LA ESTEPA!', chico: true });
+          } };
+        this.zones.push(zona);
+        this.aplicarEfecto(p, 'canalArena', { t: h.canal + 0.1, zona });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'LLAMA DE LA ESTEPA' });
         break;
       }
       // ---------------------------------------------------------- Trelgon
@@ -3780,7 +3931,7 @@ class Game {
       const f = fx[k];
       if (!f) continue;   // se borró en esta misma vuelta (ej. murió y perdió el Sobrecrecimiento)
       f.t -= dt;
-      if ((k === 'burn' || k === 'dot' || k === 'veneno') && e.alive) this.damage(e, f.dps * dt, this.players.get(f.src), { tipo: 'mag', silencioso: true, ulti: k === 'veneno' });
+      if ((k === 'burn' || k === 'dot' || k === 'veneno' || k === 'fuegoAzul') && e.alive) this.damage(e, f.dps * dt, this.players.get(f.src), { tipo: 'mag', silencioso: true, ulti: k === 'veneno' || k === 'fuegoAzul', fuegoAzul: k === 'fuegoAzul' });
       // Atrapar presa: arrastre hasta los pies de Aracnida
       if (k === 'arrastre' && e.alive) {
         const q = Math.min(1, dt / Math.max(dt, f.t + dt));
@@ -3790,6 +3941,10 @@ class Game {
       if (f.t <= 0) {
         delete fx[k];
         if (k === 'sobre') { this.quitarSobre(e); this.emit({ k: 'poof', x: e.x | 0, y: e.y | 0, c: 'vida' }); }
+        if (k === 'llama' && e.alive && !e.esUnidad) {   // Kazaro: al apagarse, recupera el 50% del daño hecho
+          const cura = f.dano * f.n.cura;
+          if (cura >= 1) { this.heal(e, cura, e); this.emit({ k: 'heal', x: e.x | 0, y: e.y | 0 }); this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: `+${Math.round(cura)} ESTEPA`, id: e.id }); }
+        }
         if (k === 'bombaPegada' && e.alive) {
           this.emit({ k: 'boom', x: e.x | 0, y: e.y | 0, r: 40 });
           this.damage(e, f.dano, this.players.get(f.src), { tipo: 'mag' });
@@ -3829,6 +3984,67 @@ class Game {
         }
       }
       if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'vida' }); }
+    }
+    // Kazaro: Arena de la estepa (encierra a los enemigos: no entran ni salen; cura a Kazaro y quema a los de dentro)
+    for (const u of this.units) {
+      if (!u.alive || u.kind !== 'arenaEstepa') continue;
+      u.t += dt;
+      const own = this.players.get(u.owner);
+      if (u.t >= u.dur || !own) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'magia' }); continue; }
+      const borde = (e, clave, rad) => {
+        const dx = e.x - u.x, dy = e.y - u.y, d = Math.hypot(dx, dy) || 0.01;
+        if (u.dentro.has(clave)) { if (d > u.r - rad) { e.x = u.x + dx / d * (u.r - rad); e.y = u.y + dy / d * (u.r - rad); e.kbx = e.kby = 0; } }
+        else if (d < u.r + rad) { e.x = u.x + dx / d * (u.r + rad); e.y = u.y + dy / d * (u.r + rad); e.kbx = e.kby = 0; }
+      };
+      // Seba (29-10): +50% de fuego y de curación por cada héroe dentro (aliado o enemigo, sin contar a Kazaro) más allá del primero
+      let heroesDentro = 0;
+      for (const q of this.players.values()) if (q.alive && q.id !== u.owner && dist(q, u) < u.r) heroesDentro++;
+      const mult = 1 + u.n.extra * Math.max(0, heroesDentro - 1);
+      u.mult = mult;
+      for (const q of this.players.values()) {
+        if (!q.alive || this.teamOf(q.id) === this.teamOf(u.owner)) continue;
+        if (q.fx && (q.fx.jetpack || q.fx.saltoLanza)) { /* en el aire no lo frena el borde */ } else borde(q, q.id, CONFIG.RADIO_JUGADOR);
+        if (u.dentro.has(q.id) && dist(q, u) < u.r) this.aplicarEfecto(q, 'fuegoAzul', { t: 0.25, dps: u.n.fuego * mult, src: u.owner });
+      }
+      for (const q of this.units) {
+        if (!q.alive || q.sinCuerpo || q.kind === 'muro' || q.kind === 'cucko' || this.teamOf(q.owner) === this.teamOf(u.owner)) continue;
+        borde(q, 'u' + q.id, 10);
+        if (u.dentro.has('u' + q.id)) this.aplicarEfecto(q, 'fuegoAzul', { t: 0.25, dps: u.n.fuego * mult, src: u.owner });
+      }
+      if (own.alive && dist(own, u) < u.r) this.heal(own, u.n.cura * mult * dt, own);
+    }
+    // Kazaro: Lanza errante (vuela, queda clavada 2 s y, si no salta, vuelve a sus manos dañando)
+    for (const u of this.units) {
+      if (!u.alive || u.kind !== 'lanza') continue;
+      const own = this.players.get(u.owner), H = HABILIDADES.lanzaErrante;
+      if (!own || !own.alive) { u.alive = false; continue; }
+      if (u.estado === 'saltando') continue;
+      const golpear = () => {
+        for (const e of this.enemigos(own.id, false)) {
+          if (u.golpes[e.id] || dist(e, u) > H.ancho / 2 + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) continue;
+          u.golpes[e.id] = 1;
+          this.damage(e, u.n.dano, own, { tipo: 'mag', desde: u });
+          this.fuegoAzulEn(own, e);
+          this.emit({ k: 'boom', x: e.x | 0, y: e.y | 0, r: 18, c: 'azul' });
+        }
+      };
+      if (u.estado === 'vuela') {
+        const sx = u.vx * dt, sy = u.vy * dt;
+        u.x += sx; u.y += sy; u.recorrido += Math.hypot(sx, sy);
+        golpear();
+        const fuera = Math.hypot(u.x, u.y) > CONFIG.RADIO_ARENA - 20 || (this.modo === 'equipos' && this.enMuroCamara(u.x, u.y, 6));
+        if (u.recorrido >= H.alcance || fuera) { this.clampWall(u); u.estado = 'clavada'; u.t = 0; this.emit({ k: 'boom', x: u.x | 0, y: u.y | 0, r: 16, c: 'piedra' }); }
+      } else if (u.estado === 'clavada') {
+        u.t += dt;
+        if (u.t >= H.clavada) { u.estado = 'vuelve'; u.golpes = {}; }
+      } else if (u.estado === 'vuelve') {
+        const dx = own.x - u.x, dy = own.y - u.y, d = Math.hypot(dx, dy), v = H.vel * RITMO.proyectil;
+        u.facing = Math.atan2(dy, dx);
+        if (d < 22) { u.alive = false; continue; }
+        const paso = Math.min(d, v * dt);
+        u.x += dx / d * paso; u.y += dy / d * paso;
+        golpear();
+      }
     }
     // Aracnida: tela de araña (potencia a Aracnida, enlentece y expone a enemigos)
     for (const u of this.units) {
@@ -3902,7 +4118,7 @@ class Game {
       if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'magia' }); }
     }
     for (const u of this.units) {
-      if (!u.alive || u.enemigo || u.kind === 'orbeVida' || u.kind === 'circuloVida' || u.kind === 'mina' || u.kind === 'nubeTormenta' || u.kind === 'clon' || u.kind === 'tela') continue;
+      if (!u.alive || u.enemigo || u.kind === 'orbeVida' || u.kind === 'circuloVida' || u.kind === 'mina' || u.kind === 'nubeTormenta' || u.kind === 'clon' || u.kind === 'tela' || u.kind === 'lanza' || u.kind === 'arenaEstepa') continue;
       const d = UNIDADES[u.kind];
       const own = this.players.get(u.owner);
       if (u.kind === 'cucko') { this.tickEfectos(u, dt); continue; }   // se mueve en updateCucko
@@ -4026,7 +4242,8 @@ class Game {
 
     for (const p of alive) {
       if (p.bot) botThink(this, p, dt);
-      for (let i = 0; i < 5; i++) p.cd[i] = Math.max(0, p.cd[i] - dt);
+      const aliento = HEROES[p.build.heroe]?.pasiva === 'ultimoAliento' && p.hp < p.st.vidaMax * 0.3 ? 1 / 0.75 : 1;   // Kazaro: 25% menos de recarga bajo 30% de vida
+      for (let i = 0; i < 5; i++) p.cd[i] = Math.max(0, p.cd[i] - dt * (i > 0 ? aliento : 1));
       // Ulti lista = carga llena Y recarga terminada (Seba 28-10)
       const ultiLista = p.ulti >= 1 && p.cd[3] <= 0;
       if (ultiLista && !p.ultiAvisada) this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ULTI LISTA', id: p.id });
@@ -4094,6 +4311,34 @@ class Game {
         }
       }
 
+      // Kazaro: salto a la lanza
+      if (p.fx.saltoLanza) {
+        const f = p.fx.saltoLanza; f.el += dt;
+        const k = Math.min(1, f.el / f.total);
+        p.x = f.x0 + (f.x1 - f.x0) * k; p.y = f.y0 + (f.y1 - f.y0) * k; p.kbx = p.kby = 0;
+        if (k >= 1) {
+          delete p.fx.saltoLanza;
+          p.x = f.x1; p.y = f.y1;
+          const l = f.lanza; if (l) l.alive = false;
+          let n = 0;
+          for (const q of this.players.values()) if (q.alive && this.teamOf(q.id) !== this.teamOf(p.id) && dist(q, p) < HABILIDADES.lanzaErrante.radioCura + CONFIG.RADIO_JUGADOR) n++;
+          this.emit({ k: 'boom', x: p.x | 0, y: p.y | 0, r: 40, c: 'azul' });
+          if (n) { this.heal(p, l.n.cura * n, p); this.emit({ k: 'heal', x: p.x | 0, y: p.y | 0 }); this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: `+${l.n.cura * n}`, id: p.id }); }
+        }
+      }
+      // Kazaro: Decimar (golpe cada 0,35 s a los enemigos cerca)
+      if (p.fx.decimar) {
+        const f = p.fx.decimar, H = HABILIDADES.decimar;
+        f.prox -= dt;
+        while (f.prox <= 0) {
+          f.prox += f.n.cada;
+          for (const e of this.enemigos(p.id, false)) {
+            if (dist(e, p) > H.radio + (e.esUnidad ? 10 : R)) continue;
+            this.damage(e, f.n.dano, p, { tipo: 'mag', desde: p });
+            this.fuegoAzulEn(p, e);
+          }
+        }
+      }
       // Rasho: ráfaga de Manos de rayo (6 disparos seguidos; cada uno +25% de daño y rebota con el daño completo)
       if (p.fx.rafaga && !p.fx.aturdido) {
         const f = p.fx.rafaga, at = p.st.ataque;
@@ -4163,12 +4408,12 @@ class Game {
       p.hidden = oculto;
 
       // Acciones
-      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !p.fx.canalSablazo && !p.fx.canalJet && !p.fx.jetpack && !p.fx.renacer) this.basicAttack(p);   // bots
+      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !p.fx.canalSablazo && !p.fx.canalJet && !p.fx.jetpack && !p.fx.renacer && !p.fx.decimar && !p.fx.saltoLanza && !p.fx.canalArena) this.basicAttack(p);   // bots
       // Jugadores: un disparo por toque o clic; si llega durante la cadencia, se guarda un instante
       if (p.input.d !== undefined && p.input.d !== p.seenD) { p.seenD = p.input.d; p.disparo = { a: p.input.da, d: p.input.dd, t: 0.4 }; }
       if (p.disparo) {
         p.disparo.t -= dt;
-        if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.jetpack || p.fx.renacer) p.disparo = null;
+        if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.jetpack || p.fx.renacer || p.fx.decimar || p.fx.saltoLanza || p.fx.canalArena) p.disparo = null;
         else if (p.cd[0] <= 0 && p.cargas >= 1) { this.basicAttack(p, p.disparo.a, p.disparo.d); p.disparo = null; }
         else if (p.cargas < 1 && p.cd[0] <= 0) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'SIN CARGAS', id: p.id }); p.disparo = null; }
       }
@@ -4479,7 +4724,7 @@ class Game {
       if (!enCombate) continue;
       const fx = p.fx;
       const flags = (p.alive ? 1 : 0) | (p.hidden ? 8 : 0)
-        | (fx.renacer ? 2 : 0) | (fx.canalJet ? 131072 : 0) | (fx.dot ? 4 : 0) | (fx.burn ? 16 : 0) | (fx.slow ? 32 : 0) | (fx.silence ? 64 : 0) | (fx.aturdido ? 2048 : 0)
+        | (fx.renacer ? 2 : 0) | (fx.canalJet ? 131072 : 0) | (fx.decimar ? 128 : 0) | (fx.canalArena ? 512 : 0) | (fx.fuegoAzul ? 1024 : 0) | (fx.dot ? 4 : 0) | (fx.burn ? 16 : 0) | (fx.slow ? 32 : 0) | (fx.silence ? 64 : 0) | (fx.aturdido ? 2048 : 0)
         | (fx.vuln ? 256 : 0) | (fx.mayhem ? 4096 : 0) | (fx.terremoto ? 8192 : 0) | (fx.fuga ? 16384 : 0)
         | (p.caido ? 32768 : 0) | (fx.marcado ? 65536 : 0) | 0 | (fx.bendecido ? 262144 : 0) | (fx.bombaPegada ? 524288 : 0) | (fx.cucko ? 1048576 : 0) | (fx.rafaga ? 2097152 : 0) | (fx.canalSablazo ? 4194304 : 0) | (fx.invisible && !fx.expuesto ? 8388608 : 0) | (fx.veneno ? 16777216 : 0) | (fx.enTela ? 33554432 : 0)
         | (fx.escudo ? 67108864 : 0) | (fx.sobre ? 134217728 : 0) | (fx.enraizando ? 268435456 : 0) | (fx.mazazos ? 536870912 : 0) | (fx.jetpack ? 1073741824 : 0);
@@ -4490,8 +4735,8 @@ class Game {
       t: 's', ph: this.phase, tm: +Math.max(0, this.timer).toFixed(1), ar: Math.round(this.arenaR),
       p: ps,
       u: this.units.map(u => [u.id, u.kind, Math.round(u.x), Math.round(u.y), r1(u.hp), u.maxHp, u.owner, +u.facing.toFixed(2),
-        (u.fx.dot ? 4 : 0) | (u.fx.burn ? 16 : 0) | (u.fx.vuln ? 256 : 0) | (u.carga > 0 ? 512 : 0) | (u.fx.bombaPegada ? 1024 : 0) | (u.armada ? 2048 : 0), u.dur ? +Math.max(0, u.dur - u.t).toFixed(1) : 0,
-        u.tipo || null, u.elite ? 1 : 0]),
+        (u.fx.dot ? 4 : 0) | (u.fx.fuegoAzul ? 8192 : 0) | (u.fuego || (u.kind === 'lanza' && this.players.get(u.owner)?.fx.llama) ? 16384 : 0) | (u.fx.burn ? 16 : 0) | (u.fx.vuln ? 256 : 0) | (u.carga > 0 ? 512 : 0) | (u.fx.bombaPegada ? 1024 : 0) | (u.armada ? 2048 : 0), u.dur ? +Math.max(0, u.dur - u.t).toFixed(1) : 0,
+        u.kind === 'lanza' ? u.estado : (u.tipo || null), u.kind === 'arenaEstepa' ? +(u.mult || 1).toFixed(1) : u.elite ? 1 : 0]),
       pr: this.projectiles.map(q => [q.id, Math.round(q.x), Math.round(q.y), q.spr, q.colorIdx, +Math.atan2(q.vy, q.vx).toFixed(2), q.owner]),
       z: this.zones.map(z => [z.id, Math.round(z.x), Math.round(z.y), z.r, z.kind, +(1 - z.t / z.total).toFixed(2), +(z.a || 0).toFixed(2), +(z.w || 0).toFixed(2), Math.round(z.ox || 0), Math.round(z.oy || 0)]),
       pv: this.modo === 'pve' && this.pve ? this.pveSnap() : null,
@@ -4656,6 +4901,12 @@ function botThink(game, p, dt) {
 
 function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
   const inp = p.input;
+  // Kazaro: con la lanza clavada, salta si hay un rival cerca de ella o si va perdiendo vida
+  const lanza = game.units.find(u => u.alive && u.kind === 'lanza' && u.owner === p.id && u.estado === 'clavada');
+  if (lanza && target && (Math.hypot(target.x - lanza.x, target.y - lanza.y) < 140 || vida < 0.4) && Math.random() < 0.15) {
+    const s = habilidadesDe(p.build).indexOf('lanzaErrante');
+    if (s >= 0) { inp.sa = inp.sa || []; inp.sa[s] = null; inp.s[s] = (inp.s[s] || 0) + 1; }
+  }
   habilidadesDe(p.build).forEach((h, s) => {
     if (!h || p.build.niv[s] < 1 || p.cd[s + 1] > 0) return;
     if (HABILIDADES[h].ulti && p.ulti < 1) return;
@@ -4667,6 +4918,9 @@ function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
       case 'atraparPresa': si = d < 430 && d > 90; break;
       case 'tejer': si = d < 320; break;
       case 'mazazos': si = d < 105; break;
+      case 'lanzaErrante': si = d < 400 && d > 50; break;
+      case 'decimar': si = d < 120 || (d < 200 && (p.fx.aturdido || p.fx.slow)); break;
+      case 'llamaEstepa': si = d < 110; break;
       case 'escudoMusgo': si = !p.fx.sobre && (d < 300 || vida < 0.7); break;
       case 'sobrecrecimiento': si = d < 200; break;
       case 'mordida': si = d < 130; break;
@@ -6489,8 +6743,9 @@ class Renderer {
       const pp = (p.id === myId && pred) ? { ...p, x: pred.x, y: pred.y } : p;
       ents.push({ y: pp.y, tipo: 'p', e: pp });
     }
-    for (const u of view.units) if (u.kind === 'circuloVida' || u.kind === 'mina') this.drawUnit(u, metaById);   // en el suelo, debajo de todos
-    for (const u of view.units) if (u.kind !== 'trampa' && u.kind !== 'circuloVida' && u.kind !== 'mina') ents.push({ y: u.y, tipo: 'u', e: u });
+    for (const u of view.units) if (u.kind === 'circuloVida' || u.kind === 'mina' || u.kind === 'arenaEstepa') this.drawUnit(u, metaById);   // en el suelo, debajo de todos
+    for (const u of view.units) if (u.kind === 'arenaEstepa') for (const c of this.columnasArena(u)) ents.push({ y: c.y, tipo: 'col', e: c });   // ruinas de la arena (se ordenan con los personajes)
+    for (const u of view.units) if (u.kind !== 'trampa' && u.kind !== 'circuloVida' && u.kind !== 'mina' && u.kind !== 'arenaEstepa') ents.push({ y: u.y, tipo: 'u', e: u });
     ents.sort((a, b) => a.y - b.y);
     for (const it of ents) {
       const e = it.e;
@@ -6499,6 +6754,7 @@ class Renderer {
     for (const it of ents) {
       if (it.tipo === 'c') this.drawCaido(it.e, metaById.get(it.e.id), it.e.id === myId);
       else if (it.tipo === 'p') { this.alphaPj = (it.e.flags & 8388608) ? 0.4 : (it.e.flags & 2) && Math.floor(this.time * 10) % 2 ? 0.5 : 1; g.globalAlpha = this.alphaPj; this.drawPlayer(it.e, metaById.get(it.e.id), it.e.id === myId, dt); this.alphaPj = 1; g.globalAlpha = 1; }
+      else if (it.tipo === 'col') this.drawColumna(it.e);
       else this.drawUnit(it.e, metaById);
     }
 
@@ -6696,7 +6952,7 @@ class Renderer {
     const arma = verArma ? armaRotada(key, idxAng(ang)) : null;
     const detras = Math.sin(ang) < -0.4;
     // Montado: el caballo va debajo y el jinete sube 7 píxeles
-    const montado = p.flags & 1024;
+    const montado = 0;   // (el bit 1024 ahora es «Fuego azul»)
     if (montado) {
       const cab = otro('caballo', Math.floor(this.time * 12) % 2, izq, meta.colorIdx);
       g.drawImage(cab, cx - (cab.width >> 1), cy - 13);
@@ -6775,6 +7031,29 @@ class Renderer {
         g.fillStyle = i % 3 === 0 ? PALETA.piedra3 : i % 2 ? PALETA.antorcha : PALETA.oro2; g.fillRect(x, y, 1, 1);
       }
     }
+    // Kazaro (Seba 29-10)
+    if (p.flags & 128) {   // Decimar: anillo de acero que gira alrededor (zona de daño)
+      const r = Math.round(110 * ESC), on = Math.floor(this.time * 10) % 2;
+      this.ring(cx, cy, r, PALETA.tinta, 1, 3);
+      this.ring(cx, cy, r, on ? PALETA.acero2 : PALETA.pergamino2, 1, 1);
+      for (let i = 0; i < 6; i++) { const a = this.time * 9 + i * (TAU / 6); this.llamasAzules(Math.round(cx + Math.cos(a) * (r - 2)), Math.round(cy + Math.sin(a) * (r - 2)), 1, 2); }
+      for (let i = 0; i < 5; i++) { const a = hash(i, Math.floor(this.time * 12), 5) * TAU, d = r * (0.3 + hash(i, 2, Math.floor(this.time * 12)) * 0.7); g.fillStyle = PALETA.acero2; g.fillRect(Math.round(cx + Math.cos(a) * d), Math.round(cy - 4 + Math.sin(a) * d), 1, 1); }   // chispas
+    }
+    if (p.flags & 512) {   // Kazaro levantando la arena: fuego azul que sube a su alrededor y el borde que late
+      const r = Math.round(150 * ESC), on = Math.floor(this.time * 8) % 2;
+      this.ring(cx, cy, r, PALETA.tinta, 0.7, 3);
+      this.ring(cx, cy, r, on ? PALETA.acero2 : PALETA.acero1, 0.7, 1);
+      for (let i = 0; i < 3; i++) { const a = this.time * 4 + i * (TAU / 3); this.llamasAzules(Math.round(cx + Math.cos(a) * 12), Math.round(cy + 4 + Math.sin(a) * 6), 2, 4); }
+    }
+    // Kazaro: los tatuajes brillan en azul mientras usa una habilidad
+    if (meta.build.heroe === 'kazaro' && (p.flags & (128 | 512) || Math.floor(this.time * 2) % 7 === 0) && gigante === 1) {
+      const on = Math.floor(this.time * 10) % 2 ? PALETA.acero2 : PALETA.pergamino2;
+      for (const [tx, ty] of [[7, 14], [12, 14], [7, 15], [9, 15], [10, 15], [12, 15], [6, 16], [9, 16], [10, 16], [13, 16]]) {
+        const x = izq ? sx + 20 - tx : sx + tx + 1;
+        g.fillStyle = on; g.fillRect(x, sy + ty + 1, 1, 1);
+      }
+    }
+    if (p.flags & 1024) this.llamasAzules(cx, sy + 14, 4, 10);          // Fuego azul: llamas azules en el cuerpo
     if (p.flags & 524288) { // Bomba pegada (Biteroi)
       const s = otro('bombaLob', Math.floor(this.time * 12));
       this.g.drawImage(s, cx + 4, sy + 6);
@@ -6855,6 +7134,37 @@ class Renderer {
   }
 
   esAliado(owner) { return owner === this.myId || !!(this.equipos && this.equipos[owner] && this.equipos[owner] === this.equipos[this.myId]); }
+
+  // Ruinas de la Arena de la estepa: 6 columnas rotas en el borde, con llamas verdes
+  columnasArena(u) {
+    return [0, 1, 2, 3, 4, 5].map(i => { const a = (i / 6) * TAU + 0.5; return { x: u.x + Math.cos(a) * 150, y: u.y + Math.sin(a) * 150, i, alto: [14, 9, 12, 7, 13, 10][i] }; });
+  }
+  drawColumna(c) {
+    const g = this.g, x = this.gx(c.x), y = this.gy(c.y), h = c.alto;
+    g.fillStyle = PALETA.tinta; g.fillRect(x - 4, y - h - 1, 9, h + 3);
+    g.fillStyle = PALETA.piedra2; g.fillRect(x - 3, y - h, 7, h + 1);
+    g.fillStyle = PALETA.piedra3; g.fillRect(x - 3, y - h, 2, h + 1);
+    g.fillStyle = PALETA.piedra1; g.fillRect(x + 2, y - h, 2, h + 1); g.fillRect(x - 3, y - Math.round(h / 2), 7, 1);
+    g.fillStyle = PALETA.tinta; g.fillRect(x - 1 + (c.i % 3), y - h, 1, 2);   // borde roto
+    // llamas verdes encima
+    const t = Math.floor(this.time * 12);
+    for (let i = 0; i < 3; i++) {
+      const fx = x - 2 + i * 2, fh = 2 + ((t + i * 2 + c.i) % 4);
+      g.fillStyle = PALETA.tinta; g.fillRect(fx - 1, y - h - fh - 1, 3, fh + 1);
+      g.fillStyle = i === 1 ? PALETA.bosque2 : PALETA.bosque1; g.fillRect(fx, y - h - fh, 1, fh);
+    }
+  }
+
+  // Llamas azules (Kazaro): n llamitas que suben alrededor de (cx, cy)
+  llamasAzules(cx, cy, n, ancho) {
+    const g = this.g, t = Math.floor(this.time * 14);
+    for (let i = 0; i < n; i++) {
+      const x = Math.round(cx - ancho / 2 + ((i * 5 + t) % (ancho + 1))), h = 2 + ((t + i * 3) % 4), y = Math.round(cy - ((t * 2 + i * 4) % 8));
+      g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - h - 1, 4, h + 2);
+      g.fillStyle = PALETA.acero1; g.fillRect(x, y - h, 2, h);
+      g.fillStyle = i % 2 ? PALETA.acero2 : PALETA.pergamino2; g.fillRect(x, y - h, 1, Math.max(1, h - 2));
+    }
+  }
 
   // Calavera negra de la Maldición (Karilthal): sube y baja, ojos morados
   calaveraMaldita(cx, cy) {
@@ -7106,6 +7416,36 @@ class Renderer {
     if (u.kind === 'enemigo') { this.drawEnemigo(u); return; }
     if (u.kind === 'cucko') { this.drawCucko(u); return; }
     if (u.kind === 'nubeTormenta') { this.drawNubeTormenta(u); return; }
+    if (u.kind === 'arenaEstepa') {
+      // Arena de la estepa: suelo azul tramado y borde de fuego azul (las ruinas con llamas verdes se dibujan aparte)
+      const g = this.g, cx = this.gx(u.x), cy = this.gy(u.y), R = Math.round(150 * ESC), t = Math.floor(this.time * 6);
+      this.discDither(cx, cy, R, PALETA.acero0, 4, t);
+      this.ring(cx, cy, R, PALETA.tinta, 1, 4);
+      this.ring(cx, cy, R, PALETA.acero1, 1, 2);
+      const n = 22;
+      for (let i = 0; i < n; i++) { const a = (i / n) * TAU + this.time * 0.4; this.llamasAzules(Math.round(cx + Math.cos(a) * R), Math.round(cy + Math.sin(a) * R), 1, 2); }
+      if (u.resta > 0) { const s = texto(String(Math.ceil(u.resta)) + (u.elite > 1 ? '  x' + String(u.elite).replace('.', ',') : ''), u.elite > 1 ? PALETA.oro2 : PALETA.acero2); g.drawImage(s, cx - (s.width >> 1), cy - R - 10); }
+      return;
+    }
+    if (u.kind === 'lanza') {
+      // Lanza errante de Kazaro: vuela girada, clavada se ve con el área de curación que late
+      const g = this.g, cx = this.gx(u.x), cy = this.gy(u.y);
+      if (u.tipo === 'clavada') {
+        const R = Math.round(HABILIDADES.lanzaErrante.radioCura * ESC), on = Math.floor(this.time * 6) % 2;
+        this.ring(cx, cy, R, PALETA.tinta, 0.8, 3);
+        this.ring(cx, cy, R, on ? PALETA.acero2 : PALETA.acero1, 0.8, 1);
+        const s = armaRotada('lanzaKazaro', idxAng(-Math.PI / 2 + 0.3));
+        g.drawImage(s, cx - 14, cy - 22);
+        g.fillStyle = PALETA.tinta; g.fillRect(cx - 3, cy - 1, 7, 3); g.fillStyle = PALETA.madera0; g.fillRect(cx - 2, cy, 5, 1);
+      } else {
+        const s = armaRotada('lanzaKazaro', idxAng(u.f + (u.tipo === 'vuelve' ? Math.PI : 0)));
+        g.drawImage(s, cx - 14, cy - 18);
+        const ca = Math.cos(u.f), sa = Math.sin(u.f);
+        for (let i = 1; i <= 4; i++) { const x = Math.round(cx - ca * (6 + i * 4)), y = Math.round(cy - 4 - sa * (6 + i * 4)); g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 3); g.fillStyle = PALETA.acero2; g.fillRect(x, y, 1, 1); }
+      }
+      this.llamasAzules(cx, cy - 4, u.tipo === 'clavada' ? 4 : 3, u.tipo === 'clavada' ? 8 : 12);   // Seba (29-10): la lanza arde en azul
+      return;
+    }
     if (u.kind === 'tela') {
       // Tela de araña en el suelo: anillos y radios blancos
       const g = this.g, cx = this.gx(u.x), cy = this.gy(u.y), R = Math.round(HABILIDADES.tejer.radio * ESC);
@@ -7188,6 +7528,7 @@ class Renderer {
     }
     if (u.flags & 256) { const t = Math.floor(this.time * 6) % 4; this.px(cx - 2 + t, cy - s.height - 1, PALETA.carmesi2); }
     if (u.flags & 4) this.calaveraMaldita(cx, cy - s.height - 12 + vuela);
+    if (u.flags & 8192) this.llamasAzules(cx, cy - 6 + vuela, 3, 8);
     if (u.flags & 16) this.px(cx + (Math.floor(this.time * 10) % 5) - 2, cy - s.height + 4, PALETA.antorcha);
   }
 
@@ -7350,8 +7691,8 @@ class Renderer {
         }
         case 'boom': {
           const r = Math.round(f.r * ESC * (0.35 + t * 0.65));
-          const colR = f.c === 'verde' ? PALETA.bosque2 : f.c === 'piedra' ? PALETA.piedra3 : f.c === 'rayo' ? PALETA.pergamino2 : PALETA.oro2;
-          const colD = f.c === 'verde' ? PALETA.bosque1 : f.c === 'piedra' ? PALETA.piedra2 : f.c === 'rayo' ? PALETA.acero1 : PALETA.antorcha;
+          const colR = f.c === 'azul' ? PALETA.acero2 : f.c === 'verde' ? PALETA.bosque2 : f.c === 'piedra' ? PALETA.piedra3 : f.c === 'rayo' ? PALETA.pergamino2 : PALETA.oro2;
+          const colD = f.c === 'azul' ? PALETA.acero1 : f.c === 'verde' ? PALETA.bosque1 : f.c === 'piedra' ? PALETA.piedra2 : f.c === 'rayo' ? PALETA.acero1 : PALETA.antorcha;
           if (t < 0.6) this.discDither(cx, cy, r, colD, t < 0.3 ? 2 : 3, Math.floor(f.age * 30));
           this.ring(cx, cy, r, colR, 1 - t * 0.6);
           break;
