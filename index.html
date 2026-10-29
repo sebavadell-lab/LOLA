@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA</title>
+<title>LOLA V1.0 A</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -649,6 +649,48 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 #feed { top: calc(54px + var(--sat)); }
 .act .cg { position: absolute; top: 1px; left: 3px; z-index: 4; font: 10px var(--f-num); color: var(--oro2); text-shadow: 1px 1px 0 var(--tinta); letter-spacing: 1px; }
 
+/* Seba (29-10): botón para cancelar el apuntado (arriba del ataque, un poco a la derecha). Solo aparece al arrastrar. */
+#b-cancel { width: 46px; height: 46px; right: -10px; bottom: 108px; background: var(--carm0); box-shadow: inset 3px 3px 0 var(--carm1), inset -3px -3px 0 var(--tinta); opacity: 0; pointer-events: none; transition: opacity .1s steps(2); }
+#b-cancel span { font: 22px var(--f-num); color: var(--perg2); text-shadow: 2px 2px 0 var(--tinta); line-height: 1; }
+#b-cancel.on { opacity: .85; }
+#b-cancel.hot { opacity: 1; background: var(--carm2); transform: scale(1.12); }
+@media (hover: hover) and (pointer: fine) { #b-cancel { display: none; } }
+
+/* ---------------- heroes2 (Seba 29-10) ---------------- */
+/* Tabla de matchups: la tabla nunca se encoge (así los nombres no pisan la primera columna) y la columna de nombres queda fija al desplazar */
+.matriz { width: max-content; border-collapse: separate; border-spacing: 0; }
+.matriz th, .matriz td { border-width: 0 2px 2px 0; }
+.matriz tr > :first-child { border-left-width: 2px; }
+.matriz thead th { border-top-width: 2px; }
+.matriz tbody th { position: sticky; left: 0; z-index: 1; min-width: max-content; padding: 0 6px 0 0; }
+.matriz thead th:first-child { position: sticky; left: 0; z-index: 2; }
+.matriz tbody th .mz-n { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.matriz tbody th img { flex: none; }
+@media (max-width: 520px) { .matriz tbody th .mz-n span { display: none; } }
+
+/* Draft por casas: Aliados y Renegados */
+.casas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.casa-btn { appearance: none; cursor: pointer; text-align: left; font: inherit; color: var(--perg2); border: 3px solid var(--tinta); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.casa-btn.aliados { background: var(--acero0); box-shadow: inset 3px 3px 0 var(--acero1), inset -3px -3px 0 var(--tinta); }
+.casa-btn.renegados { background: var(--carm0); box-shadow: inset 3px 3px 0 var(--carm1), inset -3px -3px 0 var(--tinta); }
+.casa-btn:focus-visible { outline: 3px solid var(--oro2); outline-offset: 2px; }
+.casa-btn.on { outline: 3px solid var(--oro2); outline-offset: -6px; }
+.casa-top { display: flex; align-items: center; gap: 10px; }
+.casa-top img { width: 48px; height: 48px; flex: none; }
+.casa-n { font-size: 26px; font-weight: 700; color: var(--oro2); text-shadow: 2px 2px 0 var(--tinta); line-height: 1; }
+.casa-d { font-size: 13px; color: var(--perg1); line-height: 1.25; }
+.casa-mini { display: flex; flex-wrap: wrap; gap: 2px; }
+.casa-mini img { width: 34px; height: 30px; }
+.casa-mini img.tomado { opacity: .35; }
+.casa-volver { display: flex; justify-content: center; }
+@media (max-width: 520px) { .casas { grid-template-columns: 1fr; } .casa-n { font-size: 22px; } }
+/* Pausa (Seba 29-10): botón chico en la esquina superior derecha (en el celular, arriba a la izquierda, donde no hay panel) */
+#b-pausa { position: fixed; z-index: 30; top: calc(6px + var(--sat)); right: max(8px, var(--sar)); width: 36px; height: 32px; padding: 0; font: 14px var(--f-num); }
+@media (hover: none) and (pointer: coarse) { #b-pausa { right: auto; left: max(8px, var(--sal)); } }
+#scr-pausa { z-index: 45; }
+.panel.pausa { width: min(340px, 100%); display: flex; flex-direction: column; gap: 10px; text-align: center; }
+.panel.pausa h2 { font-size: 30px; color: var(--carm1); }
+
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
 .demo-note b{color:var(--carm1)}
@@ -684,6 +726,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <button class="act ab" id="b-h1"><img class="ic" alt=""><span class="cd"></span><span class="key">L</span></button>
       <button class="act ab" id="b-h2"><img class="ic" alt=""><span class="cd"></span><span class="key">I</span></button>
       <button class="act ab hidden" id="b-h3"><img class="ic" alt=""><span class="cd"></span><span class="key">O</span></button>
+      <button class="act cancelar" id="b-cancel" aria-label="Cancelar apuntado"><span>✕</span></button>
       <button class="act atk" id="b-atk"><img class="ic" alt=""><span class="key">J</span></button>
     </div>
     <div id="hud-me"><div class="me-n" id="me-n"></div><div class="me-bar hp"><i id="me-hp"></i><span id="me-hpt"></span></div><div class="me-bar mn"><i id="me-mn"></i><span id="me-mnt"></span></div><div class="me-bar xp hidden" id="me-xpb"><i id="me-xp"></i><span id="me-xpt"></span></div></div>
@@ -693,12 +736,24 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
     <div id="countdown" class="hidden"></div>
   </div>
 
+  <!-- Seba (29-10): pausa en partida (esquina, fuera de la zona de juego) -->
+  <button class="btn small hidden" id="b-pausa" aria-label="Pausar partida">II</button>
+  <section class="screen overlay center hidden" id="scr-pausa" role="dialog" aria-modal="true" aria-labelledby="pausa-t">
+    <div class="panel pausa">
+      <h2 id="pausa-t">Pausa</h2>
+      <p class="hint dark" id="pausa-msg">La partida está detenida.</p>
+      <button class="btn gold wide" id="b-seguir">Continuar</button>
+      <button class="btn wide" id="b-reiniciar">Reiniciar y volver a elegir héroe</button>
+    </div>
+  </section>
+
   <!-- ================= INICIO ================= -->
   <section class="screen" id="scr-home">
     <div class="home-wrap">
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
+        <p class="sub version">LOLA V1.0 A</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -761,8 +816,9 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
   <!-- ================= DRAFT ================= -->
   <section class="screen hidden" id="scr-draft">
     <div class="draft-wrap">
-      <div class="draft-head"><h2>Elige tu héroe</h2><div class="sb-item timer" id="dr-timer">40</div></div>
-      <p class="hint">Toca un héroe para ver qué hace cada habilidad y contra quién es fuerte. Cada héroe lo puede tomar un solo jugador.</p>
+      <div class="draft-head"><h2>Elige tu héroe</h2><div class="sb-item timer" id="dr-timer">180</div></div>
+      <div class="casas" id="dr-casas"></div>
+      <p class="hint" id="dr-hint">Elige una casa para ver sus héroes.</p>
       <div class="draft-acc"><button class="btn small" id="b-matriz">Ver tabla de matchups</button></div>
       <div class="draft-grid" id="dr-grid"></div>
     </div>
@@ -825,6 +881,8 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
   <div id="loading" class="hidden"><div class="spin"></div><p id="loading-txt">Conectando…</p></div>
   <div id="toast"></div>
 </div>
+
+
 
 
 
@@ -927,6 +985,12 @@ const CONFIG = {
   CRECE_POR_NIVEL: 0.06,        // PvE: cada nivel del héroe sube 6% su vida y su daño
 };
 
+// Seba (29-10): dos casas para el draft (como Radiant y Dire). Nombres de Seba; descripción y emblema (C).
+const CASAS = {
+  aliados:   { nombre: 'Aliados', desc: 'Protectores del bosque y del reino.', glifo: 'escudoOro', fondo: 'caballero' },
+  renegados: { nombre: 'Renegados', desc: 'Los que viven fuera de la ley y de la luz.', glifo: 'calavera', fondo: 'fuego' },
+};
+
 // ---------------------------------------------------------------------
 //  HÉROES
 //  ataque: tipo 'melee' (rango, arco) o 'proyectil' (alcance, vel, proj).
@@ -935,6 +999,7 @@ const CONFIG = {
 // ---------------------------------------------------------------------
 const HEROES = {
   beast: {
+    casa: 'aliados',
     nombre: "Su'rulfar", rol: 'Tanque / iniciador', fondo: 'beast', arma: 'garras',   // Seba (28-10): antes «The Beast»
     desc: 'Bestia mamífera. Mucha vida, entra rodando y aturde a pedradas.',
     vida: 445, dano: 30, recarga: 1.2, ultiCarga: 354, velocidad: 168,   // Seba (29-10): daño 35 → 30 (la vida vuelve a 445)   // Seba (28-10): velocidad vuelve a 168
@@ -943,6 +1008,7 @@ const HEROES = {
     pasiva: 'regenBestial',
   },
   lire: {
+    casa: 'aliados',
     nombre: 'Lire', rol: 'Daño', fondo: 'lire', arma: 'arco3',
     desc: 'Elfa verde arquera. Mucho daño a distancia y se cura bajo los árboles.',
     vida: 380, dano: 28, recarga: 1.0, ultiCarga: 287, velocidad: 165,   // Seba (29-10): vida 405 → 380
@@ -951,6 +1017,7 @@ const HEROES = {
     pasiva: 'savia',
   },
   nigromante: {
+    casa: 'renegados',
     nombre: 'Karilthal', rol: 'Magia · invocador', fondo: 'nigromante', arma: 'baculoHueso',   // Seba (28-10): antes «Nigromante»
     desc: 'Brujo que revive muertos. Esqueletos, maldiciones y un gólem.',
     vida: 385, dano: 25, recarga: 1.5, ultiCarga: 265, velocidad: 141,   // Seba (29-10): vida 395 → 385
@@ -959,6 +1026,7 @@ const HEROES = {
     pasiva: 'almas',
   },
   maidas: {
+    casa: 'aliados',
     nombre: 'Maidas', rol: 'Magia · daño', fondo: 'maidas', arma: 'baston3',
     desc: 'Mago de la realeza. Fuego, muros de hielo y un dragón que cobra su precio.',
     vida: 375, dano: 28, recarga: 1.4, ultiCarga: 287, velocidad: 141,
@@ -967,6 +1035,7 @@ const HEROES = {
     pasiva: 'sangreReal',
   },
   monh: {
+    casa: 'aliados',
     nombre: 'Monh', rol: 'Sanador', fondo: 'monh', arma: 'bastonFarol',
     desc: 'Curandero vagabundo, un sacerdote algo raro sin religión. Sostiene al equipo con círculos y orbes de sanación.',
     vida: 359, dano: 18, recarga: 1.6, ultiCarga: 243, velocidad: 146,
@@ -975,6 +1044,7 @@ const HEROES = {
     pasiva: 'eco',
   },
   biteroi: {
+    casa: 'renegados',
     nombre: 'Biteroi', rol: 'Daño · control', fondo: 'biteroi', arma: 'bombaMano',
     desc: 'Bombardero loco. Bombas que caen donde apuntas, un jetpack para escapar dejando un pasillo de explosiones, minas escondidas y un bombazo que no perdona a nadie.',
     vida: 375, dano: 41, recarga: 1.8, ultiCarga: 280, velocidad: 146,   // Seba (28-10): +15 al ataque y +25 a las habilidades
@@ -984,6 +1054,7 @@ const HEROES = {
   },
   // Seba (28-10): dios del trueno que flota sobre una nube de tormenta
   rasho: {
+    casa: 'aliados',
     nombre: 'Rasho', rol: 'Daño · magia', fondo: 'rasho', arma: 'rayoMano',
     desc: 'Dios del trueno que flota sobre una nube de tormenta. Frena con rayos que rebotan entre enemigos.',
     vida: 365, dano: 29, recarga: 1.24, ultiCarga: 280, velocidad: 141,   // Seba (29-10): daño 30 → 29; recarga de carga +0,3 s (1,25 → 1,55 en juego); velocidad igual a Maidas (108)
@@ -993,6 +1064,7 @@ const HEROES = {
   },
   // Seba (28-10): asesino silencioso, samurái errante y sombrío con dos sables
   takichi: {
+    casa: 'renegados',
     nombre: 'Takichi', rol: 'Asesino', fondo: 'takichi', arma: 'sable1',
     desc: 'Samurái errante y sombrío con dos sables. Entra de un sablazo, desaparece en humo y castiga a los mal parados.',
     vida: 365, dano: 40, recarga: 1.0, ultiCarga: 300, velocidad: 170,
@@ -1003,6 +1075,7 @@ const HEROES = {
   },
   // Seba (28-10): control, mujer araña que caza con seda y veneno
   aracnida: {
+    casa: 'renegados',
     nombre: 'Aracnida', rol: 'Control', fondo: 'aracnida', arma: 'ninguna',
     desc: 'Mujer araña cazadora: atrapa a su presa con seda, la arrastra a sus pies y la remata con veneno.',
     vida: 395, dano: 30, recarga: 1.0, ultiCarga: 290, velocidad: 160,
@@ -1012,6 +1085,7 @@ const HEROES = {
   },
   // Seba (29-10): lancero nómade renegado, daño y tanque (luchador). Números (C).
   kazaro: {
+    casa: 'renegados',
     nombre: 'Kazaro', rol: 'Luchador', fondo: 'kazaro', arma: 'lanzaKazaro',
     desc: 'Lancero nómade renegado de tatuajes azules. Arroja su lanza y salta a ella, gira entre enemigos sin que nada lo detenga y encierra a sus presas en una arena de fuego azul.',
     vida: 375, dano: 35, recarga: 1.2, ultiCarga: 300, velocidad: 160,   // Seba (29-10): vida 410 → 365 → 385 → 375; daño 33 → 35
@@ -1021,12 +1095,38 @@ const HEROES = {
   },
   // Seba (28-10): tanque y control (daño en la ulti), troll del bosque con un mazo. Números (C).
   trelgon: {
+    casa: 'renegados',
     nombre: 'Trelgon', rol: 'Tanque · control', fondo: 'trelgon', arma: 'mazo',
     desc: 'Troll del bosque con un mazo de tronco. Aturde a mazazos, protege a los suyos con musgo y crece hasta volverse un gigante que echa raíces.',
     vida: 430, dano: 32, recarga: 1.3, ultiCarga: 330, velocidad: 155,
     ataque: { tipo: 'melee', rango: 60, arco: 130 },
     habs: ['mazazos', 'escudoMusgo', 'sobrecrecimiento'],
     pasiva: 'furiaBosque',
+  },
+  // Seba (29-10): control y daño, diosa de la naturaleza. Números de partida aprobados por Seba.
+  gaia: {
+    casa: 'aliados',
+    nombre: 'Gaia', rol: 'Control · daño', fondo: 'gaia', arma: 'varitaGaia',   // Seba (29-10): usa una varita
+    desc: 'Diosa de la naturaleza que flota sobre su vestido. Aturde en cadena con su disco, cruza entre planos y hace llover estrellas.',
+    vida: 370, dano: 14, recarga: 1.3, ultiCarga: 290, velocidad: 144, cargas: 2,   // Seba: 2 cargas; Seba (29-10): 12 → 14 por proyectil (42 por ráfaga)
+    ataque: { tipo: 'rafaga', proj: 'petaloGaia', vel: 560, alcance: 400, radio: 6, tiros: 3, cada: 0.1 },
+    habs: ['discoGaia', 'pasoCeleste', 'lluviaEstrellas'],
+    pasiva: 'curacionPlano',
+  },
+};
+
+// Seba (29-10): Tek'Tal queda fuera del juego por ahora (no aparece en el draft). Todo su código, habilidades y sprites
+// se mantienen; para volver a activarlo basta con pasar esta ficha de vuelta a HEROES.
+const HEROES_GUARDADOS = {
+  // Seba (29-10): daño y tanque, monstruo de piedra tipo simio de roca. Números de partida aprobados por Seba.
+  tektal: {
+    casa: 'aliados',
+    nombre: "Tek'Tal", rol: 'Tanque · daño', fondo: 'tektal', arma: 'punoRoca',
+    desc: 'Simio de roca volcánica con magma en las grietas. Parte el suelo, encadena a su presa y la revienta con géiseres.',
+    vida: 425, dano: 30, recarga: 1.2, ultiCarga: 330, velocidad: 155,
+    ataque: { tipo: 'melee', rango: 60, arco: 110 },
+    habs: ['fisura', 'grillete', 'erupcion'],
+    pasiva: 'temblor',
   },
 };
 
@@ -1167,6 +1267,26 @@ Object.assign(HABILIDADES, {
   granBombazo:   { nombre: 'Gran bombazo', glifo: 'bombazo', cd: 45, ulti: true, alcance: 420, radio: 108, aviso: 2,
                    desc: (n) => `Marcas una zona circular; a los 2 s cae un bombazo: ${n.dano} de daño a todos los jugadores dentro, incluidos tus aliados y tú.`,
                    n1: { dano: 350 }, n2: { dano: 455 } },   // Seba (28-10): 191 → 350
+  // ---- Gaia (Seba, 29-10)
+  discoGaia:     { nombre: 'Disco de Gaia', glifo: 'discoGaia', cd: 18, cdFijo: true, alcance: 300, vel: 527, radioRebote: 96, rebote: 0.25,   // Seba (29-10): 15% más lento (620 → 527); rebote hasta 96 (20% menos que el radio de caída de Kazaro, 120)
+                   desc: (n) => `Lanzas un disco mágico en línea recta. Al primer enemigo: ${n.danos[0]} de daño y aturdido ${fmtN(n.aturde[0])} s. Rebota al azar a otro enemigo a menos de ${HABILIDADES.discoGaia.radioRebote}: ${n.danos[1]} y ${fmtN(n.aturde[1])} s. Último rebote: ${n.danos[2]} y ${fmtN(n.aturde[2])} s. No repite al mismo seguido (con 2 enemigos, el último vuelve al primero). También rebota en invocaciones; ignora las torretas.`,
+                   n1: { danos: [50, 100, 125], aturde: [1.5, 2, 2.5] }, n2: { danos: [65, 130, 162], aturde: [1.5, 2, 2.5] } },
+  pasoCeleste:   { nombre: 'Paso celestial', glifo: 'portalGaia', cd: 12, cdFijo: true, canal: 0.4, largo: 300, radio: 130,
+                   desc: (n) => `Canalizas ${fmtN(HABILIDADES.pasoCeleste.canal)} s (un aturdimiento o un silencio lo corta), entras a un portal y sales por otro a ${HABILIDADES.pasoCeleste.largo} de distancia. Al salir, un pulso deja lentos ${Math.round(n.lento * 100)}% por ${n.dur} s a los enemigos cerca y les hace ${n.dano} de daño + 1 por cada punto de vida que te falte (máximo +${n.tope}).`,
+                   n1: { dano: 25, tope: 100, lento: 0.4, dur: 4 }, n2: { dano: 32, tope: 130, lento: 0.4, dur: 4 } },
+  lluviaEstrellas: { nombre: 'Lluvia de estrellas', glifo: 'estrellas', cd: 50, ulti: true, distancias: [120, 260, 400], radio: 80, cada: 0.805, aviso: 0.575,   // Seba (29-10): meteoros 15% más lentos (0,7 → 0,805 s; caída 0,5 → 0,575 s)
+                   desc: (n) => `Te quedas quieta canalizando mientras caen 3 meteoros en línea recta, uno tras otro (cada ${fmtN(HABILIDADES.lluviaEstrellas.cada)} s): uno cerca, otro a media distancia y otro lejos. Nada interrumpe la canalización, pero sí puedes recibir daño. Cada meteoro hace ${n.dano} de daño y aturde ${fmtN(n.aturde)} s.`,
+                   n1: { dano: 125, aturde: 1 }, n2: { dano: 162, aturde: 1 } },
+  // ---- Tek'Tal (Seba, 29-10)
+  fisura:        { nombre: 'Fisura', glifo: 'fisura', cd: 14, cdFijo: true, largo: 320, ancho: 40, muro: 4,
+                   desc: (n) => `Partes el suelo en línea recta: ${n.dano} de daño. Si golpea a un solo héroe enemigo, lo aturde ${fmtN(n.aturde1)} s; si golpea a 2 o más, solo ${fmtN(n.aturde2)} s. Deja un muro de roca por ${HABILIDADES.fisura.muro} s que bloquea a todos los cuerpos (también a ti y a tus aliados); los proyectiles lo atraviesan.`,
+                   n1: { dano: 100, aturde1: 2, aturde2: 1 }, n2: { dano: 130, aturde1: 2, aturde2: 1 } },
+  grillete:      { nombre: 'Grillete de roca', glifo: 'grillete', cd: 15, cdFijo: true, canal: 1, alcance: 380, vel: 640, tiron: 80,
+                   desc: (n) => `Canalizas 1 s quieto (un aturdimiento o un silencio lo corta) y lanzas una roca en línea recta. El primer héroe que golpea queda encadenado a ti ${n.dur} s: te lo vas trayendo y queda lento ${Math.round(n.lento * 100)}%. Mientras dura, tú también quedas lento ${Math.round(n.lento * 100)}%. No hace daño.`,
+                   n1: { dur: 4, lento: 0.5 }, n2: { dur: 4, lento: 0.5 } },
+  erupcion:      { nombre: 'Erupción', glifo: 'erupcion', cd: 50, ulti: true, radios: [100, 180, 260], banda: 40, cada: 0.5, empuje: 150,
+                   desc: (n) => `Géiseres salen de la tierra en 3 anillos, uno tras otro y cada vez más lejos de ti. Cada anillo hace ${n.dano} de daño a los enemigos que estén en él. El último empuja a los enemigos lejos.`,
+                   n1: { dano: 100 }, n2: { dano: 130 } },
 });
 
 const PASIVAS = {
@@ -1181,6 +1301,8 @@ const PASIVAS = {
   furiaBosque:  { nombre: 'Furia del bosque', glifo: 'huellaTroll', desc: '+3% de velocidad de movimiento por cada héroe enemigo a menos de 250 (máximo +30%).' },
   ultimoAliento: { nombre: 'Último aliento', glifo: 'corazonVerde', desc: 'Por debajo del 30% de vida, tus habilidades se recargan 25% más rápido.' },
   sangreReal:   { nombre: 'Sangre real', glifo: 'corona', desc: 'Recuperas 25 de vida cada vez que usas una habilidad.' },
+  curacionPlano: { nombre: 'Curación del otro plano', glifo: 'corazonVerde', desc: 'Cada aturdimiento que provocas te cura 15 de vida.' },
+  temblor:      { nombre: 'Temblor', glifo: 'roca', desc: 'Cada tercer puñetazo al mismo enemigo lo deja lento 10% por 4 s.' },
 };
 
 // Invocaciones y estructuras
@@ -1199,6 +1321,7 @@ const UNIDADES = {
   mina: { vel: 0, invulnerable: true },
   lanza: { vel: 0, invulnerable: true },
   arenaEstepa: { vel: 0, invulnerable: true },
+  muroRoca: { vel: 0, invulnerable: true, grosor: 18 },
   enemigo:   { vel: 0 },
 };
 
@@ -1251,6 +1374,8 @@ const GUIAS = {
   atraparPresa: { tipo: 'linea', alcance: 400, ancho: 20 }, tejer: { tipo: 'propio', r: 162 }, mordida: { tipo: 'propio', r: 120 }, manosRayo: { tipo: 'propio', r: 30 }, tormenta: { tipo: 'linea', alcance: 400, ancho: 180 }, bendicion: { tipo: 'propio', r: 40 },
   lanzaErrante: { tipo: 'linea', alcance: 380, ancho: 26 }, decimar: { tipo: 'propio', r: 110 }, llamaEstepa: { tipo: 'propio', r: 135 },
   mazazos: { tipo: 'propio', r: 110 }, escudoMusgo: { tipo: 'propio', r: 200 }, sobrecrecimiento: { tipo: 'propio', r: 130 },
+  discoGaia: { tipo: 'linea', alcance: 300, ancho: 20 }, pasoCeleste: { tipo: 'linea', alcance: 300, ancho: 30 }, lluviaEstrellas: { tipo: 'linea', alcance: 480, ancho: 160 },
+  fisura: { tipo: 'linea', alcance: 320, ancho: 40 }, grillete: { tipo: 'linea', alcance: 380, ancho: 22 }, erupcion: { tipo: 'propio', r: 300 },
 };
 
 // ---------------------------------------------------------------------
@@ -1276,142 +1401,166 @@ for (const u of Object.values(UNIDADES)) if (u.vel) u.vel = Math.round(u.vel * R
 
 // ===== matchups.js =====
 // Generado por tools/matchups.js (2026-10-29): % de duelos 1v1 que gana la fila contra la columna.
-// Medido con bots (apuntado automático), 200 duelos por par.
+// Medido con bots (apuntado automático), 100 duelos por par.
 const MATCHUPS = {
  "beast": {
-  "lire": 56,
-  "nigromante": 96,
-  "maidas": 22,
+  "lire": 57,
+  "nigromante": 97,
+  "maidas": 17,
   "monh": 100,
-  "biteroi": 1,
-  "rasho": 1,
+  "biteroi": 0,
+  "rasho": 0,
   "takichi": 92,
-  "aracnida": 36,
-  "kazaro": 51,
-  "trelgon": 97
+  "aracnida": 33,
+  "kazaro": 58,
+  "trelgon": 96,
+  "gaia": 35
  },
  "lire": {
-  "beast": 44,
-  "nigromante": 16,
-  "maidas": 39,
-  "monh": 7,
-  "biteroi": 64,
-  "rasho": 77,
-  "takichi": 10,
-  "aracnida": 86,
-  "kazaro": 59,
-  "trelgon": 17
+  "beast": 43,
+  "nigromante": 21,
+  "maidas": 37,
+  "monh": 6,
+  "biteroi": 65,
+  "rasho": 73,
+  "takichi": 13,
+  "aracnida": 76,
+  "kazaro": 50,
+  "trelgon": 19,
+  "gaia": 43
  },
  "nigromante": {
-  "beast": 5,
-  "lire": 85,
-  "maidas": 78,
+  "beast": 3,
+  "lire": 79,
+  "maidas": 83,
   "monh": 100,
-  "biteroi": 83,
-  "rasho": 82,
-  "takichi": 39,
-  "aracnida": 100,
-  "kazaro": 12,
-  "trelgon": 8
+  "biteroi": 84,
+  "rasho": 84,
+  "takichi": 35,
+  "aracnida": 99,
+  "kazaro": 16,
+  "trelgon": 7,
+  "gaia": 85
  },
  "maidas": {
-  "beast": 79,
-  "lire": 62,
-  "nigromante": 22,
-  "monh": 61,
-  "biteroi": 61,
+  "beast": 83,
+  "lire": 63,
+  "nigromante": 17,
+  "monh": 58,
+  "biteroi": 69,
   "rasho": 86,
-  "takichi": 21,
-  "aracnida": 80,
-  "kazaro": 32,
-  "trelgon": 69
+  "takichi": 29,
+  "aracnida": 78,
+  "kazaro": 25,
+  "trelgon": 63,
+  "gaia": 69
  },
  "monh": {
   "beast": 0,
-  "lire": 93,
-  "nigromante": 1,
-  "maidas": 40,
-  "biteroi": 53,
-  "rasho": 70,
+  "lire": 94,
+  "nigromante": 0,
+  "maidas": 42,
+  "biteroi": 52,
+  "rasho": 67,
   "takichi": 0,
-  "aracnida": 43,
+  "aracnida": 37,
   "kazaro": 1,
-  "trelgon": 1
+  "trelgon": 1,
+  "gaia": 77
  },
  "biteroi": {
   "beast": 100,
-  "lire": 37,
-  "nigromante": 17,
-  "maidas": 39,
+  "lire": 35,
+  "nigromante": 16,
+  "maidas": 31,
   "monh": 48,
-  "rasho": 56,
+  "rasho": 68,
   "takichi": 100,
   "aracnida": 100,
-  "kazaro": 90,
-  "trelgon": 37
+  "kazaro": 93,
+  "trelgon": 25,
+  "gaia": 26
  },
  "rasho": {
   "beast": 100,
-  "lire": 23,
-  "nigromante": 18,
+  "lire": 27,
+  "nigromante": 16,
   "maidas": 14,
-  "monh": 30,
-  "biteroi": 44,
-  "takichi": 30,
-  "aracnida": 76,
-  "kazaro": 87,
-  "trelgon": 100
+  "monh": 33,
+  "biteroi": 32,
+  "takichi": 35,
+  "aracnida": 91,
+  "kazaro": 95,
+  "trelgon": 100,
+  "gaia": 31
  },
  "takichi": {
-  "beast": 9,
-  "lire": 91,
-  "nigromante": 61,
-  "maidas": 79,
+  "beast": 8,
+  "lire": 87,
+  "nigromante": 65,
+  "maidas": 71,
   "monh": 100,
   "biteroi": 0,
-  "rasho": 71,
-  "aracnida": 0,
-  "kazaro": 71,
-  "trelgon": 68
+  "rasho": 65,
+  "aracnida": 3,
+  "kazaro": 73,
+  "trelgon": 68,
+  "gaia": 45
  },
  "aracnida": {
-  "beast": 64,
-  "lire": 14,
+  "beast": 67,
+  "lire": 24,
   "nigromante": 1,
-  "maidas": 21,
-  "monh": 57,
+  "maidas": 22,
+  "monh": 63,
   "biteroi": 0,
-  "rasho": 25,
-  "takichi": 100,
-  "kazaro": 56,
-  "trelgon": 96
+  "rasho": 9,
+  "takichi": 97,
+  "kazaro": 60,
+  "trelgon": 95,
+  "gaia": 41
  },
  "kazaro": {
-  "beast": 49,
-  "lire": 42,
-  "nigromante": 89,
-  "maidas": 68,
-  "monh": 100,
-  "biteroi": 11,
-  "rasho": 13,
-  "takichi": 30,
-  "aracnida": 44,
-  "trelgon": 97
+  "beast": 42,
+  "lire": 50,
+  "nigromante": 84,
+  "maidas": 75,
+  "monh": 99,
+  "biteroi": 7,
+  "rasho": 5,
+  "takichi": 27,
+  "aracnida": 40,
+  "trelgon": 97,
+  "gaia": 36
  },
  "trelgon": {
   "beast": 4,
-  "lire": 84,
-  "nigromante": 92,
-  "maidas": 32,
-  "monh": 100,
-  "biteroi": 63,
+  "lire": 81,
+  "nigromante": 93,
+  "maidas": 37,
+  "monh": 99,
+  "biteroi": 75,
   "rasho": 0,
-  "takichi": 33,
+  "takichi": 32,
   "aracnida": 5,
-  "kazaro": 4
+  "kazaro": 3,
+  "gaia": 27
+ },
+ "gaia": {
+  "beast": 65,
+  "lire": 57,
+  "nigromante": 15,
+  "maidas": 31,
+  "monh": 23,
+  "biteroi": 74,
+  "rasho": 69,
+  "takichi": 55,
+  "aracnida": 59,
+  "kazaro": 64,
+  "trelgon": 73
  }
 };
-const MATCHUPS_INFO = { fecha: '2026-10-29', duelos: 200 };
+const MATCHUPS_INFO = { fecha: '2026-10-29', duelos: 100 };
 
 // ===== sprites.js =====
 // =====================================================================
@@ -2665,6 +2814,128 @@ function retrato(look, armaKey) {
 // Para la hoja de revisión
 const _debug = { CAPAS, GLIFOS, VARIANTES, BASE };
 
+// ------------------------------------------------------------------ Gaia y Tek'Tal (Seba 29-10)
+// Gaia: diosa de la naturaleza; piel verdosa pálida, pelo largo de enredaderas verde medio, vestido perla con verde y magia,
+// largo hasta el suelo (no se le ven los pies: parece que flota). Ojos y efectos color magia.
+Object.assign(CAPAS, {
+  peloGaia: L({
+    3: '........l.v.........',
+    4: '.......lGvGl........',
+    5: '......lGGGGGl.......',
+    6: '.....GGGGGGGGl......',
+    7: '....GGlGGGGGGGl.....',
+    8: '....GgG.......G.....',
+    9: '....GgG..v..v.......',
+    10: '....gGl.............',
+    11: '....gGG.............',
+    12: '...gGl..............',
+    13: '...gGG..............',
+    14: '...gG...............',
+    15: '...g................',
+  }),
+  vestidoGaia: L({
+    14: '......PqqvvqqP......',
+    15: '......qGqqqqGq......',
+    16: '......PqGqqGqP......',
+    17: '......vGXXXXGv......',
+    18: '......qqPqqPqq......',
+    19: '.....qqPqqqqPqq.....',
+    20: '....qqPqqGqqPqqq....',
+    21: '....PGqPGqvPGqPG....',
+  }),
+  vestidoGaiaPaso: L({
+    19: '.....qqPqqqqPqq.....',
+    20: '....qqPqqGqqPqqq....',
+    21: '....GPqGPqvGPqGP....',
+  }),
+  // Tek'Tal: simio de roca volcánica gris oscura casi negra, grietas de magma naranjo-rojo, ojos encendidos.
+  cabezaTek: L({
+    5: '........1111........',
+    6: '......11222211......',
+    7: '.....1222f22221.....',
+    8: '.....11111111111....',
+    9: '.....12fe22fe221....',
+    10: '.....122222222f1....',
+    11: '.....1222k2k2221....',
+    12: '......12222222f1....',
+    13: '.......1111111......',
+  }),
+  cuerpoTek: L({
+    13: '...111..122221..111.',
+    14: '..1222212222221222..',
+    15: '.122f2212f222122f21.',
+    16: '.1222212222f2122221.',
+    17: '.122f1XXXXXXXX1f221.',
+    18: '.1222.12222221.2221.',
+    19: '.1221.12211221.1221.',
+    20: '.111..1221.1221.111.',
+    21: '......111..111......',
+  }),
+  cuerpoTekPaso: L({
+    20: '.111.1221...1221.111',
+    21: '.....111.....111....',
+  }),
+});
+Object.assign(APARIENCIA, {
+  gaia: {
+    piel: { P: 'q', p: 'l', W: 'G', m: 'l', w: 'g' },
+    back: [],
+    cuerpo: [['vestidoGaia'], ['vestidoGaia']],
+    cabeza: [['peloGaia'], ['peloGaia']],
+    paso: 'vestidoGaiaPaso',
+  },
+  tektal: {
+    piel: { P: '2', p: '1', W: '1', m: '2', w: '1' },
+    back: [],
+    cuerpo: [['cuerpoTek'], ['cuerpoTek']],
+    cabeza: [['cabezaTek'], ['cabezaTek']],
+    paso: 'cuerpoTekPaso',
+  },
+});
+Object.assign(ARMAS_SPR, {
+  // Gaia: mano con un brillo mágico
+  manoGaia: { g: [1, 5], rows: [
+    '............', '............', '............', '.......v....',
+    '......vqv...', 'PP...vqqqv..', '......vqv...', '.......v....',
+    '............', '............', '............', '............'] },
+  // Tek'Tal: puño de roca con una grieta de magma
+  punoRoca: { g: [1, 6], rows: [
+    '............', '............', '............', '............',
+    '...1111.....', '..122221....', '11222f21....', '..12f221....',
+    '...1111.....', '............', '............', '............'] },
+});
+Object.assign(OTROS, {
+  petaloGaia: [['.vv.', 'vqvv', 'vvve', '.ve.'], ['.ve.', 'vvqv', 'evvv', '.vv.']],
+  discoGaia: [
+    ['..kkkk..', '.kvvvvk.', 'kvqqqevk', 'kvq..qvk', 'kvq..qvk', 'kveqqqvk', '.kvvvvk.', '..kkkk..'],
+    ['..kkkk..', '.kvvvvk.', 'kveqqqvk', 'kvq..qvk', 'kvq..qvk', 'kvqqqevk', '.kvvvvk.', '..kkkk..'],
+  ],
+  grillete: [
+    ['..kkkk..', '.k3442k.', 'k344f21k', 'k3f43211', 'k2232211', '.k2211k.', '..kkkk..', '........'],
+    ['..kkkk..', '.k2344k.', 'k2f3442k', 'k1234f2k', 'k1122332', '.k1122k.', '..kkkk..', '........'],
+  ],
+  meteoro: [
+    ['....kkk.', '...kyyyk', '..kyqqyk', '.kfyqyyk', 'kffyyyk.', 'kfffkk..', '.kkk....', '........'],
+    ['....kkk.', '...kyqyk', '..kyqqyk', '.kfyyyyk', 'kfeffyk.', 'keffkk..', '.kkk....', '........'],
+  ],
+});
+Object.assign(GLIFOS, {
+  discoGaia: ['..vvvvv..', '.vvqqqvv.', 'vvq...qvv', 'vq..v..qv', 'vq.vqv.qv', 'vq..v..qv', 'vvq...qvv', '.vvqqqvv.', '..vvvvv..'],
+  portalGaia: ['...vvv...', '..v...v..', '.v.vvv.v.', '.v.v.v.v.', '.v.v.v.v.', '.v.vvv.v.', '..v...v..', '...vvv...', '..l...l..'],
+  estrellas: ['y......y.', 'yy....yy.', '.yy..yy..', '..qy.y...', '..y.....y', '.....y.yy', '....yyyy.', '...yqyy..', '....yy...'],
+  fisura: ['....f....', '...1f1...', '..1ff1...', '...f1....', '..1ff1...', '.1f.1f1..', '1ff..1f1.', 'f1....ff1', '1......1f'],
+  grillete: ['.222.....', '2...2....', '2...2....', '.2.2.....', '..2......', '..22.....', '.2112....', '21f212...', '.2112....'],
+  erupcion: ['..f...f..', '.fyf.fyf.', '..f...f..', '.f.f.f.f.', 'f.......f', '.1.1f1.1.', '1f11111f1', '111f1f111', '.1111111.'],
+});
+Object.assign(FONDOS, { gaia: ['g', 'v'], tektal: ['1', 'r'] });
+// Gaia (Seba 29-10): varita de madera clara con punta mágica
+Object.assign(ARMAS_SPR, {
+  varitaGaia: { g: [1, 6], rows: [
+    '............', '............', '............', '............',
+    '.........v..', '........vqv.', 'PPmmmmmmlvqv', '........vqv.',
+    '.........v..', '............', '............', '............'] },
+});
+
 // ===== sim.js =====
 // =====================================================================
 //  LOLA — SIMULACIÓN AUTORITATIVA (corre en el anfitrión / modo práctica)
@@ -2674,9 +2945,14 @@ const TAU = Math.PI * 2;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const r1 = (v) => Math.round(v * 10) / 10;
 
-const NEGATIVOS = new Set(['aturdido', 'slow', 'silence', 'arrastre', 'burn', 'dot', 'veneno', 'marcado', 'bombaPegada', 'vuln', 'enraizando', 'fuegoAzul', 'marcaLire']);
+const NEGATIVOS = new Set(['aturdido', 'slow', 'silence', 'arrastre', 'burn', 'dot', 'veneno', 'marcado', 'bombaPegada', 'vuln', 'enraizando', 'fuegoAzul', 'marcaLire', 'encadenado']);
 // Kazaro (Seba 29-10): durante Decimar es inmune a todo control
-const CONTROL = new Set(['aturdido', 'silence', 'slow', 'arrastre', 'enraizando']);
+const CONTROL = new Set(['aturdido', 'silence', 'slow', 'arrastre', 'enraizando', 'encadenado']);
+// Cargas del ataque básico: 3 para todos, salvo los héroes que definen otras (Gaia: 2)
+const cargasMax = (p) => (p && p.build && HEROES[p.build.heroe]?.cargas) || CONFIG.CARGAS;
+// Canalizaciones (quieto, se cortan con aturdimiento o silencio)
+const CANALES = ['canalSablazo', 'canalJet', 'canalArena', 'canalGrillete', 'canalPortal'];
+const canalizando = (fx) => CANALES.some(k => fx[k]);
 
 function nuevaBuild() { return { heroe: null, niv: [1, 1, 1] }; }   // rework: todas las habilidades desde el inicio
 
@@ -2796,14 +3072,14 @@ class Game {
     }
     this.round = 0; this.winner = null; this.results = null;
     this.phase = 'draft';
-    this.timer = 40;
+    this.timer = 180;   // Seba (29-10): 3 minutos para elegir héroe
     this.metaDirty = true;
     return true;
   }
 
   resetToLobby() {
     for (const [id, p] of this.players) if (!p.connected) this.players.delete(id);
-    this.phase = 'lobby'; this.winner = null; this.results = null;
+    this.phase = 'lobby'; this.winner = null; this.results = null; this.pausa = false;
     if (this.marcador) this.marcador = { A: 0, B: 0 };
     this.equipoGanador = null;
     this.projectiles = []; this.units = [];
@@ -2906,7 +3182,7 @@ class Game {
       }
       p.moveX = Math.cos(p.facing); p.moveY = Math.sin(p.facing);
       p.st = statsDe(p.build);
-      p.hp = p.st.vidaMax; p.cargas = CONFIG.CARGAS; p.ulti = 1;   // cargas llenas; ulti llena pero con 45 s de espera (ver abajo)
+      p.hp = p.st.vidaMax; p.cargas = cargasMax(p); p.ulti = 1;   // cargas llenas; ulti llena pero con 45 s de espera (ver abajo)
       p.alive = true;
       p.cd = [0, 0, 0, CONFIG.ULTI_INICIO || 0, 0];   // Seba (28-10): ulti en espera 45 s al empezar
       p.ultiAvisada = false;
@@ -3133,7 +3409,7 @@ class Game {
     if (t.fx.decimar && CONTROL.has(key)) return;   // Kazaro girando   // en el aire (o recién reaparecido) no le afecta nada
     // Un aturdimiento corta la canalización del Sablazo
     // Seba (28-10): aturdimiento y silencio cortan las canalizaciones (Sablazo y Jetpack)
-    const canal = (key === 'aturdido' || key === 'silence') && (t.fx.canalSablazo ? 'canalSablazo' : t.fx.canalJet ? 'canalJet' : t.fx.canalArena ? 'canalArena' : null);
+    const canal = (key === 'aturdido' || key === 'silence') && (CANALES.find(k => t.fx[k]) || null);
     if (canal) {
       const z = t.fx[canal].zona; if (z) { z.cancelado = true; z.t = 0; }
       delete t.fx[canal];
@@ -3214,6 +3490,44 @@ class Game {
     t.kby = (t.kby || 0) + dy / d * force;
   }
 
+  // Gaia (Seba 29-10): aturde y, por su pasiva, se cura 15 por cada aturdimiento que provoca
+  aturdirGaia(p, e, t) {
+    if (!e.alive || e.kind === 'muro' || (e.esUnidad && UNIDADES[e.kind]?.invulnerable)) return;
+    const antes = e.fx && e.fx.aturdido;
+    this.aplicarEfecto(e, 'aturdido', { t });
+    if (!e.esUnidad) this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: 'ATURDIDO' });
+    if (e.fx.aturdido && e.fx.aturdido !== antes && p.alive && HEROES[p.build?.heroe]?.pasiva === 'curacionPlano') { this.heal(p, 15, p); this.emit({ k: 'heal', x: p.x | 0, y: p.y | 0 }); }
+  }
+  // Muros de roca de la Fisura (Tek'Tal): segmentos que bloquean a todos los cuerpos
+  extremosRoca(u) { const L = u.largo / 2, ca = Math.cos(u.facing), sa = Math.sin(u.facing); return [u.x - ca * L, u.y - sa * L, u.x + ca * L, u.y + sa * L]; }
+  chocarRocas(e, rad) {
+    for (const m of this.units) {
+      if (!m.alive || m.kind !== 'muroRoca') continue;
+      const [x1, y1, x2, y2] = this.extremosRoca(m), dx = x2 - x1, dy = y2 - y1;
+      const t = Math.max(0, Math.min(1, ((e.x - x1) * dx + (e.y - y1) * dy) / (dx * dx + dy * dy || 1)));
+      const px = x1 + dx * t, py = y1 + dy * t, r = rad + UNIDADES.muroRoca.grosor / 2;
+      const ex = e.x - px, ey = e.y - py, d = Math.hypot(ex, ey);
+      if (d < r) {
+        // fuera hacia el lado más cercano (si está justo encima, hacia el lado del que venía)
+        let nx, ny;
+        if (d > 0.01) { nx = ex / d; ny = ey / d; } else { nx = -Math.sin(m.facing); ny = Math.cos(m.facing); }
+        e.x = px + nx * r; e.y = py + ny * r;
+      }
+    }
+  }
+  // ¿El segmento (a→b) cruza algún muro de roca? Devuelve el punto de choque o null
+  cruzaRoca(ax, ay, bx, by) {
+    for (const m of this.units) {
+      if (!m.alive || m.kind !== 'muroRoca') continue;
+      const [x1, y1, x2, y2] = this.extremosRoca(m);
+      const d = (bx - ax) * (y2 - y1) - (by - ay) * (x2 - x1);
+      if (Math.abs(d) < 1e-6) continue;
+      const t = ((x1 - ax) * (y2 - y1) - (y1 - ay) * (x2 - x1)) / d, u = ((x1 - ax) * (by - ay) - (y1 - ay) * (bx - ax)) / d;
+      if (t >= 0 && t <= 1 && u >= -0.05 && u <= 1.05) return { x: ax + (bx - ax) * t, y: ay + (by - ay) * t };
+    }
+    return null;
+  }
+
   // ================================================================ ataques básicos (daño físico)
   // Ritmo de recarga de las cargas (Fuga y Bendición lo aceleran)
   // Trelgon: al terminar el Sobrecrecimiento (o al morir) pierde lo que quede de la vida extra
@@ -3261,7 +3575,7 @@ class Game {
     p.ulti = Math.min(1, p.ulti + cant / p.st.ultiCarga);
   }
   velocidadDe(p) {
-    if (p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.canalArena || p.fx.jetpack || p.fx.saltoLanza) return 0;
+    if (p.fx.aturdido || canalizando(p.fx) || p.fx.canalLluvia || p.fx.jetpack || p.fx.saltoLanza) return 0;
     if (p.build && HEROES[p.build.heroe]?.pasiva === 'pasoSigiloso' && this.combatTime - (p.ultimoDano ?? -99) >= 3) return this.velocidadBase(p) * 1.1;   // Takichi
     return this.velocidadBase(p);
   }
@@ -3277,6 +3591,8 @@ class Game {
       v *= 1 + Math.min(0.3, 0.03 * n);
     }
     if (p.fx.slow) v *= p.fx.slow.mult;
+    if (p.fx.encadenado) v *= 1 - p.fx.encadenado.lento;   // Grillete de roca (Tek'Tal)
+    if (p.fx.encadenando) v *= 1 - p.fx.encadenando.lento;   // Tek'Tal también queda lento
     return v;
   }
 
@@ -3313,6 +3629,12 @@ class Game {
       }
       p.facing = a;
       this.lanzarParabola(p, p.x + Math.cos(a) * largo, p.y + Math.sin(a) * largo, at.vuelo, at.area, p.st.dano, 'fis');
+    } else if (at.tipo === 'rafaga') {
+      // Gaia (Seba 29-10): cada carga suelta 3 proyectiles seguidos; cada uno sale hacia donde apuntas en ese momento
+      const manual = this._apunte ? this._apunte.a : null;
+      const { a } = this.aim(p, at.alcance);
+      p.facing = a;
+      this.aplicarEfecto(p, 'rafagaGaia', { t: at.tiros * at.cada + 0.1, restan: at.tiros, prox: 0, a0: manual });
     } else {
       const { a } = this.aim(p, at.alcance);
       p.facing = a;
@@ -3356,6 +3678,17 @@ class Game {
       this.knock(q, p.x, p.y, 90);
       // Takichi (Seba 29-10): cada básico que daña baja 0,25 s la recarga de sus habilidades 1 y 2
       if (hizo > 0 && !reducido && HEROES[p.build?.heroe]?.pasiva === 'pasoSigiloso') { reducido = true; p.cd[1] = Math.max(0, p.cd[1] - 0.25); p.cd[2] = Math.max(0, p.cd[2] - 0.25); }
+      // Tek'Tal (Seba 29-10): cada tercer puñetazo al mismo enemigo lo deja lento 10% por 4 s
+      if (hizo > 0 && q.alive && HEROES[p.build?.heroe]?.pasiva === 'temblor') {
+        const c = p.temblor || (p.temblor = {});
+        c[q.id] = (c[q.id] || 0) + 1;
+        if (c[q.id] >= 3) {
+          c[q.id] = 0;
+          if (!q.fx || !q.fx.slow || q.fx.slow.mult >= 0.9) this.aplicarEfecto(q, 'slow', { t: 4, mult: 0.9 });
+          this.emit({ k: 'boom', x: q.x | 0, y: q.y | 0, r: 26, c: 'piedra' });
+          if (!q.esUnidad) this.emit({ k: 'txt', x: q.x | 0, y: q.y | 0, s: 'TEMBLOR' });
+        }
+      }
     }
   }
 
@@ -3416,6 +3749,40 @@ class Game {
         rebote(1, hit, n.dano * H.baja);
         return;
       }
+    }
+    if (pr.efecto === 'discoGaia') {
+      // Gaia (Seba 29-10): 3 golpes que suben (50/100/125 y 1,5/2/2,5 s); rebota al azar, sin repetir al mismo seguido
+      if (!hit || hit.kind === 'muro') return;
+      const n = pr.extra, H = HABILIDADES.discoGaia;
+      const golpe = (i, e) => {
+        if (!owner || !e.alive) return;
+        this.damage(e, n.danos[i], owner, { tipo: 'mag', desde: pr });
+        this.emit({ k: 'boom', x: e.x | 0, y: e.y | 0, r: 22, c: 'gaia' });
+        if (e.alive) this.aturdirGaia(owner, e, n.aturde[i]);
+        if (i + 1 >= n.danos.length) return;
+        const cand = this.enemigos(pr.owner, false).filter(q => q !== e && q.alive && dist(q, e) <= H.radioRebote + (q.esUnidad ? 10 : CONFIG.RADIO_JUGADOR) && !(q.esUnidad && UNIDADES[q.kind]?.invulnerable));
+        if (!cand.length) return;
+        const sig = cand[Math.floor(Math.random() * cand.length)];
+        this.zones.push({ id: this.nextId++, kind: 'nada', x: sig.x, y: sig.y, r: 0, t: H.rebote, total: H.rebote, fin: () => {
+          if (!sig.alive) return;
+          this.emit({ k: 'bolt', x1: e.x | 0, y1: e.y | 0, x2: sig.x | 0, y2: sig.y | 0, c: 'gaia' });
+          golpe(i + 1, sig);
+        } });
+      };
+      golpe(0, hit);
+      return;
+    }
+    if (pr.efecto === 'grillete') {
+      // Tek'Tal (Seba 29-10): el primer héroe que golpea queda encadenado 4 s (sin daño)
+      if (!hit || !owner || !owner.alive || hit.esUnidad) return;
+      const n = pr.extra;
+      this.aplicarEfecto(hit, 'encadenado', { t: n.dur, de: owner.id, lento: n.lento });
+      if (hit.fx.encadenado) {
+        owner.fx.encadenando = { t: n.dur, presa: hit.id, lento: n.lento };
+        this.emit({ k: 'txt', x: hit.x | 0, y: hit.y | 0, s: '¡ENCADENADO!' });
+        this.emit({ k: 'boom', x: hit.x | 0, y: hit.y | 0, r: 24, c: 'piedra' });
+      }
+      return;
     }
     if (pr.efecto === 'pegajosa') {
       if (!hit) return;
@@ -3510,7 +3877,7 @@ class Game {
       const l = this.units.find(u => u.alive && u.kind === 'lanza' && u.owner === p.id && u.estado === 'clavada');
       if (l) { if (!p.fx.silence && !p.fx.aturdido && !p.fx.renacer && !p.fx.saltoLanza) this.saltarALanza(p, l); return; }
     }
-    if (p.cd[slot + 1] > 0 || p.fx.silence || p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.canalArena || p.fx.renacer) return;
+    if (p.cd[slot + 1] > 0 || p.fx.silence || p.fx.aturdido || canalizando(p.fx) || p.fx.canalLluvia || p.fx.renacer) return;
     // Aracnida: la mordida necesita un héroe enemigo cerca (si no, no se gasta)
     if (key === 'mordida') {
       if (p.ulti < 1) return;
@@ -3615,6 +3982,129 @@ class Game {
         this.zones.push(zona);
         this.aplicarEfecto(p, 'canalArena', { t: h.canal + 0.1, zona });
         this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'LLAMA DE LA ESTEPA' });
+        break;
+      }
+      // ---------------------------------------------------------- Gaia (Seba 29-10)
+      case 'discoGaia': {
+        const { a } = this.aim(p, h.alcance + 40);
+        p.facing = a;
+        this.spawnProj(p, a, { vel: h.vel, alcance: h.alcance, radio: 10, dmg: n.danos[0], tipo: 'mag', spr: 'discoGaia', efecto: 'discoGaia', extra: n });
+        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: 26, c: 'gaia' });
+        break;
+      }
+      case 'pasoCeleste': {
+        let a;
+        if (this._apunte) a = this._apunte.a;
+        else { const q = this.nearestEnemy(p, 400); a = q ? Math.atan2(p.y - q.y, p.x - q.x) : p.facing; }   // sin apuntar: se aleja del enemigo más cercano
+        const largo = this._apunte ? this.distApunte(h.largo) : h.largo;
+        p.facing = a; p.disparo = null;
+        const zona = { id: this.nextId++, kind: 'portal', x: p.x + Math.cos(a) * largo, y: p.y + Math.sin(a) * largo, ox: p.x, oy: p.y, r: 22, t: h.canal, total: h.canal,
+          fin: (z) => {
+            if (z.cancelado || !p.alive || !p.fx.canalPortal) return;
+            delete p.fx.canalPortal;
+            const x0 = p.x, y0 = p.y, fin = { x: z.x, y: z.y };
+            this.clampWall(fin);
+            p.x = fin.x; p.y = fin.y; p.kbx = p.kby = 0;
+            if (this.modo === 'equipos') this.chocarCamara(p);
+            this.chocarRocas(p, CONFIG.RADIO_JUGADOR);
+            this.emit({ k: 'portal', x1: x0 | 0, y1: y0 | 0, x2: p.x | 0, y2: p.y | 0 });
+            this.emit({ k: 'boom', x: p.x | 0, y: p.y | 0, r: h.radio, c: 'gaia' });
+            const dano = n.dano + Math.min(n.tope, Math.max(0, p.st.vidaMax - p.hp));
+            for (const e of this.enemigos(p.id, false)) {
+              if (dist(e, p) > h.radio + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) continue;
+              this.damage(e, dano, p, { tipo: 'mag', desde: p });
+              if (e.alive && !(e.esUnidad && UNIDADES[e.kind]?.invulnerable)) this.aplicarEfecto(e, 'slow', { t: n.dur, mult: 1 - n.lento });
+            }
+          } };
+        this.zones.push(zona);
+        this.aplicarEfecto(p, 'canalPortal', { t: h.canal + 0.1, zona });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'PASO CELESTIAL' });
+        break;
+      }
+      case 'lluviaEstrellas': {
+        const { a } = this.aim(p, 480);
+        p.facing = a;
+        h.distancias.forEach((d0, i) => {
+          const c = { x: p.x + Math.cos(a) * d0, y: p.y + Math.sin(a) * d0 }; this.clampWall(c);
+          const t = h.aviso + i * h.cada;
+          this.zones.push({ id: this.nextId++, kind: 'meteoro', x: c.x, y: c.y, r: h.radio, t, total: t,
+            fin: () => {
+              this.emit({ k: 'meteoro', x: c.x | 0, y: c.y | 0, r: h.radio });
+              for (const e of this.enemigos(p.id, false)) {
+                if (distA(e, c) > h.radio + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) continue;
+                this.damage(e, n.dano, p, { tipo: 'mag', ulti: true, desde: c });
+                if (e.alive) this.aturdirGaia(p, e, n.aturde);
+              }
+            } });
+        });
+        // Seba (29-10): Gaia se queda quieta canalizando hasta que cae el último meteoro; nada la interrumpe, pero sí recibe daño
+        p.disparo = null; delete p.fx.rafagaGaia;
+        p.fx.canalLluvia = { t: h.aviso + (h.distancias.length - 1) * h.cada + 0.1 };
+        this.emit({ k: 'anuncio', s: '¡LLUVIA DE ESTRELLAS!', chico: true });
+        break;
+      }
+      // ---------------------------------------------------------- Tek'Tal (Seba 29-10)
+      case 'fisura': {
+        const { a } = this.aim(p, h.largo + 40);
+        p.facing = a;
+        const x0 = p.x + Math.cos(a) * 26, y0 = p.y + Math.sin(a) * 26;
+        const fin = { x: p.x + Math.cos(a) * h.largo, y: p.y + Math.sin(a) * h.largo }; this.clampWall(fin);
+        const dx = fin.x - x0, dy = fin.y - y0, L2 = dx * dx + dy * dy || 1;
+        const golpeados = [];
+        for (const e of this.enemigos(p.id, false)) {
+          const t = Math.max(0, Math.min(1, ((e.x - x0) * dx + (e.y - y0) * dy) / L2));
+          if (Math.hypot(e.x - (x0 + dx * t), e.y - (y0 + dy * t)) <= h.ancho / 2 + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) golpeados.push(e);
+        }
+        const heroes = golpeados.filter(e => !e.esUnidad).length;
+        const aturde = heroes >= 2 ? n.aturde2 : n.aturde1;   // Seba: 1 solo héroe = 2 s; 2 o más = 1 s
+        for (const e of golpeados) {
+          this.damage(e, n.dano, p, { tipo: 'mag', desde: { x: x0, y: y0 } });
+          if (e.alive && !(e.esUnidad && UNIDADES[e.kind]?.invulnerable)) { this.aplicarEfecto(e, 'aturdido', { t: aturde }); if (!e.esUnidad) this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: 'ATURDIDO' }); }
+        }
+        // Muro de roca a lo largo de la grieta (4 s): bloquea a todos los cuerpos; los proyectiles lo atraviesan
+        const largo = Math.hypot(dx, dy);
+        this.units.push({ id: this.nextId++, kind: 'muroRoca', owner: p.id, esUnidad: true, alive: true, sinCuerpo: true,
+          x: (x0 + fin.x) / 2, y: (y0 + fin.y) / 2, hp: 1, maxHp: 0, cd: 0, t: 0, dur: h.muro, facing: a, fx: {}, largo, tipo: Math.round(largo) });
+        this.emit({ k: 'fisura', x1: x0 | 0, y1: y0 | 0, x2: fin.x | 0, y2: fin.y | 0 });
+        // los cuerpos que quedaron encima del muro salen al lado más cercano
+        for (const q of this.players.values()) if (q.alive) this.chocarRocas(q, CONFIG.RADIO_JUGADOR);
+        break;
+      }
+      case 'grillete': {
+        const { a } = this.aim(p, h.alcance + 30);
+        p.facing = a; p.disparo = null;
+        const zona = { id: this.nextId++, kind: 'grillete', x: p.x, y: p.y, r: h.alcance, a, w: 22, t: h.canal, total: h.canal,
+          fin: (z) => {
+            if (z.cancelado || !p.alive || !p.fx.canalGrillete) return;
+            delete p.fx.canalGrillete;
+            const re = z.manual ? null : this.aim(p, h.alcance + 30);   // automático: al soltar apunta de nuevo (el rival pudo moverse)
+            const af = re && re.t ? re.a : a;
+            p.facing = af;
+            this.spawnProj(p, af, { vel: h.vel, alcance: h.alcance, radio: 10, dmg: 0, tipo: 'mag', spr: 'grillete', efecto: 'grillete', soloJugadores: true, extra: n });
+            this.emit({ k: 'boom', x: p.x | 0, y: p.y | 0, r: 20, c: 'piedra' });
+          } };
+        zona.manual = !!this._apunte;
+        this.zones.push(zona);
+        this.aplicarEfecto(p, 'canalGrillete', { t: h.canal + 0.1, zona });
+        break;
+      }
+      case 'erupcion': {
+        const cx0 = p.x, cy0 = p.y;
+        h.radios.forEach((R0, i) => {
+          const t = 0.3 + i * h.cada, ultimo = i === h.radios.length - 1;
+          this.zones.push({ id: this.nextId++, kind: 'erupcion', x: cx0, y: cy0, r: R0, w: h.banda, t, total: t, fin: () => {
+            this.emit({ k: 'geiser', x: cx0 | 0, y: cy0 | 0, r: R0, w: h.banda });
+            for (const e of this.enemigos(p.id, false)) {
+              const d = dist(e, { x: cx0, y: cy0 }), rr = e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR;
+              // (C) el primer géiser estalla también bajo Tek'Tal (círculo lleno); los otros dos, solo en su anillo
+              const dentro = i === 0 ? d <= R0 + h.banda + rr : d >= R0 - h.banda - rr && d <= R0 + h.banda + rr;
+              if (!dentro) continue;
+              this.damage(e, n.dano, p, { tipo: 'mag', ulti: true, desde: { x: cx0, y: cy0 } });
+              if (ultimo && e.alive) this.knock(e, cx0, cy0, h.empuje * 7);
+            }
+          } });
+        });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ERUPCION' });
         break;
       }
       // ---------------------------------------------------------- Trelgon
@@ -4002,6 +4492,12 @@ class Game {
       }
       if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'vida' }); }
     }
+    // Tek'Tal: muros de roca de la Fisura (duran 4 s)
+    for (const u of this.units) {
+      if (!u.alive || u.kind !== 'muroRoca') continue;
+      u.t += dt;
+      if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0 }); }
+    }
     // Kazaro: Arena de la estepa (encierra a los enemigos: no entran ni salen; cura a Kazaro y quema a los de dentro)
     for (const u of this.units) {
       if (!u.alive || u.kind !== 'arenaEstepa') continue;
@@ -4047,7 +4543,10 @@ class Game {
       };
       if (u.estado === 'vuela') {
         const sx = u.vx * dt, sy = u.vy * dt;
-        u.x += sx; u.y += sy; u.recorrido += Math.hypot(sx, sy);
+        // Seba (29-10): la lanza choca con el muro de roca de Tek'Tal y queda clavada ahí
+        const choque = this.cruzaRoca(u.x, u.y, u.x + sx, u.y + sy);
+        if (choque) { u.x = choque.x - Math.sign(sx) * 2; u.y = choque.y - Math.sign(sy) * 2; u.recorrido = H.alcance; }
+        else { u.x += sx; u.y += sy; u.recorrido += Math.hypot(sx, sy); }
         golpear();
         let fuera = Math.hypot(u.x, u.y) > CONFIG.RADIO_ARENA - 20 || (this.modo === 'equipos' && this.enMuroCamara(u.x, u.y, 6));
         // Seba (29-10): lanzada desde dentro de su propia arena, choca con el borde y no lo traspasa
@@ -4141,7 +4640,7 @@ class Game {
       if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'magia' }); }
     }
     for (const u of this.units) {
-      if (!u.alive || u.enemigo || u.kind === 'orbeVida' || u.kind === 'circuloVida' || u.kind === 'mina' || u.kind === 'nubeTormenta' || u.kind === 'clon' || u.kind === 'tela' || u.kind === 'lanza' || u.kind === 'arenaEstepa') continue;
+      if (!u.alive || u.enemigo || u.kind === 'orbeVida' || u.kind === 'circuloVida' || u.kind === 'mina' || u.kind === 'nubeTormenta' || u.kind === 'clon' || u.kind === 'tela' || u.kind === 'lanza' || u.kind === 'arenaEstepa' || u.kind === 'muroRoca') continue;
       const d = UNIDADES[u.kind];
       const own = this.players.get(u.owner);
       if (u.kind === 'cucko') { this.tickEfectos(u, dt); continue; }   // se mueve en updateCucko
@@ -4196,7 +4695,7 @@ class Game {
       u.x += (u.kbx || 0) * dt; u.y += (u.kby || 0) * dt;
       const dec = Math.exp(-7 * dt); u.kbx *= dec; u.kby *= dec;
       this.clampWall(u);
-      if (u.kind !== 'dragon') this.chocarMuros(u, u.owner);
+      if (u.kind !== 'dragon') { this.chocarMuros(u, u.owner); this.chocarRocas(u, 12); }
 
       // Atacar (las invocaciones salen de hechizos: daño mágico)
       if (!objetivo || u.cd > 0) continue;
@@ -4255,7 +4754,7 @@ class Game {
           const lado = this.teamOf(p.id) === 'A' ? -1 : 1;
           p.x = lado * CONFIG.RADIO_ARENA * 0.68; p.y = (Math.random() - 0.5) * 120;
           this.clampWall(p);
-          p.alive = true; p.hp = p.st.vidaMax; p.cargas = CONFIG.CARGAS; p.fx = { renacer: { t: CONFIG.INVULNERABLE_REAPARECER } }; p.kbx = p.kby = 0;
+          p.alive = true; p.hp = p.st.vidaMax; p.cargas = cargasMax(p); p.fx = { renacer: { t: CONFIG.INVULNERABLE_REAPARECER } }; p.kbx = p.kby = 0;
           p.disparo = null;
           this.emit({ k: 'poof', x: p.x | 0, y: p.y | 0, c: 'magia' });
           this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'DE VUELTA' });
@@ -4277,7 +4776,7 @@ class Game {
       const heroe = HEROES[p.build.heroe];
 
       // Cargas del ataque
-      if (p.cargas < CONFIG.CARGAS) p.cargas = Math.min(CONFIG.CARGAS, p.cargas + dt * this.ritmoRecarga(p) / p.st.recarga);
+      if (p.cargas < cargasMax(p)) p.cargas = Math.min(cargasMax(p), p.cargas + dt * this.ritmoRecarga(p) / p.st.recarga);
       // Regeneración base y pasivas
       this.heal(p, CONFIG.REGEN_VIDA * dt);
       if (heroe.pasiva === 'regenBestial' && this.combatTime - p.ultimoDano >= 3) this.heal(p, 10 * dt, p);
@@ -4319,6 +4818,7 @@ class Game {
       }
       const vuela = HEROES[p.build.heroe]?.pasiva === 'nubeVoladora' || !!p.fx.jetpack;   // Rasho flota; Biteroi vuela con el jetpack
       if (!vuela) this.chocarMuros(p, p.id);
+      if (!vuela && !p.fx.saltoLanza) this.chocarRocas(p, R);   // Fisura de Tek'Tal: bloquea a todos (Rasho y el Jetpack pasan por encima)
       if (this.modo === 'equipos' && !vuela) this.chocarCamara(p);
       const avance = Math.hypot(p.x - x0, p.y - y0);
 
@@ -4385,6 +4885,35 @@ class Game {
         }
       }
 
+      // Gaia: ráfaga del ataque básico (3 proyectiles; si cambias el apuntado durante la ráfaga, se dispersan)
+      if (p.fx.rafagaGaia && !p.fx.aturdido) {
+        const f = p.fx.rafagaGaia, at = p.st.ataque;
+        f.prox -= dt;
+        while (f.prox <= 0 && f.restan > 0) {
+          f.prox += at.cada; f.restan--;
+          let a;
+          if (Number.isFinite(p.input.a)) a = p.input.a;   // apuntado vivo (mouse o arrastre)
+          else if (Number.isFinite(f.a0)) a = f.a0;
+          else a = this.aim(p, at.alcance).a;
+          p.facing = a;
+          this.spawnProj(p, a, { vel: at.vel, alcance: at.alcance, radio: at.radio, dmg: p.st.dano, tipo: 'fis', spr: at.proj });
+        }
+        if (f.restan <= 0) delete p.fx.rafagaGaia;
+      }
+      // Tek'Tal: la cadena del Grillete trae a su presa
+      if (p.fx.encadenado) {
+        const f = p.fx.encadenado, tk = this.players.get(f.de);
+        if (!tk || !tk.alive || !tk.fx.encadenando) delete p.fx.encadenado;
+        else if (!p.fx.jetpack && !p.fx.saltoLanza) {
+          const dx = tk.x - p.x, dy = tk.y - p.y, d = Math.hypot(dx, dy) || 1, cerca = R * 2 + 4;
+          if (d > cerca) { const paso = Math.min(d - cerca, HABILIDADES.grillete.tiron * dt); p.x += dx / d * paso; p.y += dy / d * paso; }
+        }
+      }
+      if (p.fx.encadenando) {
+        const q = this.players.get(p.fx.encadenando.presa);
+        if (!q || !q.alive || !q.fx.encadenado) delete p.fx.encadenando;
+      }
+
       // Mayhem: daño por contacto
       if (p.fx.mayhem) {
         const f = p.fx.mayhem;
@@ -4440,13 +4969,13 @@ class Game {
       p.hidden = oculto;
 
       // Acciones
-      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !p.fx.canalSablazo && !p.fx.canalJet && !p.fx.jetpack && !p.fx.renacer && !p.fx.decimar && !p.fx.saltoLanza && !p.fx.canalArena) this.basicAttack(p);   // bots
+      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !canalizando(p.fx) && !p.fx.canalLluvia && !p.fx.jetpack && !p.fx.renacer && !p.fx.decimar && !p.fx.saltoLanza && !p.fx.rafagaGaia) this.basicAttack(p);   // bots
       // Jugadores: un disparo por toque o clic; si llega durante la cadencia, se guarda un instante
       if (p.input.d !== undefined && p.input.d !== p.seenD) { p.seenD = p.input.d; p.disparo = { a: p.input.da, d: p.input.dd, t: 0.4 }; }
       if (p.disparo) {
         p.disparo.t -= dt;
-        if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido || p.fx.canalSablazo || p.fx.canalJet || p.fx.jetpack || p.fx.renacer || p.fx.decimar || p.fx.saltoLanza || p.fx.canalArena) p.disparo = null;
-        else if (p.cd[0] <= 0 && p.cargas >= 1) { this.basicAttack(p, p.disparo.a, p.disparo.d); p.disparo = null; }
+        if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido || canalizando(p.fx) || p.fx.canalLluvia || p.fx.jetpack || p.fx.renacer || p.fx.decimar || p.fx.saltoLanza) p.disparo = null;
+        else if (p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.rafagaGaia) { this.basicAttack(p, p.disparo.a, p.disparo.d); p.disparo = null; }
         else if (p.cargas < 1 && p.cd[0] <= 0) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'SIN CARGAS', id: p.id }); p.disparo = null; }
       }
       for (let s = 0; s < 3; s++) {
@@ -4709,6 +5238,7 @@ class Game {
   }
 
   update(dt) {
+    if (this.pausa && (this.phase === 'combat' || this.phase === 'countdown')) return;   // Seba (29-10): partida en pausa
     this.t += dt;
     switch (this.phase) {
       case 'draft': this.updateDraft(dt); break;
@@ -4756,12 +5286,13 @@ class Game {
       if (!enCombate) continue;
       const fx = p.fx;
       const flags = (p.alive ? 1 : 0) | (p.hidden ? 8 : 0)
-        | (fx.renacer ? 2 : 0) | (fx.canalJet ? 131072 : 0) | (fx.decimar ? 128 : 0) | (fx.canalArena ? 512 : 0) | (fx.fuegoAzul ? 1024 : 0) | (fx.dot ? 4 : 0) | (fx.burn ? 16 : 0) | (fx.slow ? 32 : 0) | (fx.silence ? 64 : 0) | (fx.aturdido ? 2048 : 0)
+        | (fx.renacer ? 2 : 0) | (fx.canalJet ? 131072 : 0) | (fx.decimar ? 128 : 0) | (fx.canalArena ? 512 : 0) | (fx.fuegoAzul ? 1024 : 0) | (fx.dot ? 4 : 0) | (fx.burn ? 16 : 0) | (fx.slow || fx.encadenado || fx.encadenando ? 32 : 0) | (fx.silence ? 64 : 0) | (fx.aturdido ? 2048 : 0)
         | (fx.vuln ? 256 : 0) | (fx.mayhem ? 4096 : 0) | (fx.terremoto ? 8192 : 0) | (fx.fuga ? 16384 : 0)
         | (p.caido || fx.carga ? 32768 : 0) | (fx.marcado || fx.marcaLire ? 65536 : 0) | 0 | (fx.bendecido ? 262144 : 0) | (fx.bombaPegada ? 524288 : 0) | (fx.cucko ? 1048576 : 0) | (fx.rafaga ? 2097152 : 0) | (fx.canalSablazo ? 4194304 : 0) | (fx.invisible && !fx.expuesto ? 8388608 : 0) | (fx.veneno ? 16777216 : 0) | (fx.enTela ? 33554432 : 0)
         | (fx.escudo ? 67108864 : 0) | (fx.sobre ? 134217728 : 0) | (fx.enraizando ? 268435456 : 0) | (fx.mazazos ? 536870912 : 0) | (fx.jetpack ? 1073741824 : 0);
       ps.push([p.id, Math.round(p.x), Math.round(p.y), r1(p.hp), p.st.vidaMax, +p.facing.toFixed(2), flags,
-        +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3), fx.escudo ? Math.ceil(fx.escudo.v) : 0, this.cargasHab(p), fx.saltoLanza ? +Math.min(1, fx.saltoLanza.el / fx.saltoLanza.total).toFixed(2) : 0]);
+        +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3), fx.escudo ? Math.ceil(fx.escudo.v) : 0, this.cargasHab(p), fx.saltoLanza ? +Math.min(1, fx.saltoLanza.el / fx.saltoLanza.total).toFixed(2) : 0,
+        (fx.canalGrillete ? 1 : 0) | (fx.canalPortal ? 2 : 0) | (fx.encadenado ? 4 : 0) | (fx.encadenando ? 8 : 0) | (fx.rafagaGaia ? 16 : 0) | (fx.canalLluvia ? 32 : 0)]);
     }
     return {
       t: 's', ph: this.phase, tm: +Math.max(0, this.timer).toFixed(1), ar: Math.round(this.arenaR),
@@ -4780,7 +5311,7 @@ class Game {
   meta() {
     this.metaDirty = false;
     return {
-      t: 'm', phase: this.phase, round: this.round, hostId: this.hostId, timer: this.timer, modo: this.modo,
+      t: 'm', phase: this.phase, round: this.round, hostId: this.hostId, timer: this.timer, modo: this.modo, pausa: !!this.pausa,
       equipos: this.modo === 'equipos' ? this.equipos : null, marcador: this.marcador || null, equipoGanador: this.equipoGanador || null,
       pve: this.modo === 'pve' && this.pve ? this.pveMeta() : null,
       players: [...this.players.values()].map(p => ({
@@ -4982,6 +5513,12 @@ function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
       case 'jetpack': si = d < 150 || (vida < 0.4 && d < 300); break;
       case 'mina': si = d < 260 || (game.objetivos && game.objetivos.some(o => o.lado === game.teamOf(p.id) && Math.hypot(o.x - p.x, o.y - p.y) < 80)); break;
       case 'granBombazo': si = d > 150 && d < 480; break;
+      case 'discoGaia': si = d < 300; break;
+      case 'pasoCeleste': si = (vida < 0.45 && d < 220) || (d > 200 && d < 330 && vida > 0.6); if (si && vida >= 0.45) { inp.sa = inp.sa || []; inp.sa[s] = Math.atan2(target.y - p.y, target.x - p.x); inp.sd = inp.sd || []; inp.sd[s] = Math.max(60, d - 40); inp.s[s] = (inp.s[s] || 0) + 1; si = false; } break;
+      case 'lluviaEstrellas': si = d < 420; break;
+      case 'fisura': si = d < 300; break;
+      case 'grillete': si = d < 360 && d > 90 && !p.fx.encadenando; break;
+      case 'erupcion': si = d < 200; break;
       case 'bendicion': si = [...game.players.values()].some(q => q.alive && game.teamOf(q.id) === game.teamOf(p.id) && q.hp / q.st.vidaMax < 0.4); break;
     }
     if (si && Math.random() < 0.7) { inp.sa = inp.sa || []; inp.sa[s] = null; inp.s[s] = (inp.s[s] || 0) + 1; }
@@ -6176,6 +6713,9 @@ class Controls {
     zone.addEventListener('contextmenu', (e) => e.preventDefault());
 
     // Botón con arrastre para apuntar (celular). alSoltar(apunte) con apunte = null (automático) o { a, frac }
+    // Seba (29-10): botón para cancelar el apuntado, arriba del ataque. Aparece al arrastrar; soltar el dedo encima cancela.
+    const btnCancel = document.getElementById('b-cancel');
+    const sobreCancel = (e) => { if (!btnCancel) return false; const r = btnCancel.getBoundingClientRect(); const m = 10; return e.clientX >= r.left - m && e.clientX <= r.right + m && e.clientY >= r.top - m && e.clientY <= r.bottom + m; };
     const arrastrable = (btn, { alApretar, alMover, alSoltar }) => {
       let id = null, ox = 0, oy = 0, apunte = null, salio = false;   // salio: ya se arrastró fuera del centro
       sinZoom(btn);
@@ -6185,6 +6725,7 @@ class Controls {
         id = e.pointerId; ox = e.clientX; oy = e.clientY; apunte = null; salio = false;
         try { btn.setPointerCapture(e.pointerId); } catch (err) { /* sin captura */ }
         btn.classList.add('press');
+        if (btnCancel && btn !== btnCancel) btnCancel.classList.add('on');
         alApretar && alApretar();
       });
       btn.addEventListener('pointermove', (e) => {
@@ -6193,6 +6734,9 @@ class Controls {
         // Seba (28-10): arrastrar y volver con el dedo al centro = cancelar
         if (d >= ARRASTRE_MIN) salio = true;
         apunte = d >= ARRASTRE_MIN ? { a: Math.atan2(dy, dx), frac: Math.min(1, d / ARRASTRE_MAX) } : salio ? 'cancelar' : null;
+        const enCancel = sobreCancel(e);
+        if (enCancel) apunte = 'cancelar';
+        if (btnCancel) btnCancel.classList.toggle('hot', enCancel);
         btn.classList.toggle('cancela', apunte === 'cancelar');
         alMover && alMover(apunte === 'cancelar' ? 'cancelar' : apunte);
         e.preventDefault();
@@ -6201,7 +6745,8 @@ class Controls {
         if (e.pointerId !== id) return;
         id = null;
         btn.classList.remove('press', 'cancela');
-        alSoltar && alSoltar(cancelar ? 'cancelar' : apunte, false);
+        if (btnCancel) btnCancel.classList.remove('on', 'hot');
+        alSoltar && alSoltar(cancelar || sobreCancel(e) ? 'cancelar' : apunte, false);
       };
       btn.addEventListener('pointerup', fin(false));
       btn.addEventListener('pointercancel', fin(true));
@@ -6349,7 +6894,7 @@ class StateBuffer {
     const pa = new Map(a.s.p.map(p => [p[0], p]));
     const players = b.s.p.map(pb => {
       const q = pa.get(pb[0]) || pb;
-      return { id: pb[0], x: lerp(q[1], pb[1], k), y: lerp(q[2], pb[2], k), hp: pb[3], mh: pb[4], f: lerpAng(q[5], pb[5], k), flags: pb[6], cd: pb.slice(7, 12), ack: pb[12], cargas: pb[13], ulti: pb[14], esc: pb[15] || 0, salto: pb[17] || 0 };
+      return { id: pb[0], x: lerp(q[1], pb[1], k), y: lerp(q[2], pb[2], k), hp: pb[3], mh: pb[4], f: lerpAng(q[5], pb[5], k), flags: pb[6], cd: pb.slice(7, 12), ack: pb[12], cargas: pb[13], ulti: pb[14], esc: pb[15] || 0, salto: pb[17] || 0, f2: pb[18] || 0 };
     });
     const ua = new Map((a.s.u || []).map(u => [u[0], u]));
     const units = (b.s.u || []).map(ub => {
@@ -6619,7 +7164,7 @@ class Renderer {
   gy(y) { return Math.round(y * ESC) + this.oy; }
 
   addEvent(ev) {
-    const dur = { mazazo: 0.45, raiz: 0.9, escudoRoto: 0.5, cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
+    const dur = { portal: 0.55, fisura: 0.7, geiser: 0.7, meteoro: 0.55, mazazo: 0.45, raiz: 0.9, escudoRoto: 0.5, cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
     const f = { ...ev, age: 0, dur: ev.k === 'slash' && ev.h === 'trelgon' ? 0.32 : dur };
     if (ev.k === 'death' || ev.k === 'heal' || ev.k === 'poof') {
       f.parts = Array.from({ length: ev.k === 'death' ? 16 : 7 }, (_, i) => ({ a: hash(i, ev.x | 0, ev.y | 0) * TAU, v: 20 + hash(i, 9, ev.x | 0) * (ev.k === 'death' ? 70 : 30) }));
@@ -6760,6 +7305,35 @@ class Renderer {
           if ((i + t) % 6 < 4) { this.g.fillRect(cx + i, cy - L, 1, 1); this.g.fillRect(cx + i, cy + L, 1, 1); this.g.fillRect(cx - L, cy + i, 1, 1); this.g.fillRect(cx + L, cy + i, 1, 1); }
         }
         this.g.globalAlpha = 0.18; this.g.fillRect(cx - L, cy - L, L * 2, L * 2); this.g.globalAlpha = 1;
+      } else if (z.kind === 'portal') {
+        // Paso celestial: portal de salida color magia que se abre donde va a aparecer Gaia
+        const rr = Math.max(3, Math.round(r * (0.4 + z.prog * 0.6)));
+        this.ring(cx, cy, rr + 1, PALETA.tinta, 1, 3);
+        this.ring(cx, cy, rr, parpadeo ? PALETA.pergamino2 : PALETA.magia, 1, 2);
+        this.ring(cx, cy, Math.max(1, rr - 4), PALETA.carmesi2, 1, 1);
+        this.linea(this.gx(z.ox), this.gy(z.oy), cx, cy, PALETA.magia, 0, 0, 1);
+      } else if (z.kind === 'meteoro') {
+        // Lluvia de estrellas: círculo de aviso que se llena y la estrella que cae
+        this.discDither(cx, cy, Math.max(1, Math.round(r * z.prog)), PALETA.magia, 2, t);
+        this.ring(cx, cy, r, PALETA.tinta, 1, 3);
+        this.ring(cx, cy, r, parpadeo ? PALETA.pergamino2 : PALETA.oro2, 1, 1);
+        const alto = Math.round((1 - z.prog) * 90), s = otro('meteoro', Math.floor(this.time * 10));
+        this.g.drawImage(s, cx - s.width + Math.round(alto * 0.4), cy - s.height * 2 - alto, s.width * 2, s.height * 2);
+      } else if (z.kind === 'grillete') {
+        // Tek'Tal canalizando el Grillete: camino de piedra que se llena (aviso para el rival)
+        const x2 = Math.round(cx + Math.cos(z.a) * r), y2 = Math.round(cy + Math.sin(z.a) * r);
+        const w = Math.max(3, Math.round(z.w * ESC));
+        this.linea(cx, cy, x2, y2, PALETA.tinta, 0, 0, w + 2);
+        this.linea(cx, cy, x2, y2, PALETA.piedra0, 0, 0, w);
+        this.linea(cx, cy, Math.round(cx + (x2 - cx) * z.prog), Math.round(cy + (y2 - cy) * z.prog), parpadeo ? PALETA.oro2 : PALETA.antorcha, 0, 0, Math.max(2, w - 2));
+      } else if (z.kind === 'erupcion') {
+        // Erupción: el anillo donde va a reventar el géiser brilla en magma antes de estallar
+        const w = Math.round(z.w * ESC);
+        const r0 = Math.max(1, r - w);
+        this.ring(cx, cy, r + w, PALETA.tinta, 1, 2);
+        this.ring(cx, cy, r + w, parpadeo ? PALETA.oro2 : PALETA.antorcha, 1, 1);
+        this.ring(cx, cy, r0, PALETA.carmesi1, 0.8, 1);
+        for (let i = 0; i < 10; i++) { const a = (i / 10) * TAU + z.prog, rr = r + Math.round((hash(i, 2, z.id) - 0.5) * w * 1.5); this.px(Math.round(cx + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr) - (t + i) % 3, PALETA.antorcha); }
       } else if (z.kind === 'mira') {
         const rr = 9 - Math.round(z.prog * 4);
         this.ring(cx, cy - 6, rr, PALETA.carmesi2, 1);
@@ -6802,6 +7376,14 @@ class Renderer {
       else this.drawUnit(it.e, metaById);
     }
 
+    // Cadena del Grillete de roca (Tek'Tal → su presa): eslabones de piedra con magma
+    { const tk = view.players.find(q => (q.f2 & 8) && (q.flags & 1)), pr = view.players.find(q => (q.f2 & 4) && (q.flags & 1));
+      if (tk && pr) {
+        const a = (tk.id === myId && pred) ? pred : tk, b = (pr.id === myId && pred) ? pred : pr;
+        const x1 = this.gx(a.x), y1 = this.gy(a.y) - 8, x2 = this.gx(b.x), y2 = this.gy(b.y) - 4, L = Math.hypot(x2 - x1, y2 - y1), n = Math.max(2, Math.floor(L / 6));
+        this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 4);
+        for (let i = 0; i <= n; i++) { const x = Math.round(x1 + (x2 - x1) * i / n), y = Math.round(y1 + (y2 - y1) * i / n); g.fillStyle = PALETA.tinta; g.fillRect(x - 2, y - 2, 5, 5); g.fillStyle = i % 2 ? PALETA.piedra2 : PALETA.piedra3; g.fillRect(x - 1, y - 1, 3, 3); if ((i + Math.floor(this.time * 8)) % 4 === 0) { g.fillStyle = PALETA.antorcha; g.fillRect(x, y, 1, 1); } }
+      } }
     // Proyectiles
     // Hilo de seda del gancho de Aracnida: desde ella hasta la punta
     for (const p of view.projs) if (p.spr === 'telaGancho') {
@@ -6835,7 +7417,13 @@ class Renderer {
   }
 
   // Guía de apuntado (skill shots): línea, punto de impacto, cono o radio propio
+  // Seba (29-10): guía más transparente (líneas y bordes al 45%, relleno al 10%)
   drawGuia() {
+    if (!this.guia) return;
+    this.g.globalAlpha = 0.45;
+    try { this._drawGuia(); } finally { this.g.globalAlpha = 1; }
+  }
+  _drawGuia() {
     const G = this.guia;
     if (!G) return;
     const g = this.g;
@@ -6853,11 +7441,11 @@ class Renderer {
     };
     // Seba (29-10): zonas de apuntado en dorado transparente con borde dorado (se ven mejor en el celular)
     const zonaDorada = (x, y, r) => {
-      g.globalAlpha = G.debil ? 0.12 : 0.22; this.bolaPixel(x, y, r, PALETA.oro1); g.globalAlpha = 1;
+      g.globalAlpha = G.debil ? 0.06 : 0.1; this.bolaPixel(x, y, r, PALETA.oro1); g.globalAlpha = 0.45;
       this.ring(x, y, r, PALETA.tinta, 1, 3); this.ring(x, y, r, G.debil ? PALETA.oro0 : PALETA.oro2, 1, 1);
     };
     const bandaDorada = (x0, y0, x1, y1, ancho) => {
-      g.globalAlpha = G.debil ? 0.12 : 0.22; this.linea(x0, y0, x1, y1, PALETA.oro1, 0, 0, Math.max(3, Math.round(ancho))); g.globalAlpha = 1;
+      g.globalAlpha = G.debil ? 0.06 : 0.1; this.linea(x0, y0, x1, y1, PALETA.oro1, 0, 0, Math.max(3, Math.round(ancho))); g.globalAlpha = 0.45;
     };
     if (G.tipo === 'propio') { zonaDorada(cx, cy + 4, Math.round(G.r * ESC)); return; }
     if (G.a === null || G.a === undefined) { this.ring(cx, cy + 4, Math.round((G.alcance || G.r || 60) * ESC), PALETA.oro2, 0.5); return; }
@@ -6956,9 +7544,10 @@ class Renderer {
     }
     // Rasho flota: sube y baja suave sobre su nube
     const flota = meta.build.heroe === 'rasho';
-    const bob = flota ? Math.round(Math.sin(this.time * 3 + (p.id.length % 5)) * 1.5) - 3 : 0;
+    const esGaia = meta.build.heroe === 'gaia';   // Gaia flota sobre su vestido (sin nube)
+    const bob = flota ? Math.round(Math.sin(this.time * 3 + (p.id.length % 5)) * 1.5) - 3 : esGaia ? Math.round(Math.sin(this.time * 2.4 + (p.id.length % 5)) * 1) - 2 : 0;
     // Trelgon en Sobrecrecimiento: 1,5 veces más grande (los pies quedan en el mismo lugar)
-    const gigante = (p.flags & 134217728) ? 1.6 : meta.build.heroe === 'trelgon' ? 1.15 : 1;   // Trelgon es más grande que el resto
+    const gigante = (p.flags & 134217728) ? 1.6 : meta.build.heroe === 'trelgon' ? 1.15 : meta.build.heroe === 'tektal' ? 1.2 : 1;   // Tek'Tal también es más grande   // Trelgon es más grande que el resto
     const enAire = p.flags & 1073741824;   // Biteroi con el jetpack: sube y deja sombra y llamas
     // Kazaro saltando a su lanza (Seba 29-10): sube en arco por el aire, con sombra y estela de fuego azul
     const alturaSalto = p.salto > 0 ? Math.round(Math.sin(Math.PI * p.salto) * 34) : 0;
@@ -6995,6 +7584,36 @@ class Renderer {
       }
     }
     if (flota) this.nubeViva(cx, sy + 20, 1, true);
+    // Gaia: brillo bajo el vestido (flota) y chispas color magia
+    if (esGaia && gigante === 1) {
+      g.globalAlpha = 0.5; this.discDither(cx, cy + 6, 6, PALETA.magia, 3, Math.floor(this.time * 6)); g.globalAlpha = this.alphaPj || 1;
+      const t = Math.floor(this.time * 8);
+      for (let i = 0; i < 2; i++) { const x = cx - 6 + ((i * 9 + t * 3) % 13), y = sy + 26 - ((t + i * 4) % 9); g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 3); g.fillStyle = i ? PALETA.magia : PALETA.pergamino2; g.fillRect(x, y, 1, 1); }
+    }
+    // Gaia canalizando la Lluvia de estrellas: círculo mágico dorado que gira bajo sus pies y chispas que suben
+    if (p.f2 & 32) {
+      const on = Math.floor(this.time * 8) % 2;
+      this.ring(cx, cy + 4, 15, PALETA.tinta, 1, 4);
+      this.ring(cx, cy + 4, 15, on ? PALETA.oro2 : PALETA.magia, 1, 2);
+      for (let i = 0; i < 5; i++) { const a = this.time * 5 + i * (TAU / 5); g.fillStyle = PALETA.tinta; g.fillRect(Math.round(cx + Math.cos(a) * 15) - 1, Math.round(cy + 4 + Math.sin(a) * 8) - 1, 4, 4); g.fillStyle = PALETA.oro2; g.fillRect(Math.round(cx + Math.cos(a) * 15), Math.round(cy + 4 + Math.sin(a) * 8), 2, 2); }
+      const t = Math.floor(this.time * 14);
+      for (let i = 0; i < 4; i++) { const x = cx - 8 + ((i * 5 + t) % 17), y = sy + 10 - ((t * 2 + i * 6) % 24); g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 3); g.fillStyle = i % 2 ? PALETA.oro2 : PALETA.pergamino2; g.fillRect(x, y, 1, 1); }
+    }
+    // Gaia canalizando el Paso celestial: portal color magia que se abre bajo sus pies
+    if (p.f2 & 2) {
+      const k = Math.floor(this.time * 12) % 3;
+      this.ring(cx, cy + 4, 12 + k, PALETA.tinta, 1, 4);
+      this.ring(cx, cy + 4, 12 + k, PALETA.magia, 1, 2);
+      this.ring(cx, cy + 4, 7, PALETA.carmesi2, 1, 1);
+      for (let i = 0; i < 6; i++) { const a = -this.time * 8 + i * (TAU / 6); g.fillStyle = PALETA.pergamino2; g.fillRect(Math.round(cx + Math.cos(a) * (10 + k)), Math.round(cy + 4 + Math.sin(a) * (6 + k)), 1, 1); }
+    }
+    // Tek'Tal canalizando el Grillete: magma que late en el pecho y anillo naranjo
+    if (p.f2 & 1) {
+      const on = Math.floor(this.time * 10) % 2;
+      this.ring(cx, cy + 4, 14, PALETA.tinta, 1, 4);
+      this.ring(cx, cy + 4, 14, on ? PALETA.antorcha : PALETA.oro2, 1, 2);
+      this.llamasAzules(cx, cy - 2, 3, 12, 'magma');
+    }
     if (flota && (p.flags & 32768) && (p.flags & 1)) {   // Rasho con carga eléctrica: chispas doradas bajo la nube
       const t = Math.floor(this.time * 18);
       for (let i = 0; i < 4; i++) { const x = cx - 9 + ((i * 6 + t * 2) % 19), y = sy + 24 + ((t + i) % 3); g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 3); g.fillStyle = i % 2 ? PALETA.oro2 : PALETA.pergamino2; g.fillRect(x, y, 1, 1); }
@@ -7010,6 +7629,7 @@ class Renderer {
       verArma = true;
     }
     if (p.flags & 128) { ang = this.time * 18; verArma = true; } // Decimar: gira
+    if (p.f2 & 32) { ang = -this.time * 14; verArma = true; }   // Gaia canalizando la Lluvia de estrellas: gira el brazo con su varita
     const esKazaro = meta.build.heroe === 'kazaro';
     if (esKazaro && this.lanzasFuera && this.lanzasFuera.has(p.id)) verArma = false;      // la lanza está lanzada
     const hx = sx + Math.round((izq ? 21 - (MANO.x + 1) : MANO.x + 1) * gigante), hy = sy + Math.round((MANO.y + 1) * gigante);
@@ -7119,6 +7739,13 @@ class Renderer {
       }
     }
     if (p.flags & 1024) this.llamasAzules(cx, sy + 14, 4, 10);          // Fuego azul: llamas azules en el cuerpo
+    // Encadenado por el Grillete de Tek'Tal: grillete de piedra en los pies
+    if (p.f2 & 4) {
+      const on = Math.floor(this.time * 6) % 2;
+      g.fillStyle = PALETA.tinta; g.fillRect(cx - 7, cy + 2, 15, 6);
+      g.fillStyle = PALETA.piedra1; g.fillRect(cx - 6, cy + 3, 13, 4);
+      g.fillStyle = on ? PALETA.antorcha : PALETA.piedra3; g.fillRect(cx - 6, cy + 3, 13, 1);
+    }
     if (p.flags & 524288) { // Bomba pegada (Biteroi)
       const s = otro('bombaLob', Math.floor(this.time * 12));
       this.g.drawImage(s, cx + 4, sy + 6);
@@ -7175,9 +7802,10 @@ class Renderer {
     g.drawImage(num, Math.round(cx - num.width / 2), by - 5);
     // Cargas del ataque: 3 segmentos naranjos bajo la vida (solo las propias, como en Brawl Stars)
     if (isMe && p.cargas !== undefined) {
-      const seg = 5, gap = 1, total = 3 * seg + 2 * gap, x0 = Math.round(cx - total / 2);
+      const nC = HEROES[meta.build.heroe]?.cargas || CONFIG.CARGAS;   // Gaia: 2 cargas
+      const seg = 5, gap = 1, total = nC * seg + (nC - 1) * gap, x0 = Math.round(cx - total / 2);
       g.fillStyle = PALETA.tinta; g.fillRect(x0 - 1, by + 3, total + 2, 3);   // justo bajo la barra de vida
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < nC; i++) {
         const lleno = Math.max(0, Math.min(1, p.cargas - i));
         const x = x0 + i * (seg + gap);
         g.fillStyle = PALETA.noche; g.fillRect(x, by + 4, seg, 1);
@@ -7243,7 +7871,7 @@ class Renderer {
   // Seba (29-10): llamas hechas de bolas que laten (misma técnica que la nube de Rasho), con contorno, capas de color y chispa en la punta.
   // (cx, cy) = base de la llama; k = tamaño (1 ≈ 10 px de alto); color 'azul' o 'verde'
   llama(cx, cy, k, color = 'azul', seed = 0) {
-    const P = color === 'verde' ? [PALETA.bosque0, PALETA.bosque1, PALETA.bosque2, PALETA.pergamino2] : [PALETA.acero0, PALETA.acero1, PALETA.acero2, PALETA.pergamino2];
+    const P = color === 'verde' ? [PALETA.bosque0, PALETA.bosque1, PALETA.bosque2, PALETA.pergamino2] : color === 'magma' ? [PALETA.carmesi0, PALETA.carmesi1, PALETA.antorcha, PALETA.oro2] : color === 'magia' ? [PALETA.noche, PALETA.magia, PALETA.carmesi2, PALETA.pergamino2] : [PALETA.acero0, PALETA.acero1, PALETA.acero2, PALETA.pergamino2];
     const T = this.time * 9 + seed;
     const B = [[0, 0, 3], [0, -2.6, 2.7], [0, -5, 2.1], [0, -7.2, 1.5], [0, -9, 0.9]].map(([x, y, r], i) => [
       Math.round(cx + (x + Math.sin(T * 0.8 + i * 1.3) * i * 0.45) * k), Math.round(cy + y * k * (1 + Math.sin(T * 1.1) * 0.08)), Math.max(1, Math.round((r + Math.sin(T * 1.7 + i) * 0.35) * k))]);
@@ -7520,6 +8148,7 @@ class Renderer {
 
   drawUnit(u, metaById) {
     if (u.kind === 'muro') { this.drawMuro(u); return; }
+    if (u.kind === 'muroRoca') { this.drawMuroRoca(u); return; }
     if (u.kind === 'enemigo') { this.drawEnemigo(u); return; }
     if (u.kind === 'cucko') { this.drawCucko(u); return; }
     if (u.kind === 'nubeTormenta') { this.drawNubeTormenta(u); return; }
@@ -7669,6 +8298,24 @@ class Renderer {
     if (u.flags & 16) this.px(cx + (Math.floor(this.time * 10) % 5) - 2, cy - s.height + 4, PALETA.antorcha);
   }
 
+  // Muro de roca de la Fisura (Tek'Tal): piedras grises oscuras apiladas a lo largo de la grieta, con magma entre ellas
+  drawMuroRoca(u) {
+    const g = this.g, L = (+u.tipo || 300) / 2, ca = Math.cos(u.f), sa = Math.sin(u.f);
+    const n = Math.max(3, Math.round(L * 2 / 22));
+    const piedras = [];
+    for (let i = 0; i <= n; i++) { const k = -L + (L * 2) * i / n; piedras.push([u.x + ca * k, u.y + sa * k, i]); }
+    piedras.sort((a, b) => a[1] - b[1]);
+    const acaba = u.resta > 0 && u.resta < 1 && Math.floor(this.time * 8) % 2;   // parpadea antes de desaparecer
+    for (const [x, y, i] of piedras) {
+      const cx = this.gx(x), cy = this.gy(y), h = 9 + Math.round(hash(i, 3, u.id) * 4), w = 6 + Math.round(hash(i, 5, u.id) * 2);
+      g.fillStyle = PALETA.tinta; g.fillRect(cx - w - 1, cy - h - 1, w * 2 + 3, h + 4);
+      g.fillStyle = acaba ? PALETA.piedra2 : PALETA.piedra0; g.fillRect(cx - w, cy - h, w * 2 + 1, h + 2);
+      g.fillStyle = PALETA.piedra1; g.fillRect(cx - w, cy - h, w * 2 + 1, 3); g.fillRect(cx - w, cy - h, 2, h);
+      g.fillStyle = PALETA.piedra2; g.fillRect(cx - w + 1, cy - h, w, 1);
+      if (i % 2 === 0) { g.fillStyle = (Math.floor(this.time * 4) + i) % 3 ? PALETA.antorcha : PALETA.oro2; g.fillRect(cx - 1, cy - h + 4, 2, h - 5); g.fillStyle = PALETA.carmesi1; g.fillRect(cx - 1, cy, 2, 1); }
+    }
+  }
+
   drawProj(p) {
     const cx = this.gx(p.x), cy = this.gy(p.y);
     let s;
@@ -7679,7 +8326,7 @@ class Renderer {
     else s = otro(p.spr, Math.floor(this.time * 8));
     // Estela: puntos detrás del proyectil, en el color de su tipo
     const col = { flecha: PALETA.pergamino2, flechaBosque: PALETA.bosque2, virote: PALETA.pergamino1, sombra: PALETA.magia,
-      orbeFuego: PALETA.antorcha, bolaFuego: PALETA.oro2, piedra: PALETA.piedra3, rocaGrande: PALETA.piedra3, rayoBola: PALETA.acero2, rayoBolaCargada: PALETA.oro2, trueno: PALETA.acero2, telaGancho: PALETA.pergamino2 }[p.spr] || PALETA.pergamino2;
+      orbeFuego: PALETA.antorcha, bolaFuego: PALETA.oro2, piedra: PALETA.piedra3, rocaGrande: PALETA.piedra3, rayoBola: PALETA.acero2, rayoBolaCargada: PALETA.oro2, trueno: PALETA.acero2, telaGancho: PALETA.pergamino2, petaloGaia: PALETA.magia, discoGaia: PALETA.carmesi2, grillete: PALETA.antorcha }[p.spr] || PALETA.pergamino2;
     const ca = Math.cos(p.a), sa = Math.sin(p.a);
     for (let i = 1; i <= 5; i++) {
       if (i > 3 && (Math.floor(this.time * 20) + i) % 2) continue;
@@ -7828,6 +8475,7 @@ class Renderer {
         }
         case 'boom': {
           const r = Math.round(f.r * ESC * (0.35 + t * 0.65));
+          if (f.c === 'gaia') { const r = Math.round(f.r * ESC * (0.35 + t * 0.65)); if (t < 0.6) this.discDither(cx, cy, r, PALETA.magia, t < 0.3 ? 2 : 3, Math.floor(f.age * 30)); this.ring(cx, cy, r, PALETA.carmesi2, 1 - t * 0.6, 2); break; }
           const colR = f.c === 'azul' ? PALETA.acero2 : f.c === 'verde' ? PALETA.bosque2 : f.c === 'piedra' ? PALETA.piedra3 : f.c === 'rayo' ? PALETA.pergamino2 : PALETA.oro2;
           const colD = f.c === 'azul' ? PALETA.acero1 : f.c === 'verde' ? PALETA.bosque1 : f.c === 'piedra' ? PALETA.piedra2 : f.c === 'rayo' ? PALETA.acero1 : PALETA.antorcha;
           if (t < 0.6) this.discDither(cx, cy, r, colD, t < 0.3 ? 2 : 3, Math.floor(f.age * 30));
@@ -7835,7 +8483,7 @@ class Renderer {
           break;
         }
         case 'ring': {
-          const col = { fuego: PALETA.antorcha, acero: PALETA.acero2, grito: PALETA.carmesi2, oro: PALETA.oro2, magia: PALETA.magia, vida: PALETA.bosque2, rayo: PALETA.acero2, seda: PALETA.pergamino2, musgo: PALETA.bosque2 }[f.c] || PALETA.pergamino2;
+          const col = { gaia: PALETA.magia, fuego: PALETA.antorcha, acero: PALETA.acero2, grito: PALETA.carmesi2, oro: PALETA.oro2, magia: PALETA.magia, vida: PALETA.bosque2, rayo: PALETA.acero2, seda: PALETA.pergamino2, musgo: PALETA.bosque2 }[f.c] || PALETA.pergamino2;
           const r = Math.round(f.r * ESC * (0.3 + t * 0.7));
           this.ring(cx, cy, r, col, 1 - t * 0.7, f.c === 'fuego' ? 2 : 1);
           if (f.c === 'fuego' && t < 0.5) this.ring(cx, cy, Math.max(1, r - 3), PALETA.oro2, 0.5);
@@ -7844,6 +8492,49 @@ class Renderer {
         case 'seda': {
           const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 8, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 8;
           this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 3); this.linea(x1, y1, x2, y2, PALETA.pergamino2, 0, 0, 1);
+          break;
+        }
+        case 'portal': {
+          // Paso celestial: destello color magia en la entrada y en la salida, y chispas entre ambos
+          for (const [x, y] of [[f.x1, f.y1], [f.x2, f.y2]]) {
+            const px = this.gx(x), py = this.gy(y), r = Math.round(6 + t * 14);
+            this.ring(px, py - 4, r, PALETA.tinta, 1, 3); this.ring(px, py - 4, r, t < 0.5 ? PALETA.pergamino2 : PALETA.magia, 1, 2);
+          }
+          for (let i = 0; i < 8; i++) { const k = (i + 0.5) / 8, x = Math.round(this.gx(f.x1 + (f.x2 - f.x1) * k)), y = Math.round(this.gy(f.y1 + (f.y2 - f.y1) * k) - 6 - Math.sin(k * Math.PI) * 10); if ((i + Math.floor(f.age * 20)) % 2) { g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 4, 4); g.fillStyle = i % 2 ? PALETA.magia : PALETA.carmesi2; g.fillRect(x, y, 2, 2); } }
+          break;
+        }
+        case 'fisura': {
+          // Fisura: grieta de magma que se abre en el suelo y piedras que saltan
+          const x1 = this.gx(f.x1), y1 = this.gy(f.y1), x2 = this.gx(f.x2), y2 = this.gy(f.y2);
+          const k = Math.min(1, t * 4), xe = Math.round(x1 + (x2 - x1) * k), ye = Math.round(y1 + (y2 - y1) * k);
+          this.linea(x1, y1, xe, ye, PALETA.tinta, 2, 7, 5);
+          this.linea(x1, y1, xe, ye, t < 0.5 ? PALETA.oro2 : PALETA.antorcha, 2, 7, 2);
+          for (let i = 0; i < 8; i++) { const kk = hash(i, 4, f.x1 | 0) * k, x = Math.round(x1 + (x2 - x1) * kk), y = Math.round(y1 + (y2 - y1) * kk - Math.sin(Math.min(1, t * 2) * Math.PI) * (6 + hash(i, 9, 2) * 10)); g.fillStyle = PALETA.tinta; g.fillRect(x - 2, y - 2, 5, 5); g.fillStyle = i % 2 ? PALETA.piedra2 : PALETA.piedra1; g.fillRect(x - 1, y - 1, 3, 3); }
+          break;
+        }
+        case 'geiser': {
+          // Erupción: géiseres de magma que revientan a lo largo del anillo
+          const R0 = Math.round(f.r * ESC), n = Math.max(6, Math.round(R0 / 5)), alto = Math.sin(Math.min(1, t * 1.4) * Math.PI);
+          if (t < 0.5) this.ring(cx, cy, R0, PALETA.antorcha, 1, 2);
+          const pts = [];
+          for (let i = 0; i < n; i++) { const a = (i / n) * TAU + hash(i, 1, f.r) * 0.3; pts.push([Math.round(cx + Math.cos(a) * R0), Math.round(cy + Math.sin(a) * R0), i]); }
+          pts.sort((a, b) => a[1] - b[1]);
+          for (const [x, y, i] of pts) {
+            const h = Math.round((8 + hash(i, 6, f.r) * 8) * alto);
+            g.fillStyle = PALETA.tinta; g.fillRect(x - 3, y - h - 1, 7, h + 3);
+            g.fillStyle = PALETA.carmesi1; g.fillRect(x - 2, y - h, 5, h + 1);
+            g.fillStyle = PALETA.antorcha; g.fillRect(x - 1, y - h, 3, h);
+            g.fillStyle = PALETA.oro2; g.fillRect(x, y - h, 1, Math.max(1, h - 3));
+          }
+          break;
+        }
+        case 'meteoro': {
+          // Impacto de la estrella: destello dorado y anillo color magia
+          const r = Math.round(f.r * ESC * (0.4 + t * 0.6));
+          if (t < 0.5) this.discDither(cx, cy, r, PALETA.oro2, t < 0.25 ? 2 : 3, Math.floor(f.age * 30));
+          this.ring(cx, cy, r, PALETA.tinta, 1, 3);
+          this.ring(cx, cy, r, PALETA.magia, 1 - t * 0.5, 2);
+          for (let i = 0; i < 6; i++) { const a = (i / 6) * TAU, d = r * 0.8; g.fillStyle = PALETA.pergamino2; g.fillRect(Math.round(cx + Math.cos(a) * d), Math.round(cy + Math.sin(a) * d) - Math.round(t * 8), 2, 2); }
           break;
         }
         case 'mordida': {
@@ -7875,7 +8566,8 @@ class Renderer {
           break;
         }
         case 'bolt': {
-          const col = { rayo: PALETA.acero2, fuego: PALETA.antorcha, drenar: PALETA.bosque2, bosque: PALETA.bosque2 }[f.c] || PALETA.pergamino2;
+          const col = { rayo: PALETA.acero2, fuego: PALETA.antorcha, drenar: PALETA.bosque2, bosque: PALETA.bosque2, gaia: PALETA.magia }[f.c] || PALETA.pergamino2;
+          if (f.c === 'gaia') { const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 6, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 6; this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 5); this.linea(x1, y1, x2, y2, PALETA.magia, 0, 0, 3); if (t < 0.6) this.linea(x1, y1, x2, y2, PALETA.carmesi2, 0, 0, 1); break; }
           const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 6, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 6;
           const seed = f.seed + Math.floor(f.age * 30);
           if (f.c === 'rayo') this.linea(x1, y1, x2, y2, PALETA.tinta, 3, seed, 4);   // borde negro: rayo bien visible
@@ -8003,6 +8695,33 @@ function applyMeta(m) {
   S.metaById = new Map(m.players.map(p => [p.id, p]));
   if (m.phase !== S.phase) onPhase(m.phase);
   refreshScreen();
+  pintarPausa();
+}
+
+// ------------------------------------------------------------ pausa (Seba 29-10)
+// Contra bots pausa tu partida; online solo el anfitrión puede pausar (se detiene para todos) y reiniciar.
+function pintarPausa() {
+  const enJuego = S.phase === 'combat' || S.phase === 'countdown';
+  const pausado = !!(S.meta && S.meta.pausa) && enJuego;
+  $('b-pausa').classList.toggle('hidden', !enJuego || !isAuth());
+  $('scr-pausa').classList.toggle('hidden', !pausado);
+  $('b-seguir').classList.toggle('hidden', !isAuth());
+  $('b-reiniciar').classList.toggle('hidden', !isAuth());
+  $('pausa-msg').textContent = isAuth() ? (S.mode === 'host' ? 'La partida está detenida para todos.' : 'La partida está detenida.') : 'El anfitrión pausó la partida.';
+}
+function pausar(v) {
+  const g = S.game;
+  if (!g || !isAuth() || !(g.phase === 'combat' || g.phase === 'countdown')) return;
+  g.pausa = v; g.metaDirty = true;
+}
+function reiniciarPartida() {
+  const g = S.game;
+  if (!g || !isAuth()) return;
+  g.pausa = false;
+  if (S.meta && S.meta.modo === 'pve') { leave(); return; }
+  const modo = g.modo, eq = g.equipos ? { ...g.equipos } : null;
+  g.resetToLobby();
+  if (modo === 'equipos' && eq) g.startEquipos(eq); else g.start();
 }
 
 function onPhase(ph) {
@@ -8013,7 +8732,7 @@ function onPhase(ph) {
   if (ph === 'countdown') { S.lastCount = null; sonido.reiniciar(); }
   if (ph === 'results' || ph === 'gameover') sonido.fin = true; else sonido.fin = false;
   if (ph === 'lobby') showScreen('scr-lobby');
-  else if (ph === 'draft') showScreen('scr-draft');
+  else if (ph === 'draft') { S.casaDraft = null; showScreen('scr-draft'); }
   if (ph !== 'draft' && fichaAbierta) cerrarFicha();
   else if (ph === 'mejoras') showScreen('scr-shop');
   else if (combate) showScreen(null);
@@ -8445,7 +9164,23 @@ function renderDraft() {
   if (!me) return;
   const duenos = new Map(S.meta.players.filter(p => p.build.heroe).map(p => [p.build.heroe, p]));
   g.innerHTML = '';
+  // Seba (29-10): dos casas (Aliados y Renegados). Primero eliges la casa y después el héroe.
+  const casas = $('dr-casas');
+  if (casas) {
+    casas.innerHTML = Object.entries(CASAS).map(([ck, c]) => {
+      const miembros = Object.keys(HEROES).filter(k => HEROES[k].casa === ck);
+      return `<button class="casa-btn ${ck}${S.casaDraft === ck ? ' on' : ''}" data-casa="${ck}" aria-pressed="${S.casaDraft === ck}">
+        <div class="casa-top"><img alt="" src="${imgIcono(c.glifo, c.fondo, 3)}"><div><div class="casa-n">${esc(c.nombre)}</div><div class="casa-d">${esc(c.desc)}</div></div></div>
+        <div class="casa-mini">${miembros.map(k => `<img alt="${esc(HEROES[k].nombre)}" title="${esc(HEROES[k].nombre)}" class="${duenos.has(k) ? 'tomado' : ''}" src="${retratoHeroe(k, duenos.get(k)?.colorIdx ?? me.colorIdx, 2)}">`).join('')}</div>
+      </button>`;
+    }).join('');
+    casas.querySelectorAll('.casa-btn').forEach(b => { b.onclick = () => { S.casaDraft = S.casaDraft === b.dataset.casa ? null : b.dataset.casa; renderDraft(); }; });
+  }
+  // Si ya elegiste, se muestra la casa de tu héroe
+  if (me.build.heroe && !S.casaDraft) S.casaDraft = HEROES[me.build.heroe]?.casa || null;
+  $('dr-hint').textContent = S.casaDraft ? 'Toca un héroe para ver qué hace cada habilidad y contra quién es fuerte. Cada héroe lo puede tomar un solo jugador.' : 'Elige una casa para ver sus héroes.';
   for (const [k, h] of Object.entries(HEROES)) {
+    if (h.casa !== S.casaDraft) continue;
     const dueno = duenos.get(k);
     const card = document.createElement('div');
     card.className = 'heroe' + (dueno ? (dueno.id === S.myId ? ' mio' : ' tomado') : '');
@@ -8498,7 +9233,8 @@ function resumenMatchups(k) {
 }
 
 function textoAtaque(h) {
-  const a = h.ataque, carga = `3 cargas; cada una se recupera en ${fmt(h.recarga)} s.`;
+  const a = h.ataque, carga = `${h.cargas || CONFIG.CARGAS} cargas; cada una se recupera en ${fmt(h.recarga)} s.`;
+  if (a.tipo === 'rafaga') return `Ráfaga de ${a.tiros} proyectiles seguidos: ${h.dano} de daño cada uno. Si mueves el apuntado durante la ráfaga, se abren en abanico. Alcance ${a.alcance}. ${carga}`;
   if (a.tipo === 'melee') return `Golpe cuerpo a cuerpo en abanico frente a ti: ${h.dano} de daño. ${carga}`;
   if (a.tipo === 'parabola') return `Bomba que cae donde apuntas (pasa por encima de todo) y explota en un área chica: ${h.dano} de daño. Alcance ${a.alcance}. ${carga}`;
   return `Disparo a distancia: ${h.dano} de daño por impacto. Alcance ${a.alcance}. ${carga}`;
@@ -8555,7 +9291,7 @@ function abrirMatriz() {
   const cab = ids.map(k => `<th scope="col"><img alt="${esc(HEROES[k].nombre)}" title="${esc(HEROES[k].nombre)}" src="${retratoHeroe(k, 0, 2)}"></th>`).join('');
   const filas = ids.map(a => {
     const r = resumenMatchups(a);
-    return `<tr><th scope="row"><img alt="" src="${retratoHeroe(a, 0, 2)}"><span>${esc(HEROES[a].nombre)}</span></th>` + ids.map(b => {
+    return `<tr><th scope="row"><div class="mz-n"><img alt="" src="${retratoHeroe(a, 0, 2)}"><span>${esc(HEROES[a].nombre)}</span></div></th>` + ids.map(b => {
       if (a === b) return '<td class="yo">—</td>';
       const v = MATCHUPS[a][b];
       const cls = v >= UMBRAL_FUERTE ? 'f' : v <= UMBRAL_DEBIL ? 'd' : 'p';
@@ -8830,7 +9566,8 @@ function updateHud(latest, now) {
   if (S.ultSt !== st) { $('hud-status').innerHTML = st; S.ultSt = st; }
   const ca = $('b-atk');
   ca.style.setProperty('--carga', Math.floor(me[13]));
-  ca.querySelector('.key').textContent = '●'.repeat(Math.floor(me[13])) + '○'.repeat(3 - Math.floor(me[13]));
+  const maxC = HEROES[S.metaById.get(S.myId)?.build?.heroe]?.cargas || CONFIG.CARGAS;   // Gaia: 2 cargas
+  ca.querySelector('.key').textContent = '●'.repeat(Math.floor(me[13])) + '○'.repeat(Math.max(0, maxC - Math.floor(me[13])));
   ca.classList.toggle('vacio', me[13] < 1);
   const meta = S.metaById.get(S.myId);
   $('me-xpb').classList.toggle('hidden', !pv);
@@ -8933,6 +9670,13 @@ $('b-rematch').onclick = () => {
   if (S.mode === 'host') { S.game.resetToLobby(); asignarEquipos(); return; }   // online: volver a la sala
   if (S.mode === 'local' && S.game) { S.game.resetToLobby(); S.game.start(); }
 };
+$('b-pausa').addEventListener('pointerdown', (e) => e.stopPropagation());
+$('b-pausa').onclick = () => pausar(true);
+$('b-seguir').onclick = () => pausar(false);
+$('b-reiniciar').onclick = reiniciarPartida;
+window.addEventListener('keydown', (e) => {
+  if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P') && e.target.tagName !== 'INPUT' && S.game && isAuth()) pausar(!S.game.pausa);
+});
 $('b-create').onclick = createRoom;
 $('b-join').onclick = joinRoom;
 $('in-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(); });
@@ -8976,6 +9720,8 @@ window.__lola = S;
     if ((e.key === 'm' || e.key === 'M') && !e.shiftKey && e.target.tagName !== 'INPUT') { sonido.setOn(!sonido.on); pintar(); }
   });
 })();
+
+
 
 
 </script>
