@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V2.1</title>
+<title>LOLA V2.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -923,7 +923,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V2.1</p>
+        <p class="sub version">LOLA V2.2</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -1507,9 +1507,10 @@ Object.assign(HABILIDADES, {
                    desc: (n) => `Te rodeas de una malla de luz por ${n.dur} s: recibes ${Math.round(n.reduce * 100)}% menos de daño de todas las fuentes y ganas +${Math.round(n.vel * 100)}% de velocidad.`,
                    n1: { dur: 4, reduce: 0.5, vel: 0.25 }, n2: { dur: 4, reduce: 0.5, vel: 0.25 } },
   // Seba (30-10): rework — 15 dagas de 15 que el jugador dirige mientras salen (siguen su apuntado); vuelven a los 2 s y repiten el daño
-  secretoTemplario: { nombre: 'Secreto Templario', glifo: 'dagasShai', cd: 50, ulti: true, alcance: 260, cono: 70, vel: 990,   /* Seba (30-10): dagas 10% más rápidas (900 → 990) */ dagas: 15, cada: 0.13, vuelta: 2, regreso: 0.55,
-                   desc: (n) => `Lanzas ${HABILIDADES.secretoTemplario.dagas} dagas mágicas, una tras otra, de ${n.dano} de daño (alcance ${HABILIDADES.secretoTemplario.alcance}). Cada daga sale hacia donde estás apuntando en ese momento: si mueves el apuntado (o apuntas con tu ataque básico), las siguientes vuelan hacia allá. La que pega a un héroe se le queda clavada; a los ${HABILIDADES.secretoTemplario.vuelta} s vuelve a ti, le hace otra vez ${n.dano} y daña a los enemigos que cruza.`,
-                   n1: { dano: 15 }, n2: { dano: 19 } },
+  // Seba (30-10): rework estilo Katarina — 45 cuchillas en todas direcciones dentro del radio del Salto del juicio (137); Shai se puede mover
+  secretoTemplario: { nombre: 'Secreto Templario', glifo: 'dagasShai', cd: 50, ulti: true, alcance: 137, vel: 1485, dagas: 55, cada: 0.03, vuelta: 2, regreso: 0.37,   // Seba (30-10): 45 → 55 cuchillas   // Seba (30-10): 50% más rápidas al salir, entre una y otra y al volver (990 → 1485, 0,045 → 0,03 s, 0,55 → 0,37 s); clavadas siguen 2 s
+                   desc: (n) => `Durante ${fmtN(Math.round(HABILIDADES.secretoTemplario.dagas * HABILIDADES.secretoTemplario.cada * 10) / 10)} s lanzas ${HABILIDADES.secretoTemplario.dagas} cuchillas mágicas en todas las direcciones, girando, hasta ${HABILIDADES.secretoTemplario.alcance} de distancia (puedes moverte: salen de donde estés). Cada una hace ${n.dano} de daño al primer enemigo que toca y se le queda clavada, o se clava en el piso al llegar al borde. A los ${HABILIDADES.secretoTemplario.vuelta} s vuelven volando hasta ti (te siguen si te mueves): repiten el daño al héroe donde estaban y dañan a todos los enemigos que cruzan en el camino.`,
+                   n1: { dano: 18 }, n2: { dano: 23 } },   // Seba (30-10): 15 → 18
   // ---- Tek'Tal (Seba, 29-10)
   fisura:        { nombre: 'Fisura', glifo: 'fisura', cd: 14, cdFijo: true, largo: 320, ancho: 40, muro: 4,
                    desc: (n) => `Partes el suelo en línea recta: ${n.dano} de daño. Si golpea a un solo héroe enemigo, lo aturde ${fmtN(n.aturde1)} s; si golpea a 2 o más, solo ${fmtN(n.aturde2)} s. Deja un muro de roca por ${HABILIDADES.fisura.muro} s que bloquea a todos los cuerpos (también a ti y a tus aliados); los proyectiles lo atraviesan.`,
@@ -1609,7 +1610,7 @@ const GUIAS = {
   lanzaErrante: { tipo: 'linea', alcance: 380, ancho: 26 }, decimar: { tipo: 'propio', r: 110 }, llamaEstepa: { tipo: 'propio', r: 135 },
   mazazos: { tipo: 'propio', r: 110 }, escudoMusgo: { tipo: 'propio', r: 200 }, sobrecrecimiento: { tipo: 'propio', r: 130 },
   discoGaia: { tipo: 'linea', alcance: 300, ancho: 20 }, pasoCeleste: { tipo: 'linea', alcance: 300, ancho: 30 }, lluviaEstrellas: { tipo: 'linea', alcance: 480, ancho: 160 },
-  saltoJuicio: { tipo: 'punto', alcance: 137, r: 45 }, mantoLuz: { tipo: 'propio', r: 30 }, secretoTemplario: { tipo: 'cono', alcance: 260, arco: 70 },
+  saltoJuicio: { tipo: 'punto', alcance: 137, r: 45 }, mantoLuz: { tipo: 'propio', r: 30 }, secretoTemplario: { tipo: 'propio', r: 137 },
   fisura: { tipo: 'linea', alcance: 320, ancho: 40 }, grillete: { tipo: 'linea', alcance: 380, ancho: 22 }, erupcion: { tipo: 'propio', r: 300 },
 };
 
@@ -4214,28 +4215,32 @@ class Game {
       return;
     }
     if (pr.efecto === 'dagaUlti') {
-      // Shai: la daga daña al primero que toca; si es un héroe, queda clavada y a los 2 s vuelve (le repite el daño y daña a los que cruza)
-      if (!hit || !owner || hit.kind === 'muro') return;
+      // Shai (Seba 30-10): la cuchilla daña al primero que toca y se le clava (si es héroe) o se clava en el piso donde quedó;
+      // a los 2 s vuelve a Shai: repite el daño al héroe donde estaba y daña a los enemigos que cruza
+      if (!owner) return;
       const n = pr.extra, H = HABILIDADES.secretoTemplario;
-      this.damage(hit, n.dano, owner, { tipo: 'mag', ulti: true, desde: pr });
-      this.emit({ k: 'boom', x: hit.x | 0, y: hit.y | 0, r: 12, c: 'gaia' });
-      if (hit.esUnidad || !hit.alive) return;
-      this.aplicarEfecto(hit, 'dagasShai', { t: H.vuelta + 1, n: (hit.fx.dagasShai ? hit.fx.dagasShai.n : 0) + 1 });
-      this.zones.push({ id: this.nextId++, kind: 'nada', x: hit.x, y: hit.y, r: 0, t: H.vuelta, total: H.vuelta, fin: () => {
+      let clavado = null;
+      if (hit && hit.kind !== 'muro') {
+        this.damage(hit, n.dano, owner, { tipo: 'mag', ulti: true, desde: pr });
+        this.emit({ k: 'boom', x: hit.x | 0, y: hit.y | 0, r: 12, c: 'gaia' });
+        if (!hit.esUnidad && hit.alive) { clavado = hit; this.aplicarEfecto(hit, 'dagasShai', { t: H.vuelta + 1, n: (hit.fx.dagasShai ? hit.fx.dagasShai.n : 0) + 1 }); }
+      }
+      const ang = Math.atan2(pr.vy, pr.vx);
+      const piso = clavado ? null : { id: this.nextId++, kind: 'dagaPiso', x: pr.x, y: pr.y, r: 6, a: ang, t: H.vuelta, total: H.vuelta };
+      const vuelta = () => {
         if (!owner.alive) return;
-        const q = hit, x0 = q.x, y0 = q.y;
-        this.emit({ k: 'dagaVuelta', x1: x0 | 0, y1: y0 | 0, x2: owner.x | 0, y2: owner.y | 0, d: H.regreso });
-        if (q.alive) {
+        const q = clavado, x0 = q ? q.x : piso.x, y0 = q ? q.y : piso.y;
+        if (q && q.alive) {
           this.damage(q, n.dano, owner, { tipo: 'mag', ulti: true, desde: owner });
           if (q.fx.dagasShai) { q.fx.dagasShai.n--; if (q.fx.dagasShai.n <= 0) delete q.fx.dagasShai; }
         }
-        const dx = owner.x - x0, dy = owner.y - y0, L2 = dx * dx + dy * dy || 1;
-        for (const e of this.enemigos(owner.id, false)) {
-          if (e === q) continue;
-          const tt = Math.max(0, Math.min(1, ((e.x - x0) * dx + (e.y - y0) * dy) / L2));
-          if (Math.hypot(e.x - (x0 + dx * tt), e.y - (y0 + dy * tt)) <= 14 + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) this.damage(e, n.dano, owner, { tipo: 'mag', ulti: true, desde: { x: x0, y: y0 } });
-        }
-      } });
+        // Seba (30-10): la daga vuela de vuelta HASTA Shai (la persigue si se mueve) y daña a cada enemigo que cruza
+        const a = Math.atan2(owner.y - y0, owner.x - x0), v = H.vel * RITMO.proyectil;
+        this.projectiles.push({ id: this.nextId++, owner: owner.id, colorIdx: owner.colorIdx, x: x0, y: y0, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+          left: 9999, radio: 7, dmg: n.dano, tipo: 'mag', spr: 'dagaUlti', efecto: 'dagaVuelve', atraviesa: true, extra: n, vuelve: { golpes: new Set(q ? [q.id] : []), t: 0 } });
+      };
+      if (piso) { piso.fin = vuelta; this.zones.push(piso); }
+      else this.zones.push({ id: this.nextId++, kind: 'nada', x: pr.x, y: pr.y, r: 0, t: H.vuelta, total: H.vuelta, fin: vuelta });
       return;
     }
     if (pr.efecto === 'grillete') {
@@ -4536,8 +4541,8 @@ class Game {
         this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'MANTO DE LUZ' });
         break;
       case 'secretoTemplario': {
-        // Seba (30-10): las dagas salen de a una hacia donde el jugador apunta en ese momento
-        const a0 = this._apunte ? this._apunte.a : this.aim(p, h.alcance + 40).a;
+        // Seba (30-10): rework estilo Katarina — las cuchillas salen girando en todas direcciones
+        const a0 = p.facing;
         p.facing = a0; p.disparo = null;
         this.aplicarEfecto(p, 'rafagaShai', { t: h.dagas * h.cada + 0.2, restan: h.dagas, prox: 0, a0, n });
         this.emit({ k: 'anuncio', s: '¡SECRETO TEMPLARIO!', chico: true });
@@ -5384,15 +5389,14 @@ class Game {
         }
       }
 
-      // Shai: Secreto Templario — una daga cada 0,13 s hacia el apuntado actual (vivo: mouse o arrastre del ataque básico)
+      // Shai: Secreto Templario — cuchillas girando en todas direcciones (3 vueltas de 15 direcciones, cada vuelta corrida un tercio)
       if (p.fx.rafagaShai && !p.fx.aturdido) {
         const f = p.fx.rafagaShai, H = HABILIDADES.secretoTemplario;
         f.prox -= dt;
         while (f.prox <= 0 && f.restan > 0) {
           f.prox += H.cada; f.restan--;
-          const a = Number.isFinite(p.input.a) ? p.input.a : (p.bot ? this.aim(p, H.alcance + 40).a : f.a0);
-          f.a0 = a; p.facing = a;
-          this.spawnProj(p, a, { vel: H.vel, alcance: H.alcance, radio: 7, dmg: f.n.dano, tipo: 'mag', spr: 'dagaUlti', efecto: 'dagaUlti', extra: f.n });
+          const k = H.dagas - f.restan - 1, a = f.a0 + k * (TAU / 15) + Math.floor(k / 15) * (TAU / 45);
+          this.spawnProj(p, a, { vel: H.vel, alcance: H.alcance - CONFIG.RADIO_JUGADOR - 4, radio: 7, dmg: f.n.dano, tipo: 'mag', spr: 'dagaUlti', efecto: 'dagaUlti', extra: f.n });   // sale desde el borde del cuerpo: llega justo al borde del círculo
         }
         if (f.restan <= 0) delete p.fx.rafagaShai;
       }
@@ -5511,6 +5515,23 @@ class Game {
 
     // Proyectiles
     for (const pr of this.projectiles) {
+      // Shai: daga que vuelve — persigue a Shai, daña una vez a cada enemigo que cruza y desaparece al llegar
+      if (pr.vuelve) {
+        const own = this.players.get(pr.owner), V = pr.vuelve;
+        V.t += dt;
+        if (!own || !own.alive || V.t > 3) { pr.dead = true; continue; }
+        const dx = own.x - pr.x, dy = own.y - pr.y, d = Math.hypot(dx, dy) || 1, v = Math.hypot(pr.vx, pr.vy);
+        pr.vx = dx / d * v; pr.vy = dy / d * v;
+        const paso = Math.min(d, v * dt);
+        pr.x += dx / d * paso; pr.y += dy / d * paso;
+        for (const e of this.enemigos(pr.owner, false)) {
+          if (V.golpes.has(e.id) || dist(e, pr) > pr.radio + (e.esUnidad ? 10 : R)) continue;
+          V.golpes.add(e.id);
+          this.damage(e, pr.dmg, own, { tipo: 'mag', ulti: true, desde: pr });
+        }
+        if (d <= paso + 4) pr.dead = true;
+        continue;
+      }
       const step = Math.hypot(pr.vx, pr.vy) * dt;
       pr.x += pr.vx * dt; pr.y += pr.vy * dt; pr.left -= step;
       let hit = null;
@@ -5524,7 +5545,7 @@ class Game {
       const fuera = Math.hypot(pr.x, pr.y) > CONFIG.RADIO_ARENA || (this.modo === 'equipos' && this.enMuroCamara(pr.x, pr.y, pr.radio));
       if (hit || pr.left <= 0 || fuera) {
         pr.dead = true;
-        if (hit || pr.efecto === 'pulso') this.impacto(pr, hit);
+        if (hit || pr.efecto === 'pulso' || pr.efecto === 'dagaUlti') this.impacto(pr, hit);
       }
     }
     this.projectiles = this.projectiles.filter(p => !p.dead);
@@ -6028,7 +6049,7 @@ function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
       case 'discoGaia': si = d < 300; break;
       case 'saltoJuicio': si = d < HABILIDADES.saltoJuicio.alcance + 20 && (!target.esUnidad); break;
       case 'mantoLuz': si = d < 140 || vida < 0.5; break;
-      case 'secretoTemplario': si = d < 230; break;
+      case 'secretoTemplario': si = d < 110; break;
       case 'pasoCeleste': si = (vida < 0.45 && d < 220) || (d > 200 && d < 330 && vida > 0.6); if (si && vida >= 0.45) { inp.sa = inp.sa || []; inp.sa[s] = Math.atan2(target.y - p.y, target.x - p.x); inp.sd = inp.sd || []; inp.sd[s] = Math.max(60, d - 40); inp.s[s] = (inp.s[s] || 0) + 1; si = false; } break;
       case 'lluviaEstrellas': si = d < 420; break;
       case 'fisura': si = d < 300; break;
@@ -7830,6 +7851,13 @@ class Renderer {
           if ((i + t) % 6 < 4) { this.g.fillRect(cx + i, cy - L, 1, 1); this.g.fillRect(cx + i, cy + L, 1, 1); this.g.fillRect(cx - L, cy + i, 1, 1); this.g.fillRect(cx + L, cy + i, 1, 1); }
         }
         this.g.globalAlpha = 0.18; this.g.fillRect(cx - L, cy - L, L * 2, L * 2); this.g.globalAlpha = 1;
+      } else if (z.kind === 'dagaPiso') {
+        // Cuchilla de Shai clavada en el piso (vuelve a ella al terminar): mango oscuro, hoja color magenta enterrada
+        const ca = Math.cos(z.a), sa = Math.sin(z.a), x0 = Math.round(cx - ca * 6), y0 = Math.round(cy - sa * 6 - 6);
+        this.linea(x0, y0, cx, cy, PALETA.tinta, 0, 0, 4);
+        this.linea(x0, y0, Math.round(cx - ca * 3), Math.round(cy - sa * 3 - 3), PALETA.noche, 0, 0, 2);
+        this.linea(Math.round(cx - ca * 3), Math.round(cy - sa * 3 - 3), cx, cy, PALETA.carmesi2, 0, 0, 2);
+        if (parpadeo) { this.g.fillStyle = PALETA.pergamino2; this.g.fillRect(cx, cy, 1, 1); }
       } else if (z.kind === 'portal') {
         // Paso celestial: portal de salida color magia que se abre donde va a aparecer Gaia
         const rr = Math.max(3, Math.round(r * (0.4 + z.prog * 0.6)));
@@ -8121,23 +8149,11 @@ class Renderer {
     }
     // Shai (Seba 30-10): mientras lanza el Secreto Templario, todos ven el alcance de las dagas (círculo rojizo en el suelo; Seba: sin el alcance del Salto)
     if (p.f2 & 64) {
-      // Seba (30-10): cono hacia donde apunta (las dagas salen en esa dirección), mismo radio que el alcance
+      // Seba (30-10): rework — círculo del alcance de las cuchillas alrededor de Shai (la sigue)
       const r = Math.round(HABILIDADES.secretoTemplario.alcance * ESC), on = Math.floor(this.time * 8) % 2;
-      // el propio jugador ve el cono siguiendo su apuntado en vivo (sin esperar la foto del servidor)
-      const ua = isMe && this.guia && Number.isFinite(this.guia.a) ? this.guia.a : p.ua, w = HABILIDADES.secretoTemplario.cono * Math.PI / 180, a0 = ua - w / 2, a1 = ua + w / 2, sombra = Math.floor(this.time * 6);
-      g.globalAlpha = 0.3; g.fillStyle = PALETA.carmesi0;
-      for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
-        if (x * x + y * y > r * r || ((x + y + sombra) % 3 + 3) % 3) continue;
-        if (angDiff(Math.atan2(y, x), ua) > w / 2) continue;
-        g.fillRect(cx + x, cy + y, 1, 1);
-      }
-      g.globalAlpha = 1;
-      for (const [col, gr] of [[PALETA.tinta, 4], [on ? PALETA.carmesi2 : PALETA.carmesi1, 2]]) {
-        this.arc(cx, cy, r, a0, a1, col, gr);
-        for (const aa of [a0, a1]) this.linea(cx, cy, Math.round(cx + Math.cos(aa) * r), Math.round(cy + Math.sin(aa) * r), col, 0, 0, gr);
-      }
-      // flecha en el centro del cono que marca hacia dónde salen las dagas
-      for (let i = 1; i <= 4; i++) { const d = r * i / 5, x = Math.round(cx + Math.cos(ua) * d), y = Math.round(cy + Math.sin(ua) * d); g.fillStyle = PALETA.tinta; g.fillRect(x - 2, y - 2, 5, 5); g.fillStyle = (i + Math.floor(this.time * 10)) % 4 === 0 ? PALETA.pergamino2 : PALETA.carmesi2; g.fillRect(x - 1, y - 1, 3, 3); }
+      g.globalAlpha = 0.3; this.discDither(cx, cy, r, PALETA.carmesi0, 3, Math.floor(this.time * 6)); g.globalAlpha = 1;
+      this.ring(cx, cy, r, PALETA.tinta, 1, 4);
+      this.ring(cx, cy, r, on ? PALETA.carmesi2 : PALETA.carmesi1, 1, 2);
       g.globalAlpha = this.alphaPj || 1;
     }
     // Gaia: brillo bajo el vestido (flota) y chispas color magia
@@ -10488,6 +10504,12 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
 const PATCH_NOTES = [
+  { v: 'V2.2', f: '30-10-2026', n: [
+    'Shai — rework del Secreto Templario: durante 1,7 s lanza 55 cuchillas mágicas en todas las direcciones, girando, hasta 137 de distancia.',
+    'Puede moverse mientras lo usa: las cuchillas salen de donde esté.',
+    'Cada cuchilla hace 18 / 23 de daño al primer enemigo que toca y se le queda clavada, o se clava en el piso al llegar al borde.',
+    'A los 2 s vuelven volando hasta Shai (la siguen): repiten el daño al héroe donde estaban y dañan a los enemigos que cruzan.',
+    'Mientras lo lanza, todos ven el alcance como un círculo rojizo que sigue a Shai.' ] },
   { v: 'V2.1', f: '30-10-2026', n: [
     'Nueva pantalla de selección: todo en una sola pantalla, sin bajar.',
     'A la izquierda, los retratos de los héroes separados por casa; a la derecha, la ficha completa del héroe que tocas.',
