@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V1.2 A</title>
+<title>LOLA V2.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -650,7 +650,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 .act .cg { position: absolute; top: 1px; left: 3px; z-index: 4; font: 10px var(--f-num); color: var(--oro2); text-shadow: 1px 1px 0 var(--tinta); letter-spacing: 1px; }
 
 /* Seba (29-10): botón para cancelar el apuntado (arriba del ataque, un poco a la derecha). Solo aparece al arrastrar. */
-#b-cancel { width: 46px; height: 46px; right: -10px; bottom: 108px; background: var(--carm0); box-shadow: inset 3px 3px 0 var(--carm1), inset -3px -3px 0 var(--tinta); opacity: 0; pointer-events: none; transition: opacity .1s steps(2); }
+#b-cancel { width: 44px; height: 44px; right: -16px; bottom: 186px; background: var(--carm0); box-shadow: inset 3px 3px 0 var(--carm1), inset -3px -3px 0 var(--tinta); opacity: 0; pointer-events: none; transition: opacity .1s steps(2); }
 #b-cancel span { font: 22px var(--f-num); color: var(--perg2); text-shadow: 2px 2px 0 var(--tinta); line-height: 1; }
 #b-cancel.on { opacity: .85; }
 #b-cancel.hot { opacity: 1; background: var(--carm2); transform: scale(1.12); }
@@ -779,6 +779,14 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 #feed .kf-n.c0 { color: var(--carm2); } #feed .kf-n.c1 { color: var(--acero2); } #feed .kf-n.c2 { color: var(--bosq2); } #feed .kf-n.c3 { color: var(--oro2); }
 #feed .kf-v { color: var(--perg1); }
 @media (max-height: 420px) { #feed .kf-cara { width: 27px; height: 26px; } }
+/* Seba (30-10): botones de ataque y habilidades 5% más grandes (posiciones ajustadas para que no se toquen) */
+.act.atk { width: 101px; height: 101px; }
+.act.ab { width: 65px; height: 65px; }
+#b-h0 { right: 110px; bottom: 0; }
+#b-h1 { right: 106px; bottom: 78px; }
+#b-h2 { right: 26px; bottom: 110px; width: 74px; height: 74px; }
+#b-h3 { right: 176px; bottom: 38px; }
+#actions { height: 230px; }
 
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
@@ -848,7 +856,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V1.2 A</p>
+        <p class="sub version">LOLA V2.0</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -7113,6 +7121,8 @@ class Controls {
         return;
       }
       if (this.joy.id !== null) return;
+      // Seba (30-10): el joystick solo nace en la mitad izquierda de la pantalla (la derecha es de los botones)
+      if (e.clientX > window.innerWidth / 2) { e.preventDefault(); return; }
       this.joy.id = e.pointerId;
       this.joy.ox = e.clientX; this.joy.oy = e.clientY;
       this.joy.mx = this.joy.my = 0;
@@ -7147,7 +7157,7 @@ class Controls {
     // Botón con arrastre para apuntar (celular). alSoltar(apunte) con apunte = null (automático) o { a, frac }
     // Seba (29-10): botón para cancelar el apuntado, arriba del ataque. Aparece al arrastrar; soltar el dedo encima cancela.
     const btnCancel = document.getElementById('b-cancel');
-    const sobreCancel = (e) => { if (!btnCancel) return false; const r = btnCancel.getBoundingClientRect(); const m = 10; return e.clientX >= r.left - m && e.clientX <= r.right + m && e.clientY >= r.top - m && e.clientY <= r.bottom + m; };
+    const sobreCancel = (e) => { if (!btnCancel) return false; const r = btnCancel.getBoundingClientRect(); const m = 4; return e.clientX >= r.left - m && e.clientX <= r.right + m && e.clientY >= r.top - m && e.clientY <= r.bottom + m; };
     const arrastrable = (btn, { alApretar, alMover, alSoltar }) => {
       let id = null, ox = 0, oy = 0, apunte = null, salio = false;   // salio: ya se arrastró fuera del centro
       sinZoom(btn);
@@ -7326,7 +7336,7 @@ class StateBuffer {
     const pa = new Map(a.s.p.map(p => [p[0], p]));
     const players = b.s.p.map(pb => {
       const q = pa.get(pb[0]) || pb;
-      return { id: pb[0], x: lerp(q[1], pb[1], k), y: lerp(q[2], pb[2], k), hp: pb[3], mh: pb[4], f: lerpAng(q[5], pb[5], k), flags: pb[6], cd: pb.slice(7, 12), ack: pb[12], cargas: pb[13], ulti: pb[14], esc: pb[15] || 0, salto: pb[17] || 0, f2: pb[18] || 0, ua: pb[19] || 0 };
+      return { id: pb[0], x: lerp(q[1], pb[1], k), y: lerp(q[2], pb[2], k), hp: pb[3], mh: pb[4], f: lerpAng(q[5], pb[5], k), flags: pb[6], cd: pb.slice(7, 12), ack: pb[12], cargas: pb[13], ulti: pb[14], esc: pb[15] || 0, salto: pb[17] || 0, f2: pb[18] || 0, ua: lerpAng(q[19] || pb[19] || 0, pb[19] || 0, k) };   // ua suavizado entre fotos
     });
     const ua = new Map((a.s.u || []).map(u => [u[0], u]));
     const units = (b.s.u || []).map(ub => {
@@ -7669,6 +7679,9 @@ class Renderer {
     this.ensureAssets();
 
     const me = view.players.find(p => p.id === myId && (p.flags & (1 | 32768)));
+    // Dirección del apuntado automático (enemigo visible más cercano), para dibujar guías sin arrastrar
+    this.autoA = null;
+    if (me && (me.flags & 1)) { let bd = 700; for (const q of view.players) { if (q.id === myId || !(q.flags & 1) || (this.equipos && this.equipos[q.id] === this.equipos[myId]) || (q.flags & (8 | 8388608))) continue; const d = Math.hypot(q.x - me.x, q.y - me.y); if (d < bd) { bd = d; this.autoA = Math.atan2(q.y - me.y, q.x - me.x); } } if (this.autoA === null) this.autoA = me.f; }
     let tx = me ? (pred ? pred.x : me.x) : 0, ty = me ? (pred ? pred.y : me.y) : 0;
     const k = 1 - Math.exp(-dt * 9);
     // Seba (30-10): muerto, la cámara sigue a un aliado o se arrastra libre
@@ -7860,6 +7873,7 @@ class Renderer {
     this.g.globalAlpha = 0.45;
     try { this._drawGuia(); } finally { this.g.globalAlpha = 1; }
   }
+  _drawGuiaCon(G2) { const g0 = this.guia; this.guia = G2; try { this._drawGuia(); } finally { this.guia = g0; } }
   _drawGuia() {
     const G = this.guia;
     if (!G) return;
@@ -7885,6 +7899,8 @@ class Renderer {
       g.globalAlpha = G.debil ? 0.06 : 0.1; this.linea(x0, y0, x1, y1, PALETA.oro1, 0, 0, Math.max(3, Math.round(ancho))); g.globalAlpha = 0.45;
     };
     if (G.tipo === 'propio') { zonaDorada(cx, cy + 4, Math.round(G.r * ESC)); return; }
+    // Seba (30-10): el cono (ulti de Shai) sin arrastrar apunta solo al enemigo más cercano: se dibuja el cono hacia allá, no un círculo
+    if ((G.a === null || G.a === undefined) && G.tipo === 'cono' && Number.isFinite(this.autoA)) { this._drawGuiaCon({ ...G, a: this.autoA }); return; }
     if (G.a === null || G.a === undefined) { this.ring(cx, cy + 4, Math.round((G.alcance || G.r || 60) * ESC), PALETA.oro2, 0.5); return; }
     const ca = Math.cos(G.a), sa = Math.sin(G.a);
     if (G.tipo === 'linea') {
@@ -8032,7 +8048,8 @@ class Renderer {
     if (p.f2 & 64) {
       // Seba (30-10): cono hacia donde apunta (las dagas salen en esa dirección), mismo radio que el alcance
       const r = Math.round(HABILIDADES.secretoTemplario.alcance * ESC), on = Math.floor(this.time * 8) % 2;
-      const ua = p.ua, w = HABILIDADES.secretoTemplario.cono * Math.PI / 180, a0 = ua - w / 2, a1 = ua + w / 2, sombra = Math.floor(this.time * 6);
+      // el propio jugador ve el cono siguiendo su apuntado en vivo (sin esperar la foto del servidor)
+      const ua = isMe && this.guia && Number.isFinite(this.guia.a) ? this.guia.a : p.ua, w = HABILIDADES.secretoTemplario.cono * Math.PI / 180, a0 = ua - w / 2, a1 = ua + w / 2, sombra = Math.floor(this.time * 6);
       g.globalAlpha = 0.3; g.fillStyle = PALETA.carmesi0;
       for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
         if (x * x + y * y > r * r || ((x + y + sombra) % 3 + 3) % 3) continue;
