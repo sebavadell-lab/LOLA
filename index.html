@@ -749,6 +749,20 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 #dr-picks .dp-slot.lleno, #dr-bans .db { cursor: pointer; }
 #dr-picks .dp-slot.lleno:hover, #dr-picks .dp-slot.lleno:focus-visible { border-color: var(--oro2); outline: 2px solid var(--oro2); }
 
+/* Seba (30-10): Colección de héroes */
+#scr-coleccion { overflow-y: auto; }
+.col-wrap { max-width: 720px; margin: 0 auto; padding: calc(12px + var(--sat)) max(16px, var(--sar)) calc(16px + var(--sab)) max(16px, var(--sal)); display: flex; flex-direction: column; gap: 10px; }
+.col-head { display: flex; align-items: center; gap: 12px; }
+.col-head h2 { margin: 0; }
+.col-casa { display: flex; flex-direction: column; gap: 6px; }
+.col-t { font: 12px var(--f-num); color: var(--oro2); text-transform: uppercase; letter-spacing: 1px; }
+.col-fila { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.col-h { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 2px 6px; background: var(--noche); border: 3px solid var(--tinta); box-shadow: inset 0 -3px 0 var(--piedra0); cursor: pointer; color: var(--perg2); }
+.col-h img { width: 68px; height: 60px; image-rendering: pixelated; }
+.col-h span { font: 10px var(--f-num); text-transform: uppercase; }
+.col-h:hover, .col-h:focus-visible { border-color: var(--oro2); outline: none; }
+.col-h:active { transform: translateY(2px); }
+
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
 .demo-note b{color:var(--carm1)}
@@ -807,6 +821,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <p class="hint dark" id="pausa-msg">La partida está detenida.</p>
       <button class="btn gold wide" id="b-seguir">Continuar</button>
       <button class="btn wide" id="b-reiniciar">Reiniciar y volver a elegir héroe</button>
+      <button class="btn wide" id="b-inicio">Salir al menú inicial</button>
     </div>
   </section>
 
@@ -845,11 +860,21 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
             <label class="field"><span>Seed (opcional)</span><input id="in-seed" maxlength="9" autocomplete="off" inputmode="numeric" placeholder="Al azar"></label>
           </div>
         </div>
+        <button class="btn" id="b-coleccion">Colección de héroes</button>
         <button class="btn" id="b-sonido">Sonido: sí</button>
         <p class="demo-note solo-pc"><b>Moverse</b> WASD · <b>Apuntar</b> con el mouse · <b>Atacar</b> clic o Espacio<br><b>Habilidades</b> 1 y 2 · <b>Ulti</b> 3 (se llena haciendo daño)<br>El ataque tiene 3 cargas que se recuperan solas.<br><b>1v1 y 2v2</b>: a los 25 s se abren los círculos (uno en el lado de cada equipo). Gana quien tenga el círculo rival y 10 kills a la vez.</p>
         <p class="demo-note solo-cel">Gira el celular en horizontal.<br><b>Moverse</b>: arrastra el dedo en la mitad izquierda.<br><b>Atacar</b>: arrastra el botón rojo para apuntar y suelta; tocar sin arrastrar apunta solo, pero gasta 1 de tus 3 cargas.<br><b>Ulti</b> (botón dorado): se llena haciendo daño.<br><b>1v1 y 2v2</b>: a los 25 s se abren los círculos (uno en el lado de cada equipo). Gana quien tenga el círculo rival y 10 kills a la vez.</p>
       </div>
       
+    </div>
+  </section>
+
+  <!-- ================= COLECCIÓN (Seba 30-10) ================= -->
+  <section class="screen hidden" id="scr-coleccion">
+    <div class="col-wrap">
+      <div class="col-head"><button class="btn small" id="b-col-volver">Volver</button><h2>Colección</h2></div>
+      <p class="hint">Toca un héroe para leer su ficha.</p>
+      <div id="col-grid"></div>
     </div>
   </section>
 
@@ -894,14 +919,16 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="draft-acc"><button class="btn small" id="b-matriz">Ver tabla de matchups</button></div>
       <div class="draft-grid" id="dr-grid"></div>
     </div>
-    <div class="ficha-fondo hidden" id="ficha">
-      <div class="panel ficha" role="dialog" aria-modal="true" aria-labelledby="fi-nombre">
-        <button class="btn small fi-cerrar" id="fi-cerrar" aria-label="Cerrar">X</button>
-        <div id="fi-cuerpo"></div>
-        <div class="fi-pie"><button class="btn gold" id="fi-elegir">Elegir</button></div>
-      </div>
-    </div>
   </section>
+
+  <!-- Ficha del héroe (draft y colección) -->
+  <div class="ficha-fondo hidden" id="ficha">
+    <div class="panel ficha" role="dialog" aria-modal="true" aria-labelledby="fi-nombre">
+      <button class="btn small fi-cerrar" id="fi-cerrar" aria-label="Cerrar">X</button>
+      <div id="fi-cuerpo"></div>
+      <div class="fi-pie"><button class="btn gold" id="fi-elegir">Elegir</button></div>
+    </div>
+  </div>
 
   <!-- ================= TIENDA ================= -->
   <section class="screen hidden" id="scr-shop">
@@ -9175,7 +9202,7 @@ function toast(text, ok = false) {
   clearTimeout(toastT);
   toastT = setTimeout(() => t.classList.remove('show'), 2400);
 }
-const SCREENS = ['scr-home', 'scr-lobby', 'scr-draft', 'scr-shop', 'scr-results', 'scr-over'];
+const SCREENS = ['scr-home', 'scr-coleccion', 'scr-lobby', 'scr-draft', 'scr-shop', 'scr-results', 'scr-over'];
 function showScreen(id) { for (const s of SCREENS) $(s).classList.toggle('hidden', s !== id); }
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } }
@@ -9854,8 +9881,8 @@ for (const id of ['dr-picks', 'dr-bans']) {
   el.addEventListener('keydown', (e) => { const s = e.target.closest('[data-h]'); if (s && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirFicha(s.dataset.h); } });
 }
 function abrirFicha(k) {
-  const h = HEROES[k], me = S.metaById.get(S.myId);
-  if (!h || !me) return;
+  const h = HEROES[k], me = S.metaById.get(S.myId) || { colorIdx: 0 };   // Seba (30-10): también desde la Colección (sin partida)
+  if (!h) return;
   fichaAbierta = k;
   if (S.mode === 'local' && S.game) S.game.draftPausa = true;   // contra bots, el reloj del draft se detiene mientras lees
   const P = PASIVAS[h.pasiva];
@@ -9879,8 +9906,8 @@ function abrirFicha(k) {
     <div class="fi-sec">Pasiva</div>
     ${P ? `<div class="fi-hab"><img alt="" src="${imgIcono(P.glifo, k, 3)}"><div><div class="fi-hn">${esc(P.nombre)}</div><p>${esc(P.desc)}</p></div></div>` : '<p class="fi-at">Sin pasiva.</p>'}
     ${muHtml}`;
-  const tomado = S.meta.players.find(p => p.build.heroe === k);
-  const baneo = (S.meta.bans || []).find(b => b.heroe === k);
+  const tomado = S.meta ? S.meta.players.find(p => p.build.heroe === k) : null;
+  const baneo = S.meta ? (S.meta.bans || []).find(b => b.heroe === k) : null;
   const be = $('fi-elegir'), ac = accionDraft(h);
   be.classList.toggle('hidden', S.phase !== 'draft');
   be.disabled = !!tomado || !!baneo || ac.off;
@@ -10296,6 +10323,19 @@ $('b-pausa').addEventListener('pointerdown', (e) => e.stopPropagation());
 $('b-pausa').onclick = () => pausar(true);
 $('b-seguir').onclick = () => pausar(false);
 $('b-reiniciar').onclick = reiniciarPartida;
+// Seba (30-10): desde la pausa se puede volver al menú inicial
+$('b-inicio').onclick = () => { if (S.game) S.game.pausa = false; $('scr-pausa').classList.add('hidden'); $('b-pausa').classList.add('hidden'); leave(); };
+// Seba (30-10): Colección — botones chicos con el retrato de cada héroe, agrupados por casa; al tocar se abre su ficha
+function abrirColeccion() {
+  $('col-grid').innerHTML = Object.entries(CASAS).map(([ck, c]) => {
+    const hs = Object.keys(HEROES).filter(k => HEROES[k].casa === ck);
+    return `<div class="col-casa"><div class="col-t">${esc(c.nombre)}</div><div class="col-fila">` + hs.map(k => `<button class="col-h" data-h="${k}" aria-label="Ficha de ${esc(HEROES[k].nombre)}"><img alt="" src="${retratoHeroe(k, ck === 'aliados' ? 1 : 0, 3)}"><span>${esc(HEROES[k].nombre)}</span></button>`).join('') + '</div></div>';
+  }).join('');
+  showScreen('scr-coleccion');
+}
+$('b-coleccion').onclick = abrirColeccion;
+$('b-col-volver').onclick = () => showScreen('scr-home');
+$('col-grid').addEventListener('click', (e) => { const b = e.target.closest('[data-h]'); if (b) abrirFicha(b.dataset.h); });
 window.addEventListener('keydown', (e) => {
   if ((e.key === 'Escape' || e.key === 'p' || e.key === 'P') && e.target.tagName !== 'INPUT' && S.game && isAuth()) pausar(!S.game.pausa);
 });
