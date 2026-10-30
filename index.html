@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V2.0</title>
+<title>LOLA V2.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -797,6 +797,63 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 .pn ul { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
 .pn li { color: var(--perg2); font-size: 14px; line-height: 1.3; }
 #patch-lista { display: flex; flex-direction: column; gap: 10px; }
+/* Seba (30-10): selección en una sola pantalla, sin scroll */
+#scr-draft { overflow: hidden; padding: calc(6px + var(--sat)) max(8px, var(--sar)) calc(6px + var(--sab)) max(8px, var(--sal)); }
+.draft-wrap.sel { max-width: 1200px; height: 100%; display: flex; flex-direction: column; gap: 6px; }
+.sel .draft-head { flex: none; gap: 8px; justify-content: space-between; flex-wrap: nowrap; }
+.sel .draft-head h2 { font-size: 22px; margin: 0; text-shadow: 2px 2px 0 var(--oro0), 4px 4px 0 var(--tinta); white-space: nowrap; }
+.sel .dr-turnos { flex: 1; min-width: 0; overflow-x: auto; flex-wrap: nowrap; }
+.sel-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 56fr) minmax(0, 44fr); gap: 8px; }
+.sel-roster { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.ro-casa { padding: 5px 6px 6px; border: 3px solid var(--tinta); }
+.ro-casa.aliados { background: var(--acero0); box-shadow: inset 3px 3px 0 var(--acero1); }
+.ro-casa.renegados { background: var(--carm0); box-shadow: inset 3px 3px 0 var(--carm1); }
+.ro-t { display: flex; align-items: center; gap: 6px; font: 11px var(--f-num); color: var(--oro2); text-transform: uppercase; letter-spacing: 1px; text-shadow: 2px 2px 0 var(--tinta); margin-bottom: 4px; }
+.ro-t img { width: 18px; height: 18px; }
+.ro-fila { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 5px; }
+.ro-h { position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 3px 1px 4px; border: 3px solid var(--tinta); cursor: pointer; color: var(--perg2); }
+.ro-casa.aliados .ro-h { background: var(--acero1); box-shadow: inset 0 -3px 0 var(--acero0); }
+.ro-casa.renegados .ro-h { background: var(--carm1); box-shadow: inset 0 -3px 0 var(--carm0); }
+.ro-h img { width: 54px; height: 48px; image-rendering: pixelated; }
+.ro-h span { font: 9px var(--f-num); text-transform: uppercase; white-space: nowrap; }
+.ro-h.ver { border-color: var(--oro2); outline: 2px solid var(--oro2); outline-offset: -6px; }
+.ro-h.tomado img, .ro-h.mio img { opacity: .55; }
+.ro-h.baneado img { filter: grayscale(1) brightness(.5); }
+.ro-m { position: absolute; left: 2px; right: 2px; top: 22px; font: 8px var(--f-num); font-style: normal; text-align: center; padding: 1px 0; background: var(--tinta); color: var(--perg2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ro-m.az { color: var(--acero2); } .ro-m.ro { color: var(--carm2); } .ro-m.ban { color: var(--carm2); }
+.ro-h.mio .ro-m { color: var(--oro2); }
+.sel-card { min-height: 0; display: flex; flex-direction: column; padding: 0; margin: 0; max-width: none; width: auto; }
+.sel-card-cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding: 8px 10px; }
+.sel-card-cuerpo .fi-top img { width: 68px; height: 60px; }
+.sel-card-cuerpo h3 { margin: 0; font-size: 22px; }
+.sel-lock { flex: none; padding: 6px; border-top: 3px solid var(--perg0); }
+.sel-lock .btn { width: 100%; }
+.sel-pie { flex: none; display: flex; flex-direction: column; gap: 4px; }
+.sel .dr-picks { position: static; padding: 0; box-shadow: none; background: none; grid-template-columns: 1fr auto 1fr; }
+.sel .dp-col { padding: 3px 5px; gap: 2px; }
+.sel .dp-col.todos { grid-column: 1 / -1; background: var(--piedra0); }
+.dp-fila { display: flex; gap: 4px; }
+.sel .dp-slot { flex: 1; min-width: 0; min-height: 0; padding: 2px 4px; gap: 5px; }
+.sel .dp-slot img, .sel .dp-q { width: 36px; height: 32px; font-size: 18px; }
+.sel .dp-n b { font-size: 13px; } .sel .dp-n small { font-size: 8px; }
+.sel .dp-vs { font-size: 16px; }
+.sel .dr-bans { justify-content: center; }
+@media (max-height: 430px) {
+  .sel .draft-head h2 { font-size: 18px; }
+  .ro-h img { width: 44px; height: 39px; } .ro-fila { grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 4px; }
+  .ro-m { top: 16px; }
+  .sel-card-cuerpo { font-size: 13px; }
+  .sel .dp-slot img, .sel .dp-q { width: 30px; height: 27px; }
+}
+@media (orientation: portrait) and (max-width: 700px) {
+  .sel-main { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .sel-roster { overflow: visible; }
+}
+@media (min-height: 600px) and (min-width: 900px) {
+  .ro-fila { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .ro-h img { width: 81px; height: 72px; } .ro-h span { font-size: 11px; } .ro-m { top: 34px; font-size: 10px; }
+  .ro-t { font-size: 13px; } .ro-casa { padding: 8px 10px 10px; }
+}
 
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
@@ -866,7 +923,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V2.0</p>
+        <p class="sub version">LOLA V2.1</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -953,16 +1010,15 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 
   <!-- ================= DRAFT ================= -->
   <section class="screen hidden" id="scr-draft">
-    <div class="draft-wrap">
-      <div class="draft-head"><h2>Elige tu héroe</h2><div class="sb-item timer" id="dr-timer">180</div></div>
-      <div class="casas" id="dr-casas"></div>
-      <div class="dr-turnos hidden" id="dr-turnos"></div>
-      <div class="dr-picks hidden" id="dr-picks"></div>
-      <div class="dr-bans hidden" id="dr-bans"></div>
+    <!-- Seba (30-10): selección en una sola pantalla — roster por casa a la izquierda, ficha a la derecha, jugadores abajo -->
+    <div class="draft-wrap sel">
+      <div class="draft-head"><h2>Elige tu héroe</h2><div class="dr-turnos hidden" id="dr-turnos"></div><button class="btn small" id="b-matriz">Matchups</button><div class="sb-item timer" id="dr-timer">180</div></div>
+      <div class="sel-main">
+        <div class="sel-roster" id="dr-roster"></div>
+        <div class="sel-card panel"><div class="sel-card-cuerpo" id="dr-card"></div><div class="sel-lock"><button class="btn gold" id="dr-lock">Elegir</button></div></div>
+      </div>
+      <div class="sel-pie"><div class="dr-picks" id="dr-picks"></div><div class="dr-bans hidden" id="dr-bans"></div></div>
       <div class="dr-flash hidden" id="dr-flash"></div>
-      <p class="hint" id="dr-hint">Elige una casa para ver sus héroes.</p>
-      <div class="draft-acc"><button class="btn small" id="b-matriz">Ver tabla de matchups</button></div>
-      <div class="draft-grid" id="dr-grid"></div>
     </div>
   </section>
 
@@ -9350,7 +9406,7 @@ function onPhase(ph) {
   if (ph === 'countdown') { S.lastCount = null; sonido.reiniciar(); }
   if (ph === 'results' || ph === 'gameover') sonido.fin = true; else sonido.fin = false;
   if (ph === 'lobby') showScreen('scr-lobby');
-  else if (ph === 'draft') { S.casaDraft = null; S.ultFirmaDraft = undefined; S.ultPicks = {}; S.ultNBans = 0; showScreen('scr-draft'); }
+  else if (ph === 'draft') { S.casaDraft = null; S.verDraft = null; S.verDraftPick = null; $('dr-card').dataset.h = ''; S.ultFirmaDraft = undefined; S.ultPicks = {}; S.ultNBans = 0; showScreen('scr-draft'); }
   if (ph !== 'draft' && fichaAbierta) cerrarFicha();
   else if (ph === 'mejoras') showScreen('scr-shop');
   else if (combate) showScreen(null);
@@ -9815,7 +9871,6 @@ function estadoBan() {
 const NOM_EQ = { A: 'AZUL', B: 'ROJO' };
 
 function renderDraft() {
-  const g = $('dr-grid');
   const me = S.metaById.get(S.myId);
   if (!me) return;
   const duenos = new Map(S.meta.players.filter(p => p.build.heroe).map(p => [p.build.heroe, p]));
@@ -9827,17 +9882,18 @@ function renderDraft() {
   if (EB) $('dr-turnos').innerHTML = EB.d.turnos.map(([eq, acc], i) => `<span class="dt ${eq === 'A' ? 'az' : 'ro'} ${acc}${i === EB.d.paso ? ' ahora' : i < EB.d.paso ? ' hecho' : ''}">${NOM_EQ[eq]} ${acc === 'ban' ? 'banea' : 'elige'}</span>`).join('');
   // Seba (29-10): lo elegido, bien visible — dos columnas (Azul / Rojo) con un casillero por jugador
   const eqs = S.meta.equipos;
-  $('dr-picks').classList.toggle('hidden', !eqs);
+  $('dr-picks').classList.remove('hidden');
+  if (!eqs) $('dr-picks').innerHTML = '<div class="dp-col todos"><div class="dp-t">Jugadores</div><div class="dp-fila">' + S.meta.players.map(p => { const h = p.build.heroe ? HEROES[p.build.heroe] : null; return `<div ${h ? `data-h="${p.build.heroe}" role="button" tabindex="0" ` : ''}class="dp-slot${h ? ' lleno' : ''}${p.id === S.myId ? ' yo' : ''}">${h ? `<img alt="" src="${retratoHeroe(p.build.heroe, p.colorIdx, 3)}">` : '<span class="dp-q">?</span>'}<div class="dp-n"><b>${h ? esc(h.nombre) : 'Sin elegir'}</b><small>${esc(p.name)}${p.id === S.myId ? ' (tú)' : ''}</small></div></div>`; }).join('') + '</div></div>';
   if (eqs) {
     const col = (eq) => {
       const js = S.meta.players.filter(p => eqs[p.id] === eq);
       const turnoAqui = EB && EB.tr && EB.tr.acc === 'pick' && EB.tr.eq === eq;
       let marcado = false;
-      return `<div class="dp-col ${eq === 'A' ? 'az' : 'ro'}"><div class="dp-t">${NOM_EQ[eq]}${eq === EB?.miEq || (!EB && eqs[S.myId] === eq) ? ' · tu equipo' : ''}</div>` + js.map(p => {
+      return `<div class="dp-col ${eq === 'A' ? 'az' : 'ro'}"><div class="dp-t">${NOM_EQ[eq]}${eq === EB?.miEq || (!EB && eqs[S.myId] === eq) ? ' · tu equipo' : ''}</div><div class="dp-fila">` + js.map(p => {
         const h = p.build.heroe ? HEROES[p.build.heroe] : null;
         const toca = !h && turnoAqui && !marcado; if (toca) marcado = true;
         return `<div ${h ? `data-h="${p.build.heroe}" role="button" tabindex="0" title="Ver ficha de ${esc(h.nombre)}" ` : ''}class="dp-slot${h ? ' lleno' : ''}${toca ? ' toca' : ''}${p.id === S.myId ? ' yo' : ''}">${h ? `<img alt="" src="${retratoHeroe(p.build.heroe, p.colorIdx, 3)}">` : '<span class="dp-q">?</span>'}<div class="dp-n"><b>${h ? esc(h.nombre) : toca ? 'Eligiendo…' : 'Sin elegir'}</b><small>${esc(p.name)}${p.id === S.myId ? ' (tú)' : ''}</small></div></div>`;
-      }).join('') + '</div>';
+      }).join('') + '</div></div>';
     };
     $('dr-picks').innerHTML = col('A') + '<div class="dp-vs">VS</div>' + col('B');
   }
@@ -9858,60 +9914,32 @@ function renderDraft() {
   }
   S.ultFirmaDraft = firma; S.ultPicks = Object.fromEntries(S.meta.players.filter(p => p.build.heroe).map(p => [p.id, 1])); S.ultNBans = (S.meta.bans || []).length;
   if (baneados.size) $('dr-bans').innerHTML = '<span class="db-t">Baneados</span>' + [...baneados].map(([k, eq]) => `<span data-h="${k}" role="button" tabindex="0" class="db ${eq === 'A' ? 'az' : 'ro'}" title="${esc(HEROES[k]?.nombre || k)}"><img alt="${esc(HEROES[k]?.nombre || k)}" src="${retratoHeroe(k, 0, 2)}"></span>`).join('');
-  g.innerHTML = '';
-  // Seba (29-10): dos casas (Aliados y Renegados). Primero eliges la casa y después el héroe.
-  const casas = $('dr-casas');
-  if (casas) {
-    casas.innerHTML = Object.entries(CASAS).map(([ck, c]) => {
-      const miembros = Object.keys(HEROES).filter(k => HEROES[k].casa === ck);
-      return `<button class="casa-btn ${ck}${S.casaDraft === ck ? ' on' : ''}" data-casa="${ck}" aria-pressed="${S.casaDraft === ck}">
-        <div class="casa-top"><img alt="" src="${imgIcono(c.glifo, c.fondo, 3)}"><div><div class="casa-n">${esc(c.nombre)}</div><div class="casa-d">${esc(c.desc)}</div></div></div>
-        <div class="casa-mini">${miembros.map(k => `<img alt="${esc(HEROES[k].nombre)}" title="${esc(HEROES[k].nombre)}" class="${duenos.has(k) ? 'tomado' : baneados.has(k) ? 'baneado' : ''}" src="${retratoHeroe(k, duenos.get(k)?.colorIdx ?? me.colorIdx, 2)}">`).join('')}</div>
-      </button>`;
-    }).join('');
-    casas.querySelectorAll('.casa-btn').forEach(b => { b.onclick = () => { S.casaDraft = S.casaDraft === b.dataset.casa ? null : b.dataset.casa; renderDraft(); }; });
+  // Seba (30-10): una sola pantalla. Izquierda: retratos por casa (como el roster de Dota 2). Derecha: la ficha del héroe tocado
+  // y el botón para fijar el pick (o banear). Abajo: los jugadores.
+  const ac0 = (k) => accionDraft(HEROES[k]);
+  if (!S.verDraft || !HEROES[S.verDraft]) S.verDraft = me.build.heroe || Object.keys(HEROES).find(k => !duenos.has(k) && !baneados.has(k)) || Object.keys(HEROES)[0];
+  if (me.build.heroe && S.verDraftPick !== me.build.heroe) { S.verDraft = me.build.heroe; S.verDraftPick = me.build.heroe; }
+  $('dr-roster').innerHTML = Object.entries(CASAS).map(([ck, c]) => {
+    const hs = Object.keys(HEROES).filter(k => HEROES[k].casa === ck);
+    return `<div class="ro-casa ${ck}"><div class="ro-t"><img alt="" src="${imgIcono(c.glifo, c.fondo, 2)}">${esc(c.nombre)}</div><div class="ro-fila">` + hs.map(k => {
+      const d = duenos.get(k), bn = baneados.get(k);
+      const cls = (k === S.verDraft ? ' ver' : '') + (d ? (d.id === S.myId ? ' mio' : ' tomado') : bn ? ' baneado' : '');
+      const marca = d ? `<i class="ro-m ${eqs ? (eqs[d.id] === 'A' ? 'az' : 'ro') : ''}">${esc(d.id === S.myId ? 'TÚ' : d.name)}</i>` : bn ? '<i class="ro-m ban">BAN</i>' : '';
+      return `<button class="ro-h${cls}" data-h="${k}" aria-label="${esc(HEROES[k].nombre)}" aria-pressed="${k === S.verDraft}"><img alt="" src="${retratoHeroe(k, d ? d.colorIdx : me.colorIdx, 2)}"><span>${esc(HEROES[k].nombre)}</span>${marca}</button>`;
+    }).join('') + '</div></div>';
+  }).join('');
+  // Ficha (solo se reconstruye si cambia el héroe que miras: así no se pierde lo que estabas leyendo)
+  const kv = S.verDraft;
+  if ($('dr-card').dataset.h !== kv || $('dr-card').dataset.c !== String(me.colorIdx)) {
+    $('dr-card').innerHTML = fichaHtml(kv, me.colorIdx, false);
+    $('dr-card').dataset.h = kv; $('dr-card').dataset.c = String(me.colorIdx); $('dr-card').scrollTop = 0;
   }
-  // Si ya elegiste, se muestra la casa de tu héroe
-  if (me.build.heroe && !S.casaDraft) S.casaDraft = HEROES[me.build.heroe]?.casa || null;
-  $('dr-hint').textContent = S.casaDraft ? 'Toca un héroe para ver qué hace cada habilidad y contra quién es fuerte. Cada héroe lo puede tomar un solo jugador.' : 'Elige una casa para ver sus héroes.';
-  for (const [k, h] of Object.entries(HEROES)) {
-    if (h.casa !== S.casaDraft) continue;
-    const dueno = duenos.get(k);
-    const card = document.createElement('div');
-    const ban = baneados.get(k);
-    card.className = 'heroe' + (dueno ? (dueno.id === S.myId ? ' mio' : ' tomado') : ban ? ' baneado' : '');
-    card.tabIndex = 0;
-    card.setAttribute('role', 'button');
-    card.setAttribute('aria-label', `Ver detalle de ${h.nombre}`);
-    card.onclick = (e) => { if (!e.target.closest('button')) abrirFicha(k); };
-    card.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirFicha(k); } };
-    const habs = h.habs.map((hk, i) => {
-      const H = HABILIDADES[hk];
-      return `<div class="hab"><img alt="" src="${imgIcono(H.glifo, k)}"><div><b>${i + 1}. ${esc(H.nombre)}</b>${H.ulti ? ' <em>ULTI</em>' : ''}</div></div>`;
-    }).join('');
-    const P = PASIVAS[h.pasiva] || { glifo: 'candado', nombre: 'Sin pasiva' };
-    const mu = resumenMatchups(k);
-    card.innerHTML = `<div class="hh"><img alt="" src="${retratoHeroe(k, dueno ? dueno.colorIdx : me.colorIdx)}"><div><div class="hn">${esc(h.nombre)}</div><div class="hr">${esc(h.rol)}</div></div></div>
-      <div class="hd">${esc(h.desc)}</div>${statsHtml(h)}${habs}
-      <div class="hab"><img alt="" src="${imgIcono(P.glifo, k)}"><div><b>Pasiva: ${esc(P.nombre)}</b></div></div>
-      ${mu ? `<div class="mu-mini">${mu.fuerte.length ? `<span class="mu-f">Fuerte vs ${mu.fuerte.map(x => esc(HEROES[x.h].nombre)).join(', ')}</span>` : ''}${mu.debil.length ? `<span class="mu-d">Débil vs ${mu.debil.map(x => esc(HEROES[x.h].nombre)).join(', ')}</span>` : ''}</div>` : ''}
-      <div class="ver-mas">Toca para ver detalle</div>`;
-    if (dueno || ban) {
-      const q = document.createElement('div');
-      q.className = 'quien';
-      q.textContent = dueno ? (dueno.id === S.myId ? 'Tu héroe' : `Tomado por ${dueno.name}`) : `Baneado por ${NOM_EQ[ban]}`;
-      card.appendChild(q);
-    } else {
-      const b = document.createElement('button');
-      const accion = accionDraft(h);
-      b.className = 'btn ' + (accion.ban ? 'ban' : 'gold');
-      b.textContent = accion.texto;
-      b.disabled = accion.off;
-      b.onclick = () => act({ t: accion.ban ? 'ban' : 'pick', key: k });
-      card.appendChild(b);
-    }
-    g.appendChild(card);
-  }
+  const lock = $('dr-lock'), dk = duenos.get(kv), bk = baneados.get(kv), ak = ac0(kv);
+  lock.disabled = !!dk || !!bk || ak.off;
+  lock.classList.toggle('ban', !dk && !bk && ak.ban);
+  lock.classList.toggle('gold', !(!dk && !bk && ak.ban));
+  lock.dataset.ban = ak.ban ? '1' : '';
+  lock.textContent = dk ? (dk.id === S.myId ? `${HEROES[kv].nombre} · Tu héroe` : `Tomado por ${dk.name}`) : bk ? `Baneado por ${NOM_EQ[bk]}` : ak.ban ? `Banear ${HEROES[kv].nombre}` : ak.off ? ak.texto : `Fijar ${HEROES[kv].nombre}`;
 }
 
 // ------------------------------------------------------------ ficha detallada y matchups
@@ -9995,11 +10023,9 @@ for (const id of ['dr-picks', 'dr-bans']) {
   el.addEventListener('click', (e) => { const s = e.target.closest('[data-h]'); if (s) abrirFicha(s.dataset.h); });
   el.addEventListener('keydown', (e) => { const s = e.target.closest('[data-h]'); if (s && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirFicha(s.dataset.h); } });
 }
-function abrirFicha(k) {
-  const h = HEROES[k], me = S.metaById.get(S.myId) || { colorIdx: 0 };   // Seba (30-10): también desde la Colección (sin partida)
-  if (!h) return;
-  fichaAbierta = k;
-  if (S.mode === 'local' && S.game) S.game.draftPausa = true;   // contra bots, el reloj del draft se detiene mientras lees
+// Contenido de la ficha de un héroe (ventana de la ficha y panel derecho de la selección)
+function fichaHtml(k, colorIdx = 0, conId = true) {
+  const h = HEROES[k];
   const P = PASIVAS[h.pasiva];
   const habs = h.habs.map((hk, i) => {
     const H = HABILIDADES[hk];
@@ -10013,14 +10039,22 @@ function abrirFicha(k) {
       <div class="mu-fila"><span class="mu-t">Pierde con</span>${mu.debil.map(x => chip(x, 'd')).join('') || '<span class="mu-nada">nadie con claridad</span>'}</div>
       <div class="mu-fila"><span class="mu-t">Parejo con</span>${mu.parejo.map(x => chip(x, 'p')).join('') || '<span class="mu-nada">—</span>'}</div>
       <p class="fi-nota">% de duelos que gana, medido con bots (${MATCHUPS_INFO.duelos} por pareja). Es una guía: un jugador que apunta bien cambia los números.</p>` : '';
-  $('fi-cuerpo').innerHTML = `<div class="fi-top"><img alt="" src="${retratoHeroe(k, me.colorIdx, 4)}">
-      <div><h3 id="fi-nombre">${esc(h.nombre)}</h3><div class="hr">${esc(h.rol)}</div><p class="fi-desc">${esc(h.desc)}</p></div></div>
+  return `<div class="fi-top"><img alt="" src="${retratoHeroe(k, colorIdx, 4)}">
+      <div><h3 ${conId ? 'id="fi-nombre"' : ''}>${esc(h.nombre)}</h3><div class="hr">${esc(h.rol)}</div><p class="fi-desc">${esc(h.desc)}</p></div></div>
     <div class="heroe fi-stats">${statsHtml(h)}</div>
     <div class="fi-sec">Ataque básico</div><p class="fi-at">${esc(textoAtaque(h))}</p>
     <div class="fi-sec">Habilidades</div>${habs}
     <div class="fi-sec">Pasiva</div>
     ${P ? `<div class="fi-hab"><img alt="" src="${imgIcono(P.glifo, k, 3)}"><div><div class="fi-hn">${esc(P.nombre)}</div><p>${esc(P.desc)}</p></div></div>` : '<p class="fi-at">Sin pasiva.</p>'}
     ${muHtml}`;
+}
+
+function abrirFicha(k) {
+  const h = HEROES[k], me = S.metaById.get(S.myId) || { colorIdx: 0 };   // Seba (30-10): también desde la Colección (sin partida)
+  if (!h) return;
+  fichaAbierta = k;
+  if (S.mode === 'local' && S.game) S.game.draftPausa = true;   // contra bots, el reloj del draft se detiene mientras lees
+  $('fi-cuerpo').innerHTML = fichaHtml(k, me.colorIdx);
   const tomado = S.meta ? S.meta.players.find(p => p.build.heroe === k) : null;
   const baneo = S.meta ? (S.meta.bans || []).find(b => b.heroe === k) : null;
   const be = $('fi-elegir'), ac = accionDraft(h);
@@ -10419,6 +10453,8 @@ pintarDraftModo();
 $('b-draftmodo').onclick = () => { S.draftModo = S.draftModo === 'ban' ? 'libre' : 'ban'; lsSet('lola-draft', S.draftModo); pintarDraftModo(); };
 document.querySelectorAll('#sala-draft button').forEach(b => { b.onclick = () => { if (!isAuth() || !S.game.sala) return; S.game.sala.draft = b.dataset.d; S.game.metaDirty = true; }; });
 $('b-matriz').onclick = abrirMatriz;
+$('dr-roster').addEventListener('click', (e) => { const b = e.target.closest('[data-h]'); if (b) { S.verDraft = b.dataset.h; renderDraft(); } });
+$('dr-lock').onclick = () => { const k = S.verDraft; if (k && HEROES[k]) act({ t: $('dr-lock').dataset.ban ? 'ban' : 'pick', key: k }); };
 $('b-1v1').onclick = () => startEquipos(1);
 $('b-2v2').onclick = () => startEquipos(2);
 $('b-pve').onclick = startPve;
@@ -10452,6 +10488,11 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
 const PATCH_NOTES = [
+  { v: 'V2.1', f: '30-10-2026', n: [
+    'Nueva pantalla de selección: todo en una sola pantalla, sin bajar.',
+    'A la izquierda, los retratos de los héroes separados por casa; a la derecha, la ficha completa del héroe que tocas.',
+    'Botón «Fijar» (o «Banear» en el draft con baneos) para confirmar tu héroe después de leer su ficha.',
+    'Abajo, los jugadores de cada equipo con lo que eligió cada uno.' ] },
   { v: 'V2.0 · ajuste de balance', f: '30-10-2026', n: [
     'Gaia: el Disco aturde 1 / 1,5 / 2 s (antes 1,5 / 2 / 2,5); el daño no cambia.',
     'Gaia: Paso celestial recarga 13 s (antes 12), deja lento 25% (antes 40%) y hace como máximo 100 de daño (antes 125).',
