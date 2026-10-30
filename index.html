@@ -762,6 +762,14 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 .col-h span { font: 10px var(--f-num); text-transform: uppercase; }
 .col-h:hover, .col-h:focus-visible { border-color: var(--oro2); outline: none; }
 .col-h:active { transform: translateY(2px); }
+/* Seba (30-10): colección con el color de cada casa */
+.col-casa { padding: 8px 10px 10px; border: 3px solid var(--tinta); }
+.col-casa.aliados { background: var(--acero0); box-shadow: inset 3px 3px 0 var(--acero1); }
+.col-casa.renegados { background: var(--carm0); box-shadow: inset 3px 3px 0 var(--carm1); }
+.col-casa.aliados .col-h { background: var(--acero1); box-shadow: inset 0 -3px 0 var(--acero0); }
+.col-casa.renegados .col-h { background: var(--carm1); box-shadow: inset 0 -3px 0 var(--carm0); }
+.col-casa .col-t { text-shadow: 2px 2px 0 var(--tinta); }
+.col-acc { display: flex; justify-content: center; }
 
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
@@ -874,6 +882,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
     <div class="col-wrap">
       <div class="col-head"><button class="btn small" id="b-col-volver">Volver</button><h2>Colección</h2></div>
       <p class="hint">Toca un héroe para leer su ficha.</p>
+      <div class="col-acc"><button class="btn small" id="b-col-matriz">Ver tabla de matchups</button></div>
       <div id="col-grid"></div>
     </div>
   </section>
@@ -5679,7 +5688,7 @@ class Game {
         | (fx.escudo ? 67108864 : 0) | (fx.sobre ? 134217728 : 0) | (fx.enraizando ? 268435456 : 0) | (fx.mazazos ? 536870912 : 0) | (fx.jetpack ? 1073741824 : 0);
       ps.push([p.id, Math.round(p.x), Math.round(p.y), r1(p.hp), p.st.vidaMax, +p.facing.toFixed(2), flags,
         +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3), fx.escudo ? Math.ceil(fx.escudo.v) : 0, this.cargasHab(p), fx.saltoLanza ? +Math.min(1, fx.saltoLanza.el / fx.saltoLanza.total).toFixed(2) : 0,
-        (fx.canalGrillete ? 1 : 0) | (fx.canalPortal ? 2 : 0) | (fx.encadenado ? 4 : 0) | (fx.encadenando ? 8 : 0) | (fx.rafagaGaia ? 16 : 0) | (fx.canalLluvia ? 32 : 0) | (fx.manto ? 128 : 0) | (fx.dagasShai ? 256 : 0) | (fx.pacto || fx.impulsoShai ? 512 : 0)]);
+        (fx.canalGrillete ? 1 : 0) | (fx.canalPortal ? 2 : 0) | (fx.encadenado ? 4 : 0) | (fx.encadenando ? 8 : 0) | (fx.rafagaGaia ? 16 : 0) | (fx.canalLluvia ? 32 : 0) | (fx.rafagaShai ? 64 : 0) | (fx.manto ? 128 : 0) | (fx.dagasShai ? 256 : 0) | (fx.pacto || fx.impulsoShai ? 512 : 0)]);
     }
     return {
       t: 's', ph: this.phase, tm: +Math.max(0, this.timer).toFixed(1), ar: Math.round(this.arenaR),
@@ -7980,11 +7989,20 @@ class Renderer {
       }
     }
     if (flota) this.nubeViva(cx, sy + 20, 1, true);
-    // Shai (Seba 30-10): su propio jugador ve siempre el alcance del Salto del juicio, como una zona color magia en el suelo
+    // Shai (Seba 30-10): solo el jugador que la controla ve siempre el alcance del Salto del juicio (zona morada; más tenue en recarga)
     if (isMe && meta.build.heroe === 'shai') {
       const r = Math.round(HABILIDADES.saltoJuicio.alcance * ESC), lista = !(p.cd[1] > 0);
       g.globalAlpha = lista ? 0.35 : 0.15; this.discDither(cx, cy, r, PALETA.magia, 4, Math.floor(this.time * 3)); g.globalAlpha = lista ? 0.8 : 0.35;
       this.ring(cx, cy, r, PALETA.magia, 1, 1);
+      g.globalAlpha = this.alphaPj || 1;
+    }
+    // Shai (Seba 30-10): mientras lanza el Secreto Templario, todos ven el alcance de las dagas (círculo rojizo en el suelo; Seba: sin el alcance del Salto)
+    if (p.f2 & 64) {
+      const r = Math.round(HABILIDADES.secretoTemplario.alcance * ESC), on = Math.floor(this.time * 8) % 2;
+      g.globalAlpha = 0.3; this.discDither(cx, cy, r, PALETA.carmesi0, 3, Math.floor(this.time * 6)); g.globalAlpha = 1;
+      this.ring(cx, cy, r, PALETA.tinta, 1, 4);
+      this.ring(cx, cy, r, on ? PALETA.carmesi2 : PALETA.carmesi1, 1, 2);
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * TAU + this.time * 1.5, x = Math.round(cx + Math.cos(a) * r), y = Math.round(cy + Math.sin(a) * r); g.fillStyle = PALETA.tinta; g.fillRect(x - 2, y - 2, 5, 5); g.fillStyle = PALETA.pergamino2; g.fillRect(x - 1, y - 1, 3, 3); }
       g.globalAlpha = this.alphaPj || 1;
     }
     // Gaia: brillo bajo el vestido (flota) y chispas color magia
@@ -10329,11 +10347,12 @@ $('b-inicio').onclick = () => { if (S.game) S.game.pausa = false; $('scr-pausa')
 function abrirColeccion() {
   $('col-grid').innerHTML = Object.entries(CASAS).map(([ck, c]) => {
     const hs = Object.keys(HEROES).filter(k => HEROES[k].casa === ck);
-    return `<div class="col-casa"><div class="col-t">${esc(c.nombre)}</div><div class="col-fila">` + hs.map(k => `<button class="col-h" data-h="${k}" aria-label="Ficha de ${esc(HEROES[k].nombre)}"><img alt="" src="${retratoHeroe(k, ck === 'aliados' ? 1 : 0, 3)}"><span>${esc(HEROES[k].nombre)}</span></button>`).join('') + '</div></div>';
+    return `<div class="col-casa ${ck}"><div class="col-t">${esc(c.nombre)}</div><div class="col-fila">` + hs.map(k => `<button class="col-h" data-h="${k}" aria-label="Ficha de ${esc(HEROES[k].nombre)}"><img alt="" src="${retratoHeroe(k, ck === 'aliados' ? 1 : 0, 3)}"><span>${esc(HEROES[k].nombre)}</span></button>`).join('') + '</div></div>';
   }).join('');
   showScreen('scr-coleccion');
 }
 $('b-coleccion').onclick = abrirColeccion;
+$('b-col-matriz').onclick = abrirMatriz;
 $('b-col-volver').onclick = () => showScreen('scr-home');
 $('col-grid').addEventListener('click', (e) => { const b = e.target.closest('[data-h]'); if (b) abrirFicha(b.dataset.h); });
 window.addEventListener('keydown', (e) => {
