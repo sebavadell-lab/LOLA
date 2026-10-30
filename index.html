@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V2.4</title>
+<title>LOLA V2.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -930,7 +930,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V2.4</p>
+        <p class="sub version">LOLA V2.5</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -7243,7 +7243,9 @@ class Controls {
       const d = Math.hypot(dx, dy);
       if (d > RADIO) { dx = dx / d * RADIO; dy = dy / d * RADIO; }
       this.joy.mx = dx / RADIO; this.joy.my = dy / RADIO;
-      if (Math.hypot(this.joy.mx, this.joy.my) < 0.15) this.joy.mx = this.joy.my = 0;
+      // Seba (30-10): el joystick solo da la dirección — fuera de la zona muerta siempre corres al 100% (antes era gradual hasta 56 px y al atacar el dedo se iba al centro y caías a 60-70%)
+      const lj = Math.hypot(this.joy.mx, this.joy.my);
+      if (lj < 0.15) this.joy.mx = this.joy.my = 0; else { this.joy.mx /= lj; this.joy.my /= lj; }
       this.knob.style.transform = `translate(calc(-50% + ${Math.round(dx)}px), calc(-50% + ${Math.round(dy)}px))`;
       e.preventDefault();
     });
@@ -10511,6 +10513,8 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
 const PATCH_NOTES = [
+  { v: 'V2.5', f: '30-10-2026', n: [
+    'Celular: el joystick ahora solo marca la dirección; apenas lo mueves corres al 100% (antes la velocidad dependía de cuánto alejabas el dedo y al atacar se perdía velocidad sin querer).' ] },
   { v: 'V2.4', f: '30-10-2026', n: [
     'Nueva letra general del juego: Jersey 10, pixelada y más clara (el 5 ya no parece una S).',
     'La letra viene dentro del juego: carga al instante, sin depender de internet.' ] },
