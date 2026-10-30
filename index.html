@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V2.5</title>
+<title>LOLA V2.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -930,7 +930,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V2.5</p>
+        <p class="sub version">LOLA V2.6</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -1329,6 +1329,19 @@ const HEROES = {
   },
 };
 
+// Seba (30-10): Tenebris, la parca (Renegados). Daño y control; vida de asesino, menos daño que Shai y Takichi, lento como Trelgon. Números (C).
+Object.assign(HEROES, {
+  tenebris: {
+    casa: 'renegados',
+    nombre: 'Tenebris', rol: 'Daño · control', fondo: 'tenebris', arma: 'guadana',
+    desc: 'La parca: capucha negra, cara de sombra con ojos que titilan y una guadaña. Maldice con almas errantes, siega la mitad de la vida y cae sobre sus presas en un pozo de almas.',
+    vida: 370, dano: 33, recarga: 1.4, ultiCarga: 300, velocidad: 155,   // Seba (30-10): daño 28 → 33, recarga más lenta (1,2 → 1,4 (C))
+    ataque: { tipo: 'melee', rango: 64, arco: 140 },
+    habs: ['almaErrante', 'siega', 'pozoMaldad'],
+    pasiva: 'mantoSombras',
+  },
+});
+
 // Seba (30-10): Shai, asesina templaria (Renegados desde el 30-10). Daño, asesinato y sigilo; balance cercano a Takichi. Números (C).
 Object.assign(HEROES, {
   shai: {
@@ -1510,6 +1523,16 @@ Object.assign(HABILIDADES, {
   saltoJuicio:   { nombre: 'Salto del juicio', glifo: 'ganchoShai', cd: 10, cdFijo: true, alcance: 137, area: 45,   // Seba (30-10): alcance −15% (230 → 196) y luego −30% (196 → 137)
                    desc: (n) => `Apuntas a un punto (hasta ${HABILIDADES.saltoJuicio.alcance} de distancia). Si hay un héroe enemigo ahí (si hay varios, el de menos vida; tocando sin apuntar, el de menos vida a tu alcance), desapareces, apareces a su espalda y lo apuñalas: ${n.dano} de daño. Si fallas, no te mueves y la habilidad igual se recarga. Si lo matas, quedas invisible y con +${Math.round(n.vel * 100)}% de velocidad por ${n.invis} s.`,
                    n1: { dano: 100, invis: 2, vel: 0.5 }, n2: { dano: 130, invis: 2, vel: 0.5 } },
+  // ---- Tenebris (Seba, 30-10; números (C))
+  almaErrante:   { nombre: 'Alma errante', glifo: 'almaErrante', cd: 12, cdFijo: true, alcance: 0, vel: 150, velMax: 300, acelera: 400, radio: 14, curaKill: 25,   // Seba (30-10): sin límite de distancia (borde a borde); acelera hasta el doble
+                   desc: (n) => `Sueltas un alma lenta en línea recta que acelera mientras viaja (hasta el doble de velocidad). Llega hasta el borde del mapa y vuelve hasta el borde contrario. El primer héroe enemigo que toca (ida o vuelta) queda maldito: ${n.dps} de daño por segundo y ${Math.round(n.lento * 100)}% más lento por ${n.dur} s. Atraviesa invocaciones. Si no toca a nadie, desaparece. Si el maldito muere con la maldición encima, recuperas ${HABILIDADES.almaErrante.curaKill} de vida y la recarga de esta habilidad vuelve a 0.`,
+                   n1: { dps: 20, dur: 4, lento: 0.2 }, n2: { dps: 20, dur: 4, lento: 0.2 } },
+  siega:         { nombre: 'Siega', glifo: 'siega', cd: 14, cdFijo: true, canal: 1, rango: 80, arco: 180, cura: 75,   // Seba (30-10): +75 de vida por héroe golpeado
+                   desc: (n) => `Canalizas ${fmtN(HABILIDADES.siega.canal)} s quieto (un aturdimiento o un silencio lo corta) y das un tajo de guadaña en arco al frente: los enemigos pierden el ${Math.round(n.pct * 100)}% de su vida actual. Rompe los escudos (Escudo de musgo, Manto de luz) y silencia esas habilidades ${fmtN(n.silencio)} s. Recuperas ${HABILIDADES.siega.cura} de vida por cada héroe enemigo golpeado (las invocaciones no curan). Mata a los esqueletos; al gólem y al dragón les quita el ${Math.round(n.pct * 100)}% de su vida.`,
+                   n1: { pct: 0.5, silencio: 1 }, n2: { pct: 0.5, silencio: 1 } },
+  pozoMaldad:    { nombre: 'Pozo de la maldad', glifo: 'pozoMaldad', cd: 45, ulti: true, canal: 2, alcance: 300, radio: 100,   // Seba (30-10): 50 → 45 s
+                   desc: (n) => `Apuntas un punto (hasta ${HABILIDADES.pozoMaldad.alcance}) y canalizas ${HABILIDADES.pozoMaldad.canal} s quieto (un aturdimiento o un silencio lo corta). Al terminar apareces ahí y silencias ${fmtN(n.silencio)} s a los enemigos del pozo, que te sigue bajo los pies ${n.dur} s: ${n.dps} de daño por segundo y ${Math.round(n.lento * 100)}% más lentos a los enemigos dentro.`,
+                   n1: { dps: 25, dur: 5, lento: 0.25, silencio: 0.5 }, n2: { dps: 25, dur: 5, lento: 0.25, silencio: 0.5 } },
   mantoLuz:      { nombre: 'Manto de luz', glifo: 'mantoLuz', cd: 16, cdFijo: true,
                    desc: (n) => `Te rodeas de una malla de luz por ${n.dur} s: recibes ${Math.round(n.reduce * 100)}% menos de daño de todas las fuentes y ganas +${Math.round(n.vel * 100)}% de velocidad.`,
                    n1: { dur: 4, reduce: 0.5, vel: 0.25 }, n2: { dur: 4, reduce: 0.5, vel: 0.25 } },
@@ -1543,6 +1566,7 @@ const PASIVAS = {
   ultimoAliento: { nombre: 'Último aliento', glifo: 'corazonVerde', desc: 'Por debajo del 30% de vida, tus habilidades se recargan 25% más rápido.' },
   sangreReal:   { nombre: 'Sangre real', glifo: 'corona', desc: 'Recuperas 25 de vida cada vez que usas una habilidad.' },
   curacionPlano: { nombre: 'Curación del otro plano', glifo: 'corazonVerde', desc: 'Cada aturdimiento que provocas te cura 15 de vida.' },
+  mantoSombras: { nombre: 'Manto de sombras', glifo: 'mantoSombras', desc: 'Mientras canalizas la Siega o el Pozo de la maldad, recibes 10% menos de daño de todas las fuentes.' },
   pactoSangre:  { nombre: 'Pacto de sangre', glifo: 'selloShai', desc: 'Cada 3 ataques al mismo enemigo en 3 s explota un sello: 15 de daño y +5% de velocidad por 3 s.' },
   temblor:      { nombre: 'Temblor', glifo: 'roca', desc: 'Cada tercer puñetazo al mismo enemigo lo deja lento 10% por 4 s.' },
 };
@@ -1564,6 +1588,7 @@ const UNIDADES = {
   lanza: { vel: 0, invulnerable: true },
   arenaEstepa: { vel: 0, invulnerable: true },
   muroRoca: { vel: 0, invulnerable: true, grosor: 18 },
+  almaErrante: { vel: 0, invulnerable: true },
   enemigo:   { vel: 0 },
 };
 
@@ -1617,6 +1642,7 @@ const GUIAS = {
   lanzaErrante: { tipo: 'linea', alcance: 380, ancho: 26 }, decimar: { tipo: 'propio', r: 110 }, llamaEstepa: { tipo: 'propio', r: 135 },
   mazazos: { tipo: 'propio', r: 110 }, escudoMusgo: { tipo: 'propio', r: 200 }, sobrecrecimiento: { tipo: 'propio', r: 130 },
   discoGaia: { tipo: 'linea', alcance: 300, ancho: 20 }, pasoCeleste: { tipo: 'linea', alcance: 300, ancho: 30 }, lluviaEstrellas: { tipo: 'linea', alcance: 480, ancho: 160 },
+  almaErrante: { tipo: 'linea', alcance: 600, ancho: 28 }, siega: { tipo: 'cono', alcance: 80, arco: 180 }, pozoMaldad: { tipo: 'punto', alcance: 300, r: 100 },
   saltoJuicio: { tipo: 'punto', alcance: 137, r: 45 }, mantoLuz: { tipo: 'propio', r: 30 }, secretoTemplario: { tipo: 'propio', r: 137 },
   fisura: { tipo: 'linea', alcance: 320, ancho: 40 }, grillete: { tipo: 'linea', alcance: 380, ancho: 22 }, erupcion: { tipo: 'propio', r: 300 },
 };
@@ -1644,192 +1670,220 @@ for (const u of Object.values(UNIDADES)) if (u.vel) u.vel = Math.round(u.vel * R
 
 // ===== matchups.js =====
 // Generado por tools/matchups.js (2026-10-30): % de duelos 1v1 que gana la fila contra la columna.
-// Medido con bots (apuntado automático), 200 duelos por par.
+// Medido con bots (apuntado automático), 30 duelos por par.
 const MATCHUPS = {
  "beast": {
-  "lire": 59,
-  "nigromante": 95,
-  "maidas": 14,
+  "lire": 63,
+  "nigromante": 97,
+  "maidas": 27,
   "monh": 100,
   "biteroi": 0,
   "rasho": 0,
   "takichi": 90,
-  "aracnida": 42,
-  "kazaro": 46,
-  "trelgon": 98,
-  "gaia": 17,
-  "shai": 20
+  "aracnida": 73,
+  "kazaro": 43,
+  "trelgon": 97,
+  "gaia": 23,
+  "tenebris": 33,
+  "shai": 37
  },
  "lire": {
-  "beast": 42,
-  "nigromante": 17,
-  "maidas": 33,
-  "monh": 6,
-  "biteroi": 69,
-  "rasho": 80,
-  "takichi": 9,
-  "aracnida": 79,
-  "kazaro": 54,
-  "trelgon": 20,
-  "gaia": 44,
-  "shai": 34
+  "beast": 37,
+  "nigromante": 13,
+  "maidas": 27,
+  "monh": 7,
+  "biteroi": 70,
+  "rasho": 87,
+  "takichi": 13,
+  "aracnida": 87,
+  "kazaro": 67,
+  "trelgon": 17,
+  "gaia": 83,
+  "tenebris": 93,
+  "shai": 30
  },
  "nigromante": {
-  "beast": 6,
-  "lire": 84,
-  "maidas": 78,
-  "monh": 99,
-  "biteroi": 76,
-  "rasho": 85,
-  "takichi": 41,
-  "aracnida": 99,
-  "kazaro": 11,
+  "beast": 3,
+  "lire": 87,
+  "maidas": 87,
+  "monh": 100,
+  "biteroi": 73,
+  "rasho": 93,
+  "takichi": 50,
+  "aracnida": 97,
+  "kazaro": 0,
   "trelgon": 7,
-  "gaia": 88,
-  "shai": 13
+  "gaia": 87,
+  "tenebris": 97,
+  "shai": 7
  },
  "maidas": {
-  "beast": 87,
-  "lire": 67,
-  "nigromante": 22,
-  "monh": 62,
-  "biteroi": 65,
-  "rasho": 83,
-  "takichi": 24,
-  "aracnida": 82,
-  "kazaro": 31,
-  "trelgon": 68,
-  "gaia": 74,
+  "beast": 73,
+  "lire": 73,
+  "nigromante": 13,
+  "monh": 70,
+  "biteroi": 50,
+  "rasho": 90,
+  "takichi": 20,
+  "aracnida": 80,
+  "kazaro": 37,
+  "trelgon": 67,
+  "gaia": 80,
+  "tenebris": 100,
   "shai": 27
  },
  "monh": {
-  "beast": 1,
-  "lire": 95,
-  "nigromante": 1,
-  "maidas": 39,
-  "biteroi": 61,
-  "rasho": 76,
+  "beast": 0,
+  "lire": 93,
+  "nigromante": 0,
+  "maidas": 30,
+  "biteroi": 53,
+  "rasho": 77,
   "takichi": 0,
-  "aracnida": 45,
-  "kazaro": 1,
-  "trelgon": 0,
-  "gaia": 83,
+  "aracnida": 60,
+  "kazaro": 0,
+  "trelgon": 3,
+  "gaia": 87,
+  "tenebris": 93,
   "shai": 0
  },
  "biteroi": {
   "beast": 100,
-  "lire": 32,
-  "nigromante": 25,
-  "maidas": 35,
-  "monh": 39,
-  "rasho": 59,
-  "takichi": 100,
+  "lire": 30,
+  "nigromante": 27,
+  "maidas": 50,
+  "monh": 47,
+  "rasho": 63,
+  "takichi": 97,
   "aracnida": 100,
-  "kazaro": 89,
-  "trelgon": 31,
-  "gaia": 39,
-  "shai": 100
+  "kazaro": 90,
+  "trelgon": 33,
+  "gaia": 30,
+  "tenebris": 100,
+  "shai": 97
  },
  "rasho": {
   "beast": 100,
-  "lire": 20,
-  "nigromante": 15,
-  "maidas": 18,
-  "monh": 25,
-  "biteroi": 42,
-  "takichi": 32,
-  "aracnida": 91,
-  "kazaro": 92,
+  "lire": 13,
+  "nigromante": 7,
+  "maidas": 10,
+  "monh": 23,
+  "biteroi": 37,
+  "takichi": 33,
+  "aracnida": 93,
+  "kazaro": 93,
   "trelgon": 100,
-  "gaia": 22,
-  "shai": 80
+  "gaia": 33,
+  "tenebris": 100,
+  "shai": 70
  },
  "takichi": {
   "beast": 10,
-  "lire": 91,
-  "nigromante": 60,
-  "maidas": 77,
+  "lire": 87,
+  "nigromante": 50,
+  "maidas": 80,
   "monh": 100,
-  "biteroi": 0,
-  "rasho": 69,
+  "biteroi": 3,
+  "rasho": 67,
   "aracnida": 3,
-  "kazaro": 68,
-  "trelgon": 73,
-  "gaia": 23,
+  "kazaro": 63,
+  "trelgon": 67,
+  "gaia": 17,
+  "tenebris": 63,
   "shai": 0
  },
  "aracnida": {
-  "beast": 58,
-  "lire": 22,
-  "nigromante": 2,
-  "maidas": 19,
-  "monh": 55,
-  "biteroi": 1,
-  "rasho": 9,
-  "takichi": 98,
-  "kazaro": 52,
-  "trelgon": 98,
-  "gaia": 10,
-  "shai": 97
+  "beast": 27,
+  "lire": 13,
+  "nigromante": 3,
+  "maidas": 20,
+  "monh": 40,
+  "biteroi": 0,
+  "rasho": 7,
+  "takichi": 97,
+  "kazaro": 47,
+  "trelgon": 90,
+  "gaia": 17,
+  "tenebris": 67,
+  "shai": 90
  },
  "kazaro": {
-  "beast": 54,
-  "lire": 46,
-  "nigromante": 89,
-  "maidas": 70,
-  "monh": 99,
-  "biteroi": 12,
-  "rasho": 8,
-  "takichi": 32,
-  "aracnida": 48,
-  "trelgon": 99,
-  "gaia": 15,
-  "shai": 37
+  "beast": 57,
+  "lire": 33,
+  "nigromante": 100,
+  "maidas": 63,
+  "monh": 100,
+  "biteroi": 10,
+  "rasho": 7,
+  "takichi": 37,
+  "aracnida": 53,
+  "trelgon": 97,
+  "gaia": 17,
+  "tenebris": 30,
+  "shai": 43
  },
  "trelgon": {
   "beast": 3,
-  "lire": 81,
+  "lire": 83,
   "nigromante": 93,
-  "maidas": 32,
-  "monh": 100,
-  "biteroi": 70,
-  "rasho": 1,
-  "takichi": 27,
-  "aracnida": 3,
-  "kazaro": 1,
-  "gaia": 6,
-  "shai": 2
+  "maidas": 33,
+  "monh": 97,
+  "biteroi": 67,
+  "rasho": 0,
+  "takichi": 33,
+  "aracnida": 10,
+  "kazaro": 3,
+  "gaia": 17,
+  "tenebris": 100,
+  "shai": 0
  },
  "gaia": {
-  "beast": 84,
-  "lire": 56,
-  "nigromante": 12,
-  "maidas": 27,
-  "monh": 17,
-  "biteroi": 61,
-  "rasho": 78,
-  "takichi": 78,
-  "aracnida": 91,
-  "kazaro": 85,
-  "trelgon": 95,
-  "shai": 78
+  "beast": 77,
+  "lire": 17,
+  "nigromante": 13,
+  "maidas": 20,
+  "monh": 13,
+  "biteroi": 70,
+  "rasho": 67,
+  "takichi": 83,
+  "aracnida": 83,
+  "kazaro": 83,
+  "trelgon": 83,
+  "tenebris": 100,
+  "shai": 57
+ },
+ "tenebris": {
+  "beast": 67,
+  "lire": 7,
+  "nigromante": 3,
+  "maidas": 0,
+  "monh": 7,
+  "biteroi": 0,
+  "rasho": 0,
+  "takichi": 37,
+  "aracnida": 33,
+  "kazaro": 70,
+  "trelgon": 0,
+  "gaia": 0,
+  "shai": 63
  },
  "shai": {
-  "beast": 81,
-  "lire": 66,
-  "nigromante": 87,
+  "beast": 63,
+  "lire": 70,
+  "nigromante": 93,
   "maidas": 73,
   "monh": 100,
-  "biteroi": 1,
-  "rasho": 21,
+  "biteroi": 3,
+  "rasho": 30,
   "takichi": 100,
-  "aracnida": 4,
-  "kazaro": 63,
-  "trelgon": 98,
-  "gaia": 22
+  "aracnida": 10,
+  "kazaro": 57,
+  "trelgon": 100,
+  "gaia": 43,
+  "tenebris": 37
  }
 };
-const MATCHUPS_INFO = { fecha: '2026-10-30', duelos: 200 };
+const MATCHUPS_INFO = { fecha: '2026-10-30', duelos: 30 };
 
 // ===== sprites.js =====
 // =====================================================================
@@ -2852,7 +2906,7 @@ function armaRotada(key, idx) {
   const W = def.rows[0].length;   // Kazaro: su lanza es más larga (15 de ancho)
   const src = matrizVacia(W, 12);
   pintar(src, def.rows);
-  const S = 27, C = 13;
+  const S = def.S || 27, C = (S - 1) >> 1;   // Tenebris: la guadaña es más grande (lienzo 31)
   const dst = matrizVacia(S, S);
   const a = (idx / PASOS_ROT) * Math.PI * 2;
   const ca = Math.cos(a), sa = Math.sin(a);
@@ -3277,9 +3331,85 @@ function caraHeroe(heroe, color = 0) {
   const px = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
   if (heroe === 'nigromante') { for (const x of [7, 10]) { px(x, 9, PALETA.magia); px(x, 10, PALETA.magia); px(x, 9, PALETA.pergamino2); } }   // Karilthal: ojos encendidos
   if (heroe === 'shai') { for (const x of [7, 10]) { px(x, 9, PALETA.magia); px(x, 8, PALETA.tinta); } }   // Shai: ojos color magia
+  if (heroe === 'tenebris') { for (const x of [7, 10]) px(x, 9, PALETA.bosque2); }   // Tenebris: ojos verdes
   cacheCara.set(k, c);
   return c;
 }
+
+// Tenebris (Seba 30-10): la parca — capucha negra grande con volumen y pliegues (como la de Shai), cara de sombra
+// con dos ojos verdes que titilan (el titileo se dibuja en render), túnica negra rasgada y guadaña de bastón largo.
+Object.assign(CAPAS, {
+  capuchaTen: L({
+    1: '..........n.........',
+    2: '.........nn.........',
+    3: '........nn1n........',
+    4: '.......nnnn1n.......',
+    5: '......nnnnnn1n......',
+    6: '.....nn1nnnnn1n.....',
+    7: '.....n1kkkkkkn1n....',
+    8: '....nn1kkkkkkk1n....',
+    9: '....nn1klkklkk1n....',
+    10: '....nn1kkkkkkk1n....',
+    11: '....n1nkkkkkknn1....',
+    12: '.....n1nnkknn1n.....',
+    13: '......nnnnnnnn......',
+  }),
+  tunicaTen: L({
+    14: '.....nn1nnnnn1n.....',
+    15: '....nn1nnnnnnn1n....',
+    16: '....n1nnnnnnnnn1n...',
+    17: '....nnXXXXXXXXnn....',
+    18: '...nn1nnnnnnnn1nn...',
+    19: '...n1nnn.nn.nnn1n...',
+    20: '...n1n.n.nn.n.n1n...',
+    21: '..n..n.n....n..n.n..',
+  }),
+  capaTen: L({
+    10: '...nn..........nn...',
+    11: '...n1..........1n...',
+    12: '..nn1..........1nn..',
+    13: '..n1............1n..',
+  }),
+});
+Object.assign(APARIENCIA, {
+  tenebris: {
+    piel: { W: 'n', m: '1', w: 'k' },
+    back: [['capaTen'], ['capaTen']],
+    cuerpo: [['tunicaTen'], ['tunicaTen']],
+    cabeza: [['capuchaTen'], ['capuchaTen']],
+  },
+});
+Object.assign(ARMAS_SPR, {
+  // Guadaña: bastón largo de madera oscura con virolas de hierro, y una hoja curva de acero que vuelve hacia la mano
+  // (filo claro por dentro), unida con una gema verde. 15 de ancho: el agarre queda a un tercio del bastón.
+  guadana: { g: [5, 7], S: 31, rows: [
+    '......................',
+    '...........kkkkk......',
+    '.........kkbbbBBkk....',
+    '.......kk3ccccBBBBk...',
+    '.....kkqqqkkkkkqBBBk..',
+    '....kqkk.......kqBBk..',
+    '...k...........kqBk...',
+    'wWWWW2WWWWWWWWW2kcBk..',
+    '...............kkk....',
+    '......................',
+    '......................',
+    '......................'] },
+});
+Object.assign(OTROS, {
+  // Seba (30-10): manto negro y cara de calavera negra con ojos verdes
+  almaErrante: [
+    ['....kkk....', '..kknnnkk..', '.knn111nnk.', '.kn1l1l1nk.', '.kn11111nk.', '.knn1k1nnk.', '.kn2nnn2nk.', '.knnnnnnnk.', '..kn2nn2nk.', '..knnnnnk..', '...kn2nk...', '....knk....', '.....k.....'],
+    ['....kkk....', '..kknnnkk..', '.knn111nnk.', '.kn1l1l1nk.', '.kn11111nk.', '.knn1k1nnk.', '.kn2nnn2nk.', '.knnnnnnnk.', '.kn2nn2nk..', '..knnnnnk..', '...kn2nk...', '...knk.....', '...k.......'],
+  ],
+});
+Object.assign(GLIFOS, {
+  almaErrante: ['...nnn...', '..nnnnn..', '..nkqkn..', '..nnnnn..', '..nnknn..', '.nnnnn...', 'n.nnn....', '..n.n....', '.n.......'],
+  siega: ['..nnnn...', '.n....nn.', '......q.n', '.......qn', '.......1n', '......1..', '.....1...', '....1....', '...1.....'],
+  pozoMaldad: ['...n.n...', '..n.n.n..', '...nnn...', '.kknnnkk.', 'kn.n.n.nk', 'knn.n.nnk', 'kn.n.n.nk', '.kknnnkk.', '...kkk...'],
+  mantoSombras: ['...nnn...', '..n...n..', '.n.q.q.n.', '.n.....n.', 'n.nnnnn.n', 'n.n...n.n', 'n.n...n.n', 'nn.....nn', 'n.......n'],
+});
+Object.assign(FONDOS, { tenebris: ['3', '4'] });   // Seba (30-10): íconos negros sobre piedra clara
 
 // ===== sim.js =====
 // =====================================================================
@@ -3296,7 +3426,7 @@ const CONTROL = new Set(['aturdido', 'silence', 'slow', 'arrastre', 'enraizando'
 // Cargas del ataque básico: 3 para todos, salvo los héroes que definen otras (Gaia: 2)
 const cargasMax = (p) => (p && p.build && HEROES[p.build.heroe]?.cargas) || CONFIG.CARGAS;
 // Canalizaciones (quieto, se cortan con aturdimiento o silencio)
-const CANALES = ['canalSablazo', 'canalJet', 'canalArena', 'canalGrillete', 'canalPortal'];
+const CANALES = ['canalSablazo', 'canalJet', 'canalArena', 'canalGrillete', 'canalPortal', 'canalSiega', 'canalPozo'];
 const canalizando = (fx) => CANALES.some(k => fx[k]);
 
 function nuevaBuild() { return { heroe: null, niv: [1, 1, 1] }; }   // rework: todas las habilidades desde el inicio
@@ -3721,6 +3851,7 @@ class Game {
     if (esJugador && target.fx && target.fx.cucko) amt *= CONFIG.CUCKO.buff.recibe;
     if (esJugador && target.fx && target.fx.enTela) amt *= 1 - target.fx.enTela.buff;   // Aracnida sobre su tela
     if (esJugador && target.fx && target.fx.manto) amt *= 1 - target.fx.manto.reduce;   // Shai: Manto de luz (todas las fuentes)
+    if (esJugador && target.fx && (target.fx.canalSiega || target.fx.canalPozo) && HEROES[target.build?.heroe]?.pasiva === 'mantoSombras') amt *= 0.9;   // Tenebris: Manto de sombras
     if (amt <= 0) return 0;
 
     const atacante = src ? (src.esUnidad ? this.players.get(src.owner) : src) : null;
@@ -3833,6 +3964,11 @@ class Game {
 
   kill(p, src) {
     this.quitarSobre(p);
+    // Tenebris (Seba 30-10): si muere con la maldición del Alma errante encima, el Alma vuelve a 0 de recarga
+    if (p.fx && p.fx.dot && p.fx.dot.alma) {
+      const ten = this.players.get(p.fx.dot.src), slot = ten ? HEROES[ten.build.heroe]?.habs.indexOf('almaErrante') : -1;
+      if (ten && slot >= 0) { ten.cd[slot + 1] = 0; if (ten.alive) this.heal(ten, HABILIDADES.almaErrante.curaKill, ten); this.emit({ k: 'txt', x: ten.x | 0, y: ten.y | 0, s: 'ALMA LISTA', id: ten.id }); }
+    }
     // Aracnida (Seba 28-10): si el mordido muere hasta 1,5 s después de la Mordida, su recarga baja a la mitad
     if (p.mordidaDe && this.combatTime - p.mordidaDe.t <= HABILIDADES.mordida.ventanaKill) {
       const ar = this.players.get(p.mordidaDe.id);
@@ -4392,6 +4528,7 @@ class Game {
       this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'MAXIMO DE ESQUELETOS', id: p.id });
       return;
     }
+    if ((key === 'escudoMusgo' || key === 'mantoLuz') && p.fx.silencioEscudo) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ESCUDO SILENCIADO', id: p.id }); return; }   // Siega de Tenebris
     if (key === 'escudoMusgo' && p.fx.sobre) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'NO MIENTRAS CRECE', id: p.id }); return; }   // Seba (28-10)
     if (h.ulti && p.ulti < 1) return;   // la ulti necesita la carga completa
     const n = numerosHab(key, p.build.niv[slot]);
@@ -4540,6 +4677,67 @@ class Game {
         const q = this._presaShai, pt = this._puntoShai; this._presaShai = null; this._puntoShai = null;
         if (q) this.backstabShai(p, q, n);
         else { this.emit({ k: 'blinkFalla', x: pt.x | 0, y: pt.y | 0 }); this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'FALLASTE', id: p.id }); }
+        break;
+      }
+      // ---------------------------------------------------------- Tenebris (Seba 30-10)
+      case 'almaErrante': {
+        const { a } = this.aim(p, h.alcance + 40);
+        p.facing = a;
+        const v = h.vel * RITMO.proyectil;
+        this.units.push({ id: this.nextId++, kind: 'almaErrante', owner: p.id, esUnidad: true, alive: true, sinCuerpo: true,
+          x: p.x + Math.cos(a) * 22, y: p.y + Math.sin(a) * 22, vx: Math.cos(a) * v, vy: Math.sin(a) * v, recorrido: 0, vuelve: false,
+          hp: 1, maxHp: 0, cd: 0, t: 0, dur: 0, facing: a, fx: {}, n });
+        break;
+      }
+      case 'siega': {
+        const { a } = this.aim(p, h.rango + 60);
+        p.facing = a; p.disparo = null;
+        const zona = { id: this.nextId++, kind: 'siegaAviso', x: p.x, y: p.y, r: h.rango, a, w: h.arco * Math.PI / 180, t: h.canal, total: h.canal, sigue: p,
+          fin: (z) => {
+            if (z.cancelado || !p.alive || !p.fx.canalSiega) return;
+            delete p.fx.canalSiega;
+            const mitad = h.arco * Math.PI / 360;
+            this.emit({ k: 'siega', x: p.x | 0, y: p.y | 0, a: +a.toFixed(2), r: h.rango });
+            for (const e of this.enemigos(p.id, false)) {
+              if (e.esUnidad && !e.enemigo && !['esqueleto', 'golem', 'dragon'].includes(e.kind)) continue;
+              const d = dist(e, p);
+              if (d > h.rango + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) continue;
+              if (d > CONFIG.RADIO_JUGADOR && angDiff(Math.atan2(e.y - p.y, e.x - p.x), a) > mitad + 0.2) continue;
+              if (e.esUnidad) { this.damage(e, e.kind === 'esqueleto' ? e.hp + 1 : e.hp * n.pct, p, { tipo: 'puro', desde: p }); continue; }
+              // rompe escudos y los silencia 1 s; después quita la mitad de la vida actual
+              if (e.fx.escudo || e.fx.manto) { delete e.fx.escudo; delete e.fx.manto; this.emit({ k: 'escudoRoto', x: e.x | 0, y: e.y | 0 }); }
+              this.aplicarEfecto(e, 'silencioEscudo', { t: n.silencio });
+              this.damage(e, e.hp * n.pct, p, { tipo: 'puro', desde: p });
+              this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: 'SEGADO' });
+              this.heal(p, h.cura, p);   // Seba (30-10): +75 por héroe golpeado
+            }
+          } };
+        this.zones.push(zona);
+        this.aplicarEfecto(p, 'canalSiega', { t: h.canal + 0.1, zona });
+        break;
+      }
+      case 'pozoMaldad': {
+        let x, y;
+        if (this._apunte) { const d = this.distApunte(h.alcance); x = p.x + Math.cos(this._apunte.a) * d; y = p.y + Math.sin(this._apunte.a) * d; }
+        else { const t = this.target(p, h.alcance); x = t ? t.x : p.x + Math.cos(p.facing) * h.alcance * 0.6; y = t ? t.y : p.y + Math.sin(p.facing) * h.alcance * 0.6; }
+        const c = { x, y }; this.clampWall(c);
+        p.disparo = null;
+        const zona = { id: this.nextId++, kind: 'pozoAviso', x: c.x, y: c.y, r: h.radio, t: h.canal, total: h.canal,
+          fin: (z) => {
+            if (z.cancelado || !p.alive || !p.fx.canalPozo) return;
+            delete p.fx.canalPozo;
+            const x0 = p.x, y0 = p.y;
+            p.x = c.x; p.y = c.y; p.kbx = p.kby = 0;
+            if (this.modo === 'equipos') this.chocarCamara(p);
+            this.chocarRocas(p, CONFIG.RADIO_JUGADOR);
+            this.emit({ k: 'blink', x1: x0 | 0, y1: y0 | 0, x2: p.x | 0, y2: p.y | 0 });
+            this.aplicarEfecto(p, 'pozo', { t: n.dur, n });
+            for (const e of this.jugadoresEnemigos(p.id)) if (dist(e, p) <= h.radio + CONFIG.RADIO_JUGADOR) this.aplicarEfecto(e, 'silence', { t: n.silencio });
+            this.emit({ k: 'boom', x: p.x | 0, y: p.y | 0, r: h.radio, c: 'gaia' });
+          } };
+        this.zones.push(zona);
+        this.aplicarEfecto(p, 'canalPozo', { t: h.canal + 0.1, zona });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'POZO DE LA MALDAD' });
         break;
       }
       case 'mantoLuz':
@@ -5004,6 +5202,32 @@ class Game {
       }
       if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'vida' }); }
     }
+    // Tenebris: Alma errante (lenta; va y vuelve por el mismo camino; maldice al primer héroe que toca)
+    for (const u of this.units) {
+      if (!u.alive || u.kind !== 'almaErrante') continue;
+      const own = this.players.get(u.owner), H = HABILIDADES.almaErrante;
+      if (!own) { u.alive = false; continue; }
+      // Seba (30-10): acelera con lo recorrido hasta el doble (vel → velMax en «acelera» de distancia)
+      u.total = u.total || 0;
+      const vel = (H.vel + (H.velMax - H.vel) * Math.min(1, u.total / H.acelera)) * RITMO.proyectil, va = Math.atan2(u.vy, u.vx);
+      u.vx = Math.cos(va) * vel; u.vy = Math.sin(va) * vel;
+      const sx = u.vx * dt, sy = u.vy * dt;
+      u.x += sx; u.y += sy; u.recorrido += Math.hypot(sx, sy); u.total += Math.hypot(sx, sy); u.t += dt;
+      let presa = null;
+      for (const q of this.jugadoresEnemigos(own.id)) { if (q.esUnidad && !q.enemigo) continue; if (dist(q, u) <= H.radio + CONFIG.RADIO_JUGADOR) { presa = q; break; } }
+      if (presa) {
+        u.alive = false;
+        this.aplicarEfecto(presa, 'dot', { t: u.n.dur, dps: u.n.dps, src: own.id, alma: true });
+        if (!presa.fx.slow || presa.fx.slow.mult >= 1 - u.n.lento) this.aplicarEfecto(presa, 'slow', { t: u.n.dur, mult: 1 - u.n.lento });
+        this.emit({ k: 'boom', x: presa.x | 0, y: presa.y | 0, r: 26, c: 'gaia' });
+        if (!presa.esUnidad) this.emit({ k: 'txt', x: presa.x | 0, y: presa.y | 0, s: 'MALDITO' });
+        continue;
+      }
+      // Seba (30-10): sin límite de distancia — llega al borde del mapa, vuelve y desaparece en el borde contrario
+      const fuera = Math.hypot(u.x, u.y) > CONFIG.RADIO_ARENA - 10 && (u.x * u.vx + u.y * u.vy) > 0;
+      if (fuera && !u.vuelve) { u.vuelve = true; u.vx = -u.vx; u.vy = -u.vy; u.recorrido = 0; u.facing += Math.PI; }
+      else if (fuera || u.t > 20) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'magia' }); }
+    }
     // Tek'Tal: muros de roca de la Fisura (duran 4 s)
     for (const u of this.units) {
       if (!u.alive || u.kind !== 'muroRoca') continue;
@@ -5152,7 +5376,7 @@ class Game {
       if (u.t >= u.dur) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0, c: 'magia' }); }
     }
     for (const u of this.units) {
-      if (!u.alive || u.enemigo || u.kind === 'orbeVida' || u.kind === 'circuloVida' || u.kind === 'mina' || u.kind === 'nubeTormenta' || u.kind === 'clon' || u.kind === 'tela' || u.kind === 'lanza' || u.kind === 'arenaEstepa' || u.kind === 'muroRoca') continue;
+      if (!u.alive || u.enemigo || u.kind === 'orbeVida' || u.kind === 'circuloVida' || u.kind === 'mina' || u.kind === 'nubeTormenta' || u.kind === 'clon' || u.kind === 'tela' || u.kind === 'lanza' || u.kind === 'arenaEstepa' || u.kind === 'muroRoca' || u.kind === 'almaErrante') continue;
       const d = UNIDADES[u.kind];
       const own = this.players.get(u.owner);
       if (u.kind === 'cucko') { this.tickEfectos(u, dt); continue; }   // se mueve en updateCucko
@@ -5421,6 +5645,15 @@ class Game {
           this.spawnProj(p, a, { vel: at.vel, alcance: at.alcance, radio: at.radio, dmg: p.st.dano, tipo: 'fis', spr: at.proj });
         }
         if (f.restan <= 0) delete p.fx.rafagaGaia;
+      }
+      // Tenebris: Pozo de la maldad (lo sigue bajo los pies)
+      if (p.fx.pozo) {
+        const f = p.fx.pozo, Rp = HABILIDADES.pozoMaldad.radio;
+        for (const e of this.enemigos(p.id, false)) {
+          if (e.kind === 'muro' || (e.esUnidad && UNIDADES[e.kind]?.invulnerable) || dist(e, p) > Rp + (e.esUnidad ? 10 : R)) continue;
+          this.damage(e, f.n.dps * dt, p, { tipo: 'mag', silencioso: true, ulti: true });
+          if (e.alive && (!e.fx || !e.fx.slow || e.fx.slow.mult >= 1 - f.n.lento)) this.aplicarEfecto(e, 'slow', { t: 0.25, mult: 1 - f.n.lento });
+        }
       }
       // Tek'Tal: la cadena del Grillete trae a su presa
       if (p.fx.encadenado) {
@@ -5831,7 +6064,7 @@ class Game {
         | (fx.escudo ? 67108864 : 0) | (fx.sobre ? 134217728 : 0) | (fx.enraizando ? 268435456 : 0) | (fx.mazazos ? 536870912 : 0) | (fx.jetpack ? 1073741824 : 0);
       ps.push([p.id, Math.round(p.x), Math.round(p.y), r1(p.hp), p.st.vidaMax, +p.facing.toFixed(2), flags,
         +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3), fx.escudo ? Math.ceil(fx.escudo.v) : 0, this.cargasHab(p), fx.saltoLanza ? +Math.min(1, fx.saltoLanza.el / fx.saltoLanza.total).toFixed(2) : 0,
-        (fx.canalGrillete ? 1 : 0) | (fx.canalPortal ? 2 : 0) | (fx.encadenado ? 4 : 0) | (fx.encadenando ? 8 : 0) | (fx.rafagaGaia ? 16 : 0) | (fx.canalLluvia ? 32 : 0) | (fx.rafagaShai ? 64 : 0) | (fx.manto ? 128 : 0) | (fx.dagasShai ? 256 : 0) | (fx.pacto || fx.impulsoShai ? 512 : 0), fx.rafagaShai ? +fx.rafagaShai.a0.toFixed(2) : 0]);   // 19: hacia dónde salen las dagas de Shai
+        (fx.canalGrillete ? 1 : 0) | (fx.canalPortal ? 2 : 0) | (fx.encadenado ? 4 : 0) | (fx.encadenando ? 8 : 0) | (fx.rafagaGaia ? 16 : 0) | (fx.canalLluvia ? 32 : 0) | (fx.rafagaShai ? 64 : 0) | (fx.manto ? 128 : 0) | (fx.dagasShai ? 256 : 0) | (fx.pacto || fx.impulsoShai ? 512 : 0) | (fx.canalSiega ? 1024 : 0) | (fx.canalPozo ? 2048 : 0) | (fx.pozo ? 4096 : 0), fx.rafagaShai ? +fx.rafagaShai.a0.toFixed(2) : 0]);   // 19: hacia dónde salen las dagas de Shai
     }
     return {
       t: 's', ph: this.phase, tm: +Math.max(0, this.timer).toFixed(1), ar: Math.round(this.arenaR),
@@ -6057,6 +6290,9 @@ function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
       case 'saltoJuicio': si = d < HABILIDADES.saltoJuicio.alcance + 20 && (!target.esUnidad); break;
       case 'mantoLuz': si = d < 140 || vida < 0.5; break;
       case 'secretoTemplario': si = d < 110; break;
+      case 'almaErrante': si = d < 500 && !target.esUnidad; break;
+      case 'siega': si = d < 95; break;
+      case 'pozoMaldad': si = d < 290 && !target.esUnidad; break;
       case 'pasoCeleste': si = (vida < 0.45 && d < 220) || (d > 200 && d < 330 && vida > 0.6); if (si && vida >= 0.45) { inp.sa = inp.sa || []; inp.sa[s] = Math.atan2(target.y - p.y, target.x - p.x); inp.sd = inp.sd || []; inp.sd[s] = Math.max(60, d - 40); inp.s[s] = (inp.s[s] || 0) + 1; si = false; } break;
       case 'lluviaEstrellas': si = d < 420; break;
       case 'fisura': si = d < 300; break;
@@ -7711,13 +7947,13 @@ class Renderer {
   gy(y) { return Math.round(y * ESC) + this.oy; }
 
   addEvent(ev) {
-    const dur = { aliento: 0.55, blinkFalla: 0.45, blink: 0.35, gancho: 0.3, backstab: 0.5, daga: 0.25, dagaVuelta: 0.4, sello: 0.5, portal: 0.55, fisura: 0.7, geiser: 0.7, meteoro: 0.55, mazazo: 0.45, raiz: 0.9, escudoRoto: 0.5, cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
-    const f = { ...ev, age: 0, dur: ev.k === 'slash' && ev.h === 'trelgon' ? 0.32 : (ev.k === 'daga' || ev.k === 'dagaVuelta') && ev.d ? ev.d : dur };
+    const dur = { siega: 0.5, aliento: 0.55, blinkFalla: 0.45, blink: 0.35, gancho: 0.3, backstab: 0.5, daga: 0.25, dagaVuelta: 0.4, sello: 0.5, portal: 0.55, fisura: 0.7, geiser: 0.7, meteoro: 0.55, mazazo: 0.45, raiz: 0.9, escudoRoto: 0.5, cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
+    const f = { ...ev, age: 0, dur: ev.k === 'slash' && ev.h === 'tenebris' ? 0.42 : ev.k === 'slash' && ev.h === 'trelgon' ? 0.32 : (ev.k === 'daga' || ev.k === 'dagaVuelta') && ev.d ? ev.d : dur };
     if (ev.k === 'death' || ev.k === 'heal' || ev.k === 'poof') {
       f.parts = Array.from({ length: ev.k === 'death' ? 16 : 7 }, (_, i) => ({ a: hash(i, ev.x | 0, ev.y | 0) * TAU, v: 20 + hash(i, 9, ev.x | 0) * (ev.k === 'death' ? 70 : 30) }));
     }
     if (ev.k === 'hit' || ev.k === 'cura') f.ox = Math.round((hash(ev.x | 0, ev.y | 0, this.time * 1000 | 0) - 0.5) * 10);
-    if (ev.k === 'slash' && ev.id !== undefined) this.swing.set(ev.id, { t: 0.18, a: ev.a });
+    if (ev.k === 'slash' && ev.id !== undefined) this.swing.set(ev.id, { t: ev.h === 'tenebris' ? 0.3 : 0.18, T: ev.h === 'tenebris' ? 0.3 : 0.18, a: ev.a });
     if (ev.k === 'golemGolpe') { (this.golpesGolem = this.golpesGolem || new Map()).set(ev.id, { t: this.time, x2: ev.x2, y2: ev.y2 }); return; }
     if (ev.k === 'bolt') f.seed = Math.floor(this.time * 1000);
     this.fx.push(f);
@@ -7738,6 +7974,28 @@ class Renderer {
     }
   }
 
+  // Tenebris: pozo de almas corrompidas (negro, borde verde, caras pálidas que giran y manos que asoman)
+  pozoAlmas(cx, cy, R, seed) {
+    const g = this.g, t = Math.floor(this.time * 6);
+    this.discDither(cx, cy, R, PALETA.tinta, 1, 0);   // Seba (30-10): un solo negro, el más oscuro
+    this.ring(cx, cy, R, PALETA.tinta, 1, 3);
+    this.ring(cx, cy, R, Math.floor(this.time * 5) % 2 ? PALETA.bosque1 : PALETA.bosque0, 1, 1);
+    for (let i = 0; i < 14; i++) {   // remolino de niebla verde
+      const a = -this.time * 1.8 + i * (TAU / 14), d = R * (0.55 + 0.15 * Math.sin(this.time * 3 + i));
+      this.px(Math.round(cx + Math.cos(a) * d), Math.round(cy + Math.sin(a) * d * 0.85), i % 3 ? PALETA.bosque1 : PALETA.bosque2);
+    }
+    for (let i = 0; i < 16; i++) {
+      const a = this.time * (i % 2 ? 1.3 : -0.9) + hash(i, 3, seed) * TAU, d = R * (0.25 + hash(i, 6, seed) * 0.65);
+      const x = Math.round(cx + Math.cos(a) * d), y = Math.round(cy + Math.sin(a) * d * 0.85), ph = (this.time * 0.8 + hash(i, 9, seed)) % 1;
+      if (i < 8) {   // caritas de alma: dos ojos y una boca abierta
+        g.fillStyle = PALETA.noche; g.fillRect(x - 2, y - 2, 5, 5);
+        g.fillStyle = ph < 0.5 ? PALETA.bosque2 : PALETA.acero2; g.fillRect(x - 1, y - 1, 1, 1); g.fillRect(x + 1, y - 1, 1, 1); g.fillRect(x, y + 1, 1, 1);
+      } else {         // almas que suben del pozo
+        const yy = y - Math.round(ph * 14);
+        g.globalAlpha = 1 - ph; g.fillStyle = PALETA.tinta; g.fillRect(x - 1, yy - 1, 3, 4); g.fillStyle = PALETA.bosque2; g.fillRect(x, yy, 1, 2); g.globalAlpha = 1;
+      }
+    }
+  }
   arc(cx, cy, r, a0, a1, col, grosor = 1) {
     const g = this.g;
     g.fillStyle = col;
@@ -7896,6 +8154,19 @@ class Renderer {
         this.ring(cx, cy, r + w, parpadeo ? PALETA.oro2 : PALETA.antorcha, 1, 1);
         this.ring(cx, cy, r0, PALETA.carmesi1, 0.8, 1);
         for (let i = 0; i < 10; i++) { const a = (i / 10) * TAU + z.prog, rr = r + Math.round((hash(i, 2, z.id) - 0.5) * w * 1.5); this.px(Math.round(cx + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr) - (t + i) % 3, PALETA.antorcha); }
+      } else if (z.kind === 'siegaAviso') {
+        // Siega: media luna oscura que se llena mientras Tenebris canaliza
+        const rr = Math.max(2, Math.round(r * z.prog));
+        for (let k = 4; k <= rr; k += 3) this.arc(cx, cy - 2, k, z.a - z.w / 2, z.a + z.w / 2, PALETA.noche, 1);
+        this.arc(cx, cy - 2, r, z.a - z.w / 2, z.a + z.w / 2, PALETA.tinta, 3);
+        this.arc(cx, cy - 2, r, z.a - z.w / 2, z.a + z.w / 2, parpadeo ? PALETA.pergamino2 : PALETA.bosque2, 1);
+      } else if (z.kind === 'pozoAviso') {
+        // Pozo de la maldad: un pozo negro se abre donde va a aparecer Tenebris
+        const rr = Math.max(3, Math.round(r * (0.25 + z.prog * 0.75)));
+        this.discDither(cx, cy, rr, PALETA.tinta, 2, t);
+        this.ring(cx, cy, r, PALETA.tinta, 1, 3);
+        this.ring(cx, cy, r, parpadeo ? PALETA.pergamino2 : PALETA.bosque1, 1, 1);
+        for (let i = 0; i < 6; i++) { const a = this.time * 2 + i * (TAU / 6), d = rr * 0.7; this.px(Math.round(cx + Math.cos(a) * d), Math.round(cy + Math.sin(a) * d * 0.8), PALETA.bosque2); }
       } else if (z.kind === 'mira') {
         const rr = 9 - Math.round(z.prog * 4);
         this.ring(cx, cy - 6, rr, PALETA.carmesi2, 1);
@@ -7904,6 +8175,8 @@ class Renderer {
       }
     }
 
+    // Tenebris: Pozo de la maldad en el suelo, bajo sus pies (lo sigue)
+    for (const p of view.players) if (p.f2 & 4096) this.pozoAlmas(this.gx(p.x), this.gy(p.y) + 2, Math.round(HABILIDADES.pozoMaldad.radio * ESC), 7);
     // Trampas (solo las ve su dueño)
     for (const u of view.units) if (u.kind === 'trampa' && u.owner === myId) {
       const s = otro('trampa');
@@ -8188,6 +8461,19 @@ class Renderer {
       this.ring(cx, cy + 4, 7, PALETA.carmesi2, 1, 1);
       for (let i = 0; i < 6; i++) { const a = -this.time * 8 + i * (TAU / 6); g.fillStyle = PALETA.pergamino2; g.fillRect(Math.round(cx + Math.cos(a) * (10 + k)), Math.round(cy + 4 + Math.sin(a) * (6 + k)), 1, 1); }
     }
+    // Tenebris: Pozo de la maldad bajo los pies (se dibuja con el héroe para que lo siga)
+    // Tenebris canalizando la Siega o el Pozo: niebla negra que gira y almas verdes que suben
+    if (p.f2 & 3072) {
+      const pozo = p.f2 & 2048, k = Math.floor(this.time * 10) % 2;
+      this.ring(cx, cy + 4, 14, PALETA.tinta, 1, 4);
+      this.ring(cx, cy + 4, 14, k ? PALETA.bosque2 : PALETA.bosque1, 1, 1);
+      for (let i = 0; i < (pozo ? 7 : 4); i++) {
+        const a = this.time * (pozo ? -5 : 7) + i * (TAU / (pozo ? 7 : 4)), ph = (this.time * 1.6 + i * 0.37) % 1;
+        const x = Math.round(cx + Math.cos(a) * 12), y = Math.round(cy + 4 + Math.sin(a) * 6 - ph * 16);
+        g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 4);
+        g.fillStyle = ph < 0.5 ? PALETA.bosque2 : PALETA.acero2; g.fillRect(x, y, 1, 2);
+      }
+    }
     // Tek'Tal canalizando el Grillete: magma que late en el pecho y anillo naranjo
     if (p.f2 & 1) {
       const on = Math.floor(this.time * 10) % 2;
@@ -8206,8 +8492,14 @@ class Renderer {
     let ang = p.f, verArma = key !== 'puno';
     let estoque = 0;   // Shai: la daga se clava hacia adelante en vez de barrer
     if (sw && sw.t > 0) {
-      const t = 1 - Math.max(0, sw.t) / 0.18;
+      const t = 1 - Math.max(0, sw.t) / (sw.T || 0.18);
       ang = sw.a + (key === 'puno' || meta.build.heroe === 'shai' ? 0 : (izq ? 1 : -1) * lerp(-1.1, 1.1, t));
+      if (meta.build.heroe === 'tenebris') {
+        // Guadaña: se echa atrás (anticipación) y barre de golpe toda la media luna; al final queda adelante
+        const e = t < 0.22 ? -0.25 * (t / 0.22) : -0.25 + 1.25 * (1 - Math.pow(1 - (t - 0.22) / 0.78, 3));
+        ang = sw.a - 1.7 + 3.4 * Math.max(0, e) - 0.6 * Math.max(0, -e) * 4;
+        estoque = t < 0.22 ? -2 : Math.round(Math.sin(Math.PI * Math.min(1, (t - 0.22) / 0.78)) * 5);
+      }
       if (meta.build.heroe === 'shai') estoque = Math.round(Math.sin(Math.PI * Math.min(1, t * 1.3)) * 9);
       verArma = true;
     }
@@ -8227,14 +8519,24 @@ class Renderer {
     const sube = montado ? 11 : 0;
     const atras = montado ? (izq ? 6 : -6) : 0; // el jinete va sobre el lomo, no tapa la cabeza del caballo
     const ex = Math.round(Math.cos(ang) * estoque), ey = Math.round(Math.sin(ang) * estoque);
-    const dibArma = () => gigante === 1 ? g.drawImage(arma, hx - 14 + atras + ex, hy - 14 - sube + ey)
-      : g.drawImage(arma, Math.round(hx - 14 * gigante), Math.round(hy - 14 * gigante), Math.round(arma.width * gigante), Math.round(arma.height * gigante));
+    const ac = arma ? arma.width >> 1 : 14;
+    const dibArma = () => gigante === 1 ? g.drawImage(arma, hx - ac + atras + ex, hy - ac - sube + ey)
+      : g.drawImage(arma, Math.round(hx - ac * gigante), Math.round(hy - ac * gigante), Math.round(arma.width * gigante), Math.round(arma.height * gigante));
     // Takichi: el segundo sable en la otra mano, con el mismo ángulo (se mueven juntos)
     const dosArmas = arma && HEROES[meta.build.heroe]?.dosArmas;
     const sable2 = () => g.drawImage(arma, hx - (izq ? -3 : 3) - 14, hy + 4 - 14 - sube);   // segundo sable, paralelo y un poco más abajo
     if (arma && detras) { dibArma(); if (dosArmas) sable2(); }
     if (gigante === 1) g.drawImage(spr, sx + atras, sy - sube);
     else g.drawImage(spr, sx, sy, Math.round(spr.width * gigante), Math.round(spr.height * gigante));
+    if (meta.build.heroe === 'tenebris' && gigante === 1) {
+      // ojos verdes que titilan dentro de la capucha (a veces se apagan, a veces brillan)
+      const sem = (meta.colorIdx || 0) * 0.77, fase = (this.time * 1.3 + sem) % 3.2, on = fase > 0.12 && !(fase > 1.9 && fase < 1.98);
+      const brillo = Math.floor(this.time * 7 + sem * 3) % 3 === 0;
+      for (const ox of [8, 11]) {
+        const x = sx + atras + 1 + (izq ? 20 - ox : ox), y = sy - sube + 1 + 9;
+        g.fillStyle = on ? (brillo ? PALETA.pergamino2 : PALETA.bosque2) : PALETA.tinta; g.fillRect(x, y, 1, 1);
+      }
+    }
     if (arma && !detras) { dibArma(); if (dosArmas) sable2(); }
 
     // Escudo de musgo: burbuja verde con hojas que giran
@@ -8768,6 +9070,19 @@ class Renderer {
       if (u.resta > 0) { const s = texto(String(Math.ceil(u.resta)) + (u.elite > 1 ? '  x' + String(u.elite).replace('.', ',') : ''), u.elite > 1 ? PALETA.oro2 : PALETA.acero2); g.drawImage(s, cx - (s.width >> 1), cy - R - 10); }
       return;
     }
+    if (u.kind === 'almaErrante') {
+      // Alma errante (Seba 30-10): fantasma de manto negro con cara de calavera negra, ojos verdes y estela de niebla
+      const g = this.g, cx = this.gx(u.x), cy = this.gy(u.y) - 8 + Math.round(Math.sin(this.time * 6 + u.id) * 2);
+      const ca = Math.cos(u.f), sa = Math.sin(u.f);
+      for (let i = 1; i <= 6; i++) {
+        const x = Math.round(cx - ca * i * 4 + Math.sin(this.time * 9 + i) * 1.5), y = Math.round(cy + 3 - sa * i * 4);
+        g.globalAlpha = 1 - i / 7; g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 3); g.fillStyle = i < 3 ? PALETA.piedra1 : PALETA.noche; g.fillRect(x, y, 1, 1);
+      }
+      g.globalAlpha = 1;
+      const s = otro('almaErrante', Math.floor(this.time * 6) % 2, ca < 0);
+      g.drawImage(s, cx - s.width, cy - s.height, s.width * 2, s.height * 2);
+      return;
+    }
     if (u.kind === 'lanza') {
       // Lanza errante de Kazaro: vuela girada, clavada se ve con el área de curación que late
       const g = this.g, cx = this.gx(u.x), cy = this.gy(u.y);
@@ -8960,6 +9275,42 @@ class Renderer {
       switch (f.k) {
         case 'slash': {
           // Golpes característicos por héroe (Seba 28-10)
+          if (f.h === 'tenebris') {
+            // Tenebris: media luna de guadaña — un tajo ancho que barre de un lado al otro (filo blanco adelante,
+            // estela de acero que se afina y se vuelve niebla verde) y almas que se desprenden del corte
+            const t2 = Math.max(0, (t - 0.12) / 0.88), e = 1 - Math.pow(1 - Math.min(1, t2 * 1.9), 3);
+            const R0 = Math.round(f.r * 0.8 * ESC), y0 = cy - 6, W = f.w + 0.5, a0 = f.a - W / 2, head = a0 + W * e;
+            if (t < 0.12) {   // anticipación: un destello en la hoja, atrás
+              const x = Math.round(cx + Math.cos(a0) * R0), y = Math.round(y0 + Math.sin(a0) * R0);
+              g.fillStyle = PALETA.tinta; g.fillRect(x - 2, y - 2, 5, 5); g.fillStyle = PALETA.pergamino2; g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3);
+              break;
+            }
+            const fade = t2 > 0.6 ? 1 - (t2 - 0.6) / 0.4 : 1;
+            g.globalAlpha = fade;
+            const tail = Math.max(a0, head - 2.2);
+            // media luna que se afina hacia atrás: gruesa en el filo, delgada en la cola
+            this.arc(cx, y0, R0 - 1, tail, head, PALETA.tinta, 2);
+            this.arc(cx, y0, R0 - 3, Math.max(tail, head - 1.5), head, PALETA.tinta, 3);
+            this.arc(cx, y0, R0 - 5, Math.max(tail, head - 0.8), head, PALETA.tinta, 3);
+            this.arc(cx, y0, R0, tail, head, PALETA.bosque1, 1);
+            this.arc(cx, y0, R0 - 2, Math.max(tail, head - 1.5), head, PALETA.acero1, 2);
+            this.arc(cx, y0, R0 - 1, Math.max(tail, head - 1.0), head, PALETA.acero2, 2);
+            this.arc(cx, y0, R0 - 4, Math.max(tail, head - 0.7), head, PALETA.acero2, 1);
+            this.arc(cx, y0, R0, Math.max(tail, head - 0.5), head, PALETA.pergamino2, 1);
+            // punta del filo
+            const hx = Math.round(cx + Math.cos(head) * R0), hy = Math.round(y0 + Math.sin(head) * R0);
+            if (e < 1) { g.fillStyle = PALETA.pergamino2; g.fillRect(hx - 1, hy - 1, 3, 3); }
+            // almas que se desprenden del corte y suben
+            for (let i = 0; i < 6; i++) {
+              const aa = a0 + W * (0.1 + 0.16 * i); if (aa > head) break;
+              const d = R0 + 2 + hash(i, f.x | 0, 7) * 6, sube = Math.round(t2 * (8 + i * 2));
+              const x = Math.round(cx + Math.cos(aa) * d), y = Math.round(y0 + Math.sin(aa) * d) - sube;
+              g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 4);
+              g.fillStyle = i % 2 ? PALETA.bosque2 : PALETA.acero2; g.fillRect(x, y, 1, 2);
+            }
+            g.globalAlpha = 1;
+            break;
+          }
           if (f.h === 'shai') {
             // Shai (Seba 30-10): estocada de asesina — línea de acero que se clava al frente, imagen residual color magia y un tajo corto
             const ca = Math.cos(f.a), sa = Math.sin(f.a), L = Math.round((f.r + 12) * ESC * Math.min(1, t * 2.2)), y0 = cy - 6;
@@ -9144,6 +9495,22 @@ class Renderer {
             this.ring(x2, y2 + 4, Math.max(2, r), PALETA.oro2, 1 - t * 0.6);
             this.llamasAzules(x2, y2 + 6, 3, Math.max(6, r), 'magma');
           }
+          break;
+        }
+        case 'siega': {
+          // Siega: gran media luna negra con filo blanco y almas que se escapan
+          const R0 = Math.round(f.r * ESC), e = 1 - Math.pow(1 - Math.min(1, t * 3), 3), W = Math.PI, a0 = f.a - W / 2, head = a0 + W * e;
+          g.globalAlpha = t > 0.6 ? (1 - t) / 0.4 : 1;
+          for (let k = 0; k < R0 - 4; k += 3) this.arc(cx, cy - 4, R0 - k, Math.max(a0, head - 1.6), head, k < 4 ? PALETA.tinta : PALETA.noche, 2);
+          this.arc(cx, cy - 4, R0 + 1, a0, head, PALETA.tinta, 3);
+          this.arc(cx, cy - 4, R0, Math.max(a0, head - 2), head, PALETA.bosque2, 1);
+          this.arc(cx, cy - 4, R0 - 2, Math.max(a0, head - 0.9), head, PALETA.pergamino2, 2);
+          for (let i = 0; i < 9; i++) {
+            const aa = a0 + W * hash(i, 4, f.x | 0), d = R0 * (0.4 + hash(i, 8, f.y | 0) * 0.6), ph = t * (14 + i * 2);
+            const x = Math.round(cx + Math.cos(aa) * d + Math.sin(ph * 0.5) * 2), y = Math.round(cy - 4 + Math.sin(aa) * d - ph);
+            g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 3, 4); g.fillStyle = i % 3 ? PALETA.bosque2 : PALETA.pergamino2; g.fillRect(x, y, 1, 2);
+          }
+          g.globalAlpha = 1;
           break;
         }
         case 'blink': {
@@ -10513,6 +10880,13 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
 const PATCH_NOTES = [
+  { v: 'V2.6', f: '30-10-2026', n: [
+    'Nuevo héroe: Tenebris, la parca (Renegados · daño y control). 370 de vida, guadaña cuerpo a cuerpo.',
+    'Manto de sombras (pasiva): 10% menos de daño mientras canaliza la Siega o el Pozo.',
+    'Alma errante: un alma lenta que acelera y cruza el mapa de borde a borde; maldice al primer héroe que toca (20 por segundo y 20% más lento por 4 s). Si muere maldito, Tenebris recupera 25 de vida y el Alma vuelve a estar lista.',
+    'Siega: canaliza 1 s y quita el 50% de la vida actual a los enemigos al frente; rompe escudos y recupera 75 de vida por héroe golpeado.',
+    'Pozo de la maldad (ulti): canaliza 2 s, aparece en el punto apuntado y silencia 0,5 s; el pozo lo sigue 5 s (25 por segundo y 25% más lentos).',
+    'Tabla de matchups actualizada con Tenebris.' ] },
   { v: 'V2.5', f: '30-10-2026', n: [
     'Celular: el joystick ahora solo marca la dirección; apenas lo mueves corres al 100% (antes la velocidad dependía de cuánto alejabas el dedo y al atacar se perdía velocidad sin querer).' ] },
   { v: 'V2.4', f: '30-10-2026', n: [
