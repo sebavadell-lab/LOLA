@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V1.1 A</title>
+<title>LOLA V1.2 A</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -839,7 +839,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V1.1 A</p>
+        <p class="sub version">LOLA V1.2 A</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -1230,10 +1230,10 @@ const HEROES = {
   },
 };
 
-// Seba (30-10): Shai, asesina templaria (Aliados). Daño, asesinato y sigilo; balance cercano a Takichi. Números (C).
+// Seba (30-10): Shai, asesina templaria (Renegados desde el 30-10). Daño, asesinato y sigilo; balance cercano a Takichi. Números (C).
 Object.assign(HEROES, {
   shai: {
-    casa: 'aliados',
+    casa: 'renegados',   // Seba (30-10): pasa a Renegados
     nombre: 'Shai', rol: 'Asesina', fondo: 'shai', arma: 'dagaShai',
     desc: 'Asesina templaria de negro, con capucha y una daga larga. Aparece a la espalda de su presa, se cubre con un manto de luz y la llena de dagas mágicas que vuelven a ella.',
     vida: 370, dano: 32, recarga: 1.0, ultiCarga: 300, velocidad: 160,
