@@ -770,6 +770,15 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 .col-casa.renegados .col-h { background: var(--carm1); box-shadow: inset 0 -3px 0 var(--carm0); }
 .col-casa .col-t { text-shadow: 2px 2px 0 var(--tinta); }
 .col-acc { display: flex; justify-content: center; }
+/* Seba (30-10): aviso de kill con caras 8 bit */
+#feed .fi.kf { display: flex; align-items: center; gap: 6px; padding: 3px 8px; background: rgba(26, 20, 36, 0.75); }
+#feed .fi.kf.yo { box-shadow: inset 0 -2px 0 var(--oro2); }
+#feed .kf-cara { width: 36px; height: 34px; image-rendering: pixelated; flex: none; }
+#feed .kf-n { font-weight: normal; }
+#feed .kf-n.az { color: var(--acero2); } #feed .kf-n.ro { color: var(--carm2); }
+#feed .kf-n.c0 { color: var(--carm2); } #feed .kf-n.c1 { color: var(--acero2); } #feed .kf-n.c2 { color: var(--bosq2); } #feed .kf-n.c3 { color: var(--oro2); }
+#feed .kf-v { color: var(--perg1); }
+@media (max-height: 420px) { #feed .kf-cara { width: 27px; height: 26px; } }
 
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
@@ -3158,6 +3167,29 @@ Object.assign(GLIFOS, {
 });
 Object.assign(FONDOS, { shai: ['k', 'n'] });
 
+// Seba (30-10): retrato «solo de la cara» de cada héroe (8 bit), para el aviso de kills y otros íconos.
+// Se recorta la cabeza del sprite del personaje y se pone sobre un marco oscuro.
+const cacheCara = new Map();
+function caraHeroe(heroe, color = 0) {
+  const k = heroe + '|' + color;
+  if (cacheCara.has(k)) return cacheCara.get(k);
+  const pj = personaje({ clase: heroe, ropa: 0, arbol: null, botas: false, color }, 0).der;
+  const W = 18, H = 17, c = nuevoCanvas(W, H), g = c.getContext('2d');
+  g.fillStyle = PALETA.tinta; g.fillRect(0, 0, W, H);
+  g.fillStyle = PALETA.noche; g.fillRect(1, 1, W - 2, H - 2);
+  g.fillStyle = PALETA.piedra0; g.fillRect(1, H - 4, W - 2, 3);
+  // la cabeza ocupa las filas 2 a 16 del sprite (22x24 con contorno)
+  g.save(); g.beginPath(); g.rect(1, 1, W - 2, H - 2); g.clip();
+  g.drawImage(pj, 2, 2, 18, 15, 0, 1, 18, 15);
+  g.restore();
+  // Detalles para reconocer a los de cara oscura (Seba 30-10)
+  const px = (x, y, col) => { g.fillStyle = col; g.fillRect(x, y, 1, 1); };
+  if (heroe === 'nigromante') { for (const x of [7, 10]) { px(x, 9, PALETA.magia); px(x, 10, PALETA.magia); px(x, 9, PALETA.pergamino2); } }   // Karilthal: ojos encendidos
+  if (heroe === 'shai') { for (const x of [7, 10]) { px(x, 9, PALETA.magia); px(x, 8, PALETA.tinta); } }   // Shai: ojos color magia
+  cacheCara.set(k, c);
+  return c;
+}
+
 // ===== sim.js =====
 // =====================================================================
 //  LOLA — SIMULACIÓN AUTORITATIVA (corre en el anfitrión / modo práctica)
@@ -3744,7 +3776,7 @@ class Game {
     if (killer && killer !== p && this.teamOf(killer.id) !== this.teamOf(p.id)) {
       killer.killsRound++;
       killer.racha = (killer.racha || 0) + 1;
-      this.emit({ k: 'feedKill', s: `${killer.name} derrotó a ${p.name}` });
+      this.emit({ k: 'feedKill', s: `${killer.name} derrotó a ${p.name}`, ka: killer.id, kb: p.id });   // Seba (30-10): con ids para el aviso con caras
       // Racha (Seba 28-10): mensaje desde 2 kills seguidas sin morir
       if (killer.racha >= 2) this.emit({ k: 'anuncio', s: `${killer.name} ha matado ${killer.racha} enemigos sin morir`, chico: true });
       if (this.modo === 'equipos') { this.marcador[this.teamOf(killer.id)]++; this.metaDirty = true; }
@@ -9205,6 +9237,7 @@ function url(key, fn, escala = 2) {
 }
 const imgIcono = (glifo, fondo, escala = 2) => url(`i:${glifo}:${fondo}:${escala}`, () => icono(glifo, fondo), escala);
 const imgArma = (key, escala = 2) => url(`a:${key}:${escala}`, () => iconoArma(key), escala);
+const imgCara = (heroe, color = 0, escala = 2) => url(`c:${heroe}:${color}:${escala}`, () => caraHeroe(heroe, color), escala);
 const imgRetrato = (look, arma, escala = 3) => url(`r:${JSON.stringify(look)}:${arma}:${escala}`, () => retrato(look, arma), escala);
 const retratoDe = (p, escala = 3) => imgRetrato(lookDe(p.build, p.colorIdx), armaSprite(p.build), escala);
 const retratoHeroe = (k, color, escala = 3) => imgRetrato(lookDe({ heroe: k, niv: [1, 1, 1] }, color), HEROES[k].arma, escala);
@@ -9391,6 +9424,23 @@ function boletin(text, tipo = '') {
   const el = document.createElement('div');
   el.className = 'fi ' + tipo;
   el.textContent = text;
+  f.prepend(el);
+  while (f.children.length > 4) f.lastChild.remove();
+  setTimeout(() => el.classList.add('fuera'), 3200);
+  setTimeout(() => el.remove(), 3800);
+}
+
+// Seba (30-10): aviso de kill con la cara 8 bit de cada héroe y el nombre en el color de su equipo
+function avisoKill(ev) {
+  const a = S.metaById.get(ev.ka), b = S.metaById.get(ev.kb);
+  if (!a || !b || !a.build.heroe || !b.build.heroe) { boletin(ev.s, 'kill'); return; }
+  const eqs = S.meta && S.meta.modo === 'equipos' ? S.meta.equipos : null;
+  const colJ = (m) => eqs ? (eqs[m.id] === 'A' ? 'az' : 'ro') : 'c' + (m.colorIdx % 4);
+  const caraC = (m) => eqs ? (eqs[m.id] === 'A' ? 1 : 0) : m.colorIdx;
+  const pj = (m) => `<img class="kf-cara" alt="${esc(HEROES[m.build.heroe].nombre)}" src="${imgCara(m.build.heroe, caraC(m), 2)}"><b class="kf-n ${colJ(m)}">${esc(m.name)}</b>`;
+  const f = $('feed'), el = document.createElement('div');
+  el.className = 'fi kill kf' + (ev.ka === S.myId || ev.kb === S.myId ? ' yo' : '');
+  el.innerHTML = `${pj(a)}<span class="kf-v">mató a</span>${pj(b)}`;
   f.prepend(el);
   while (f.children.length > 4) f.lastChild.remove();
   setTimeout(() => el.classList.add('fuera'), 3200);
@@ -10277,7 +10327,7 @@ function frame(now) {
   lastFrame = now;
   const latest = S.buf.latest();
   renderer.myId = S.myId;
-  const view = S.buf.sample(now - (isAuth() ? 40 : 110), (ev) => { if (ev.k === 'anuncio') { boletin(ev.s, ev.chico ? 'racha' : ''); sonido.anuncio(ev.s, ev.chico ? 'racha' : ''); } else if (ev.k === 'feedKill') { boletin(ev.s, 'kill'); sonido.anuncio(ev.s, 'kill'); } else { renderer.addEvent(ev); sonido.evento(ev); } });
+  const view = S.buf.sample(now - (isAuth() ? 40 : 110), (ev) => { if (ev.k === 'anuncio') { boletin(ev.s, ev.chico ? 'racha' : ''); sonido.anuncio(ev.s, ev.chico ? 'racha' : ''); } else if (ev.k === 'feedKill') { avisoKill(ev); sonido.anuncio(ev.s, 'kill'); } else { renderer.addEvent(ev); sonido.evento(ev); } });
   sonido.lx = renderer.cam.x; sonido.ly = renderer.cam.y;
   { const mm = S.metaById && S.metaById.get(S.myId); sonido.nombre = mm ? mm.name : ''; }
   if (view && latest && (latest.ph === 'combat' || latest.ph === 'countdown')) sonido.vista(view, S.myId);
