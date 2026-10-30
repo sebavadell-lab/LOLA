@@ -738,6 +738,17 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 @media (prefers-reduced-motion: reduce) { .dp-slot.toca, .dr-flash { animation: none; } }
 .dr-picks { position: sticky; top: 0; z-index: 10; background: var(--tinta); padding-block: 6px; box-shadow: 0 4px 0 var(--noche); }
 
+/* Seba (30-10): espectar al morir */
+#spec { position: fixed; inset: 0; z-index: 7; pointer-events: none; }
+#spec-capa { position: absolute; inset: 0; pointer-events: auto; touch-action: none; cursor: grab; }
+#spec-bar { position: absolute; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; align-items: center; gap: 6px; pointer-events: auto; background: var(--tinta); border: 2px solid var(--oro0); padding: 4px; }
+#spec-bar button { font: 16px var(--f-num); width: 40px; height: 40px; background: var(--noche); color: var(--oro2); border: 2px solid var(--oro0); cursor: pointer; }
+#spec-bar button:disabled { opacity: .35; cursor: default; }
+#spec-n { font: 12px var(--f-num); color: var(--perg2); min-width: 150px; text-align: center; text-transform: uppercase; }
+#spec-tip { position: absolute; left: 50%; bottom: calc(80px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); font: 10px var(--f-num); color: var(--perg2); text-shadow: 1px 1px 0 var(--tinta); white-space: nowrap; }
+#dr-picks .dp-slot.lleno, #dr-bans .db { cursor: pointer; }
+#dr-picks .dp-slot.lleno:hover, #dr-picks .dp-slot.lleno:focus-visible { border-color: var(--oro2); outline: 2px solid var(--oro2); }
+
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
 .demo-note b{color:var(--carm1)}
@@ -781,6 +792,11 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
     <div id="feed"></div>
     <div id="banner" class="hidden"></div>
     <div id="countdown" class="hidden"></div>
+    <div id="spec" class="hidden">
+        <div id="spec-capa"></div>
+        <div id="spec-bar"><button id="spec-ant" aria-label="Aliado anterior">◀</button><span id="spec-n">Cámara libre</span><button id="spec-sig" aria-label="Aliado siguiente">▶</button></div>
+        <small id="spec-tip">Arrastra para mirar el mapa</small>
+      </div>
   </div>
 
   <!-- Seba (29-10): pausa en partida (esquina, fuera de la zona de juego) -->
@@ -1008,8 +1024,8 @@ const CONFIG = {
     esperaBot: 1.5,   // lo que tarda un bot en jugar su turno
   },
   REAPARECER: 5,                // todos contra todos
-  REAPARECER_PASO: 4,
-  INVULNERABLE_REAPARECER: 1.5,   // Seba (28-10): al reaparecer, 1,5 s sin recibir daño (tampoco ataca ni lanza habilidades; sí se mueve)           // 1v1 / 2v2 (Seba 28-10): 4 s la 1ª muerte, 8 s la 2ª, 12 s la 3ª...
+  REAPARECER_PASO: 3,           // 1v1 / 2v2 (Seba 29-10): 3 s la 1ª muerte, 6 s la 2ª, 9 s la 3ª...
+  INVULNERABLE_REAPARECER: 1.5,   // Seba (28-10): al reaparecer, 1,5 s sin recibir daño (tampoco ataca ni lanza habilidades; sí se mueve)
   // 1v1 / 2v2 (Seba 28-10): una sola partida, sin rondas. Dos círculos al norte, uno en el lado de cada equipo.
   // Rojo captura el círculo azul y viceversa (el dueño del lado puede recuperarlo). Se abren a los 25 s; 5 s solo dentro.
   // Gana quien, a la vez, tenga capturado el círculo rival y lleve 10 kills. Tope de seguridad: 10 min (gana quien tenga más kills).
@@ -1178,6 +1194,19 @@ const HEROES = {
   },
 };
 
+// Seba (30-10): Shai, asesina templaria (Aliados). Daño, asesinato y sigilo; balance cercano a Takichi. Números (C).
+Object.assign(HEROES, {
+  shai: {
+    casa: 'aliados',
+    nombre: 'Shai', rol: 'Asesina', fondo: 'shai', arma: 'dagaShai',
+    desc: 'Asesina templaria de negro, con capucha y una daga larga. Aparece a la espalda de su presa, se cubre con un manto de luz y la llena de dagas mágicas que vuelven a ella.',
+    vida: 370, dano: 32, recarga: 1.0, ultiCarga: 300, velocidad: 160,
+    ataque: { tipo: 'melee', rango: 55, arco: 100 },
+    habs: ['saltoJuicio', 'mantoLuz', 'secretoTemplario'],
+    pasiva: 'pactoSangre',
+  },
+});
+
 // Seba (29-10): Tek'Tal queda fuera del juego por ahora (no aparece en el draft). Todo su código, habilidades y sprites
 // se mantienen; para volver a activarlo basta con pasar esta ficha de vuelta a HEROES.
 const HEROES_GUARDADOS = {
@@ -1340,6 +1369,19 @@ Object.assign(HABILIDADES, {
   lluviaEstrellas: { nombre: 'Lluvia de estrellas', glifo: 'estrellas', cd: 50, ulti: true, distancias: [120, 260, 400], radio: 80, cada: 0.805, aviso: 0.575,   // Seba (29-10): meteoros 15% más lentos (0,7 → 0,805 s; caída 0,5 → 0,575 s)
                    desc: (n) => `Te quedas quieta canalizando mientras caen 3 meteoros en línea recta, uno tras otro (cada ${fmtN(HABILIDADES.lluviaEstrellas.cada)} s): uno cerca, otro a media distancia y otro lejos. Nada interrumpe la canalización, pero sí puedes recibir daño. Cada meteoro hace ${n.dano} de daño y aturde ${fmtN(n.aturde)} s.`,
                    n1: { dano: 125, aturde: 1 }, n2: { dano: 162, aturde: 1 } },
+  // ---- Shai (Seba, 30-10; números (C))
+  // Seba (30-10): rework 2 — blink apuntado como la bomba de Biteroi (a un punto, alcance corto-medio). Si no hay un héroe
+  // enemigo en ese punto, no se teletransporta y la habilidad igual entra en recarga.
+  saltoJuicio:   { nombre: 'Salto del juicio', glifo: 'ganchoShai', cd: 10, cdFijo: true, alcance: 137, area: 45,   // Seba (30-10): alcance −15% (230 → 196) y luego −30% (196 → 137)
+                   desc: (n) => `Apuntas a un punto (hasta ${HABILIDADES.saltoJuicio.alcance} de distancia). Si hay un héroe enemigo ahí (si hay varios, el de menos vida; tocando sin apuntar, el de menos vida a tu alcance), desapareces, apareces a su espalda y lo apuñalas: ${n.dano} de daño. Si fallas, no te mueves y la habilidad igual se recarga. Si lo matas, quedas invisible y con +${Math.round(n.vel * 100)}% de velocidad por ${n.invis} s.`,
+                   n1: { dano: 100, invis: 2, vel: 0.5 }, n2: { dano: 130, invis: 2, vel: 0.5 } },
+  mantoLuz:      { nombre: 'Manto de luz', glifo: 'mantoLuz', cd: 16, cdFijo: true,
+                   desc: (n) => `Te rodeas de una malla de luz por ${n.dur} s: recibes ${Math.round(n.reduce * 100)}% menos de daño de todas las fuentes y ganas +${Math.round(n.vel * 100)}% de velocidad.`,
+                   n1: { dur: 4, reduce: 0.5, vel: 0.25 }, n2: { dur: 4, reduce: 0.5, vel: 0.25 } },
+  // Seba (30-10): rework — 15 dagas de 15 que el jugador dirige mientras salen (siguen su apuntado); vuelven a los 2 s y repiten el daño
+  secretoTemplario: { nombre: 'Secreto Templario', glifo: 'dagasShai', cd: 50, ulti: true, alcance: 260, vel: 900, dagas: 15, cada: 0.13, vuelta: 2, regreso: 0.55,
+                   desc: (n) => `Lanzas ${HABILIDADES.secretoTemplario.dagas} dagas mágicas, una tras otra, de ${n.dano} de daño (alcance ${HABILIDADES.secretoTemplario.alcance}). Cada daga sale hacia donde estás apuntando en ese momento: si mueves el apuntado (o apuntas con tu ataque básico), las siguientes vuelan hacia allá. La que pega a un héroe se le queda clavada; a los ${HABILIDADES.secretoTemplario.vuelta} s vuelve a ti, le hace otra vez ${n.dano} y daña a los enemigos que cruza.`,
+                   n1: { dano: 15 }, n2: { dano: 19 } },
   // ---- Tek'Tal (Seba, 29-10)
   fisura:        { nombre: 'Fisura', glifo: 'fisura', cd: 14, cdFijo: true, largo: 320, ancho: 40, muro: 4,
                    desc: (n) => `Partes el suelo en línea recta: ${n.dano} de daño. Si golpea a un solo héroe enemigo, lo aturde ${fmtN(n.aturde1)} s; si golpea a 2 o más, solo ${fmtN(n.aturde2)} s. Deja un muro de roca por ${HABILIDADES.fisura.muro} s que bloquea a todos los cuerpos (también a ti y a tus aliados); los proyectiles lo atraviesan.`,
@@ -1365,6 +1407,7 @@ const PASIVAS = {
   ultimoAliento: { nombre: 'Último aliento', glifo: 'corazonVerde', desc: 'Por debajo del 30% de vida, tus habilidades se recargan 25% más rápido.' },
   sangreReal:   { nombre: 'Sangre real', glifo: 'corona', desc: 'Recuperas 25 de vida cada vez que usas una habilidad.' },
   curacionPlano: { nombre: 'Curación del otro plano', glifo: 'corazonVerde', desc: 'Cada aturdimiento que provocas te cura 15 de vida.' },
+  pactoSangre:  { nombre: 'Pacto de sangre', glifo: 'selloShai', desc: 'Cada 3 ataques al mismo enemigo en 3 s explota un sello: 15 de daño y +5% de velocidad por 3 s.' },
   temblor:      { nombre: 'Temblor', glifo: 'roca', desc: 'Cada tercer puñetazo al mismo enemigo lo deja lento 10% por 4 s.' },
 };
 
@@ -1434,10 +1477,11 @@ const GUIAS = {
   circulo: { tipo: 'propio', r: 108 },
   bombaPegajosa: { tipo: 'punto', alcance: 420, r: 40 }, jetpack: { tipo: 'linea', alcance: 320, ancho: 60 }, mina: { tipo: 'propio', r: 20 }, granBombazo: { tipo: 'punto', alcance: 420, r: 108 }, orbeVida: { tipo: 'linea', alcance: 360, ancho: 70 },
   trueno: { tipo: 'linea', alcance: 420, ancho: 20 }, sablazo: { tipo: 'linea', alcance: 220, ancho: 34 }, humo: { tipo: 'propio', r: 250 }, danza: { tipo: 'propio', r: 90 },
-  atraparPresa: { tipo: 'linea', alcance: 400, ancho: 20 }, tejer: { tipo: 'propio', r: 162 }, mordida: { tipo: 'propio', r: 120 }, manosRayo: { tipo: 'propio', r: 30 }, tormenta: { tipo: 'linea', alcance: 400, ancho: 180 }, bendicion: { tipo: 'propio', r: 40 },
+  atraparPresa: { tipo: 'linea', alcance: 400, ancho: 20 }, tejer: { tipo: 'propio', r: 162 }, mordida: { tipo: 'propio', r: 120 }, manosRayo: { tipo: 'linea', alcance: 420, ancho: 6 }, tormenta: { tipo: 'linea', alcance: 400, ancho: 180 }, bendicion: { tipo: 'propio', r: 40 },
   lanzaErrante: { tipo: 'linea', alcance: 380, ancho: 26 }, decimar: { tipo: 'propio', r: 110 }, llamaEstepa: { tipo: 'propio', r: 135 },
   mazazos: { tipo: 'propio', r: 110 }, escudoMusgo: { tipo: 'propio', r: 200 }, sobrecrecimiento: { tipo: 'propio', r: 130 },
   discoGaia: { tipo: 'linea', alcance: 300, ancho: 20 }, pasoCeleste: { tipo: 'linea', alcance: 300, ancho: 30 }, lluviaEstrellas: { tipo: 'linea', alcance: 480, ancho: 160 },
+  saltoJuicio: { tipo: 'punto', alcance: 137, r: 45 }, mantoLuz: { tipo: 'propio', r: 30 }, secretoTemplario: { tipo: 'linea', alcance: 260, ancho: 10 },
   fisura: { tipo: 'linea', alcance: 320, ancho: 40 }, grillete: { tipo: 'linea', alcance: 380, ancho: 22 }, erupcion: { tipo: 'propio', r: 300 },
 };
 
@@ -1463,167 +1507,193 @@ for (const hb of Object.values(HABILIDADES)) {
 for (const u of Object.values(UNIDADES)) if (u.vel) u.vel = Math.round(u.vel * RITMO.movimiento);
 
 // ===== matchups.js =====
-// Generado por tools/matchups.js (2026-10-29): % de duelos 1v1 que gana la fila contra la columna.
-// Medido con bots (apuntado automático), 100 duelos por par.
+// Generado por tools/matchups.js (2026-10-30): % de duelos 1v1 que gana la fila contra la columna.
+// Medido con bots (apuntado automático), 200 duelos por par.
 const MATCHUPS = {
  "beast": {
-  "lire": 57,
-  "nigromante": 97,
-  "maidas": 17,
+  "lire": 59,
+  "nigromante": 95,
+  "maidas": 14,
   "monh": 100,
   "biteroi": 0,
   "rasho": 0,
-  "takichi": 92,
-  "aracnida": 33,
-  "kazaro": 58,
-  "trelgon": 96,
-  "gaia": 35
+  "takichi": 90,
+  "aracnida": 42,
+  "kazaro": 46,
+  "trelgon": 98,
+  "gaia": 17,
+  "shai": 20
  },
  "lire": {
-  "beast": 43,
-  "nigromante": 21,
-  "maidas": 37,
+  "beast": 42,
+  "nigromante": 17,
+  "maidas": 33,
   "monh": 6,
-  "biteroi": 65,
-  "rasho": 73,
-  "takichi": 13,
-  "aracnida": 76,
-  "kazaro": 50,
-  "trelgon": 19,
-  "gaia": 43
+  "biteroi": 69,
+  "rasho": 80,
+  "takichi": 9,
+  "aracnida": 79,
+  "kazaro": 54,
+  "trelgon": 20,
+  "gaia": 44,
+  "shai": 34
  },
  "nigromante": {
-  "beast": 3,
-  "lire": 79,
-  "maidas": 83,
-  "monh": 100,
-  "biteroi": 84,
-  "rasho": 84,
-  "takichi": 35,
+  "beast": 6,
+  "lire": 84,
+  "maidas": 78,
+  "monh": 99,
+  "biteroi": 76,
+  "rasho": 85,
+  "takichi": 41,
   "aracnida": 99,
-  "kazaro": 16,
+  "kazaro": 11,
   "trelgon": 7,
-  "gaia": 85
+  "gaia": 88,
+  "shai": 13
  },
  "maidas": {
-  "beast": 83,
-  "lire": 63,
-  "nigromante": 17,
-  "monh": 58,
-  "biteroi": 69,
-  "rasho": 86,
-  "takichi": 29,
-  "aracnida": 78,
-  "kazaro": 25,
-  "trelgon": 63,
-  "gaia": 69
+  "beast": 87,
+  "lire": 67,
+  "nigromante": 22,
+  "monh": 62,
+  "biteroi": 65,
+  "rasho": 83,
+  "takichi": 24,
+  "aracnida": 82,
+  "kazaro": 31,
+  "trelgon": 68,
+  "gaia": 74,
+  "shai": 27
  },
  "monh": {
-  "beast": 0,
-  "lire": 94,
-  "nigromante": 0,
-  "maidas": 42,
-  "biteroi": 52,
-  "rasho": 67,
+  "beast": 1,
+  "lire": 95,
+  "nigromante": 1,
+  "maidas": 39,
+  "biteroi": 61,
+  "rasho": 76,
   "takichi": 0,
-  "aracnida": 37,
+  "aracnida": 45,
   "kazaro": 1,
-  "trelgon": 1,
-  "gaia": 77
+  "trelgon": 0,
+  "gaia": 83,
+  "shai": 0
  },
  "biteroi": {
   "beast": 100,
-  "lire": 35,
-  "nigromante": 16,
-  "maidas": 31,
-  "monh": 48,
-  "rasho": 68,
+  "lire": 32,
+  "nigromante": 25,
+  "maidas": 35,
+  "monh": 39,
+  "rasho": 59,
   "takichi": 100,
   "aracnida": 100,
-  "kazaro": 93,
-  "trelgon": 25,
-  "gaia": 26
+  "kazaro": 89,
+  "trelgon": 31,
+  "gaia": 39,
+  "shai": 100
  },
  "rasho": {
   "beast": 100,
-  "lire": 27,
-  "nigromante": 16,
-  "maidas": 14,
-  "monh": 33,
-  "biteroi": 32,
-  "takichi": 35,
+  "lire": 20,
+  "nigromante": 15,
+  "maidas": 18,
+  "monh": 25,
+  "biteroi": 42,
+  "takichi": 32,
   "aracnida": 91,
-  "kazaro": 95,
+  "kazaro": 92,
   "trelgon": 100,
-  "gaia": 31
+  "gaia": 22,
+  "shai": 80
  },
  "takichi": {
-  "beast": 8,
-  "lire": 87,
-  "nigromante": 65,
-  "maidas": 71,
+  "beast": 10,
+  "lire": 91,
+  "nigromante": 60,
+  "maidas": 77,
   "monh": 100,
   "biteroi": 0,
-  "rasho": 65,
+  "rasho": 69,
   "aracnida": 3,
-  "kazaro": 73,
-  "trelgon": 68,
-  "gaia": 45
+  "kazaro": 68,
+  "trelgon": 73,
+  "gaia": 23,
+  "shai": 0
  },
  "aracnida": {
-  "beast": 67,
-  "lire": 24,
-  "nigromante": 1,
-  "maidas": 22,
-  "monh": 63,
-  "biteroi": 0,
+  "beast": 58,
+  "lire": 22,
+  "nigromante": 2,
+  "maidas": 19,
+  "monh": 55,
+  "biteroi": 1,
   "rasho": 9,
-  "takichi": 97,
-  "kazaro": 60,
-  "trelgon": 95,
-  "gaia": 41
+  "takichi": 98,
+  "kazaro": 52,
+  "trelgon": 98,
+  "gaia": 10,
+  "shai": 97
  },
  "kazaro": {
-  "beast": 42,
-  "lire": 50,
-  "nigromante": 84,
-  "maidas": 75,
+  "beast": 54,
+  "lire": 46,
+  "nigromante": 89,
+  "maidas": 70,
   "monh": 99,
-  "biteroi": 7,
-  "rasho": 5,
-  "takichi": 27,
-  "aracnida": 40,
-  "trelgon": 97,
-  "gaia": 36
+  "biteroi": 12,
+  "rasho": 8,
+  "takichi": 32,
+  "aracnida": 48,
+  "trelgon": 99,
+  "gaia": 15,
+  "shai": 37
  },
  "trelgon": {
-  "beast": 4,
+  "beast": 3,
   "lire": 81,
   "nigromante": 93,
-  "maidas": 37,
-  "monh": 99,
-  "biteroi": 75,
-  "rasho": 0,
-  "takichi": 32,
-  "aracnida": 5,
-  "kazaro": 3,
-  "gaia": 27
+  "maidas": 32,
+  "monh": 100,
+  "biteroi": 70,
+  "rasho": 1,
+  "takichi": 27,
+  "aracnida": 3,
+  "kazaro": 1,
+  "gaia": 6,
+  "shai": 2
  },
  "gaia": {
-  "beast": 65,
-  "lire": 57,
-  "nigromante": 15,
-  "maidas": 31,
-  "monh": 23,
-  "biteroi": 74,
-  "rasho": 69,
-  "takichi": 55,
-  "aracnida": 59,
-  "kazaro": 64,
-  "trelgon": 73
+  "beast": 84,
+  "lire": 56,
+  "nigromante": 12,
+  "maidas": 27,
+  "monh": 17,
+  "biteroi": 61,
+  "rasho": 78,
+  "takichi": 78,
+  "aracnida": 91,
+  "kazaro": 85,
+  "trelgon": 95,
+  "shai": 78
+ },
+ "shai": {
+  "beast": 81,
+  "lire": 66,
+  "nigromante": 87,
+  "maidas": 73,
+  "monh": 100,
+  "biteroi": 1,
+  "rasho": 21,
+  "takichi": 100,
+  "aracnida": 4,
+  "kazaro": 63,
+  "trelgon": 98,
+  "gaia": 22
  }
 };
-const MATCHUPS_INFO = { fecha: '2026-10-29', duelos: 100 };
+const MATCHUPS_INFO = { fecha: '2026-10-30', duelos: 200 };
 
 // ===== sprites.js =====
 // =====================================================================
@@ -2372,21 +2442,10 @@ const OTROS = {
     '......kk333222kk333222kk..',
     '......k1111111kk1111111k..',
     '......kkkkkkkkkkkkkkkkkk..'],
+  // Seba (30-10): dragón más vistoso — alas que aletean (2 cuadros), cuernos dorados, vientre dorado, ojo negro
   dragon: [
-    '......r.........r.......',
-    '.....rR........rRr......',
-    '....rRRr......rRRRr.....',
-    '...rRRRRr....rRRRRRr....',
-    '..rRReRRRr..rRReRRRRr...',
-    '..rReeRRRRrrRReeRRRRRr..',
-    '...rRRRRRRRRRRRRRRRRrRR.',
-    '.....rRRRRRRRRRRRRRRyRkR',
-    '....rRRyyyyyyRRRRRRRRRRR',
-    '...rRRyyyyyyyRR.rRRRRqrq',
-    '..rRR.rRRRRRRr...rRRRr..',
-    '.rR...rR...rR.....rr....',
-    'rR...rRR..rRR...........',
-    'r.....................',
+    ['......rr..........rr..........', '.....rRRr........rRRr.........', '....rRReRr......rRReRr........', '...rRReeRRr....rRReeRRr.......', '..rRReeeRRRr..rRReeeRRRr......', '..rReeeeRRRRrrRReeeeRRRr..o.o.', '...rrRRRRRRRRRRRRRRRRrr..oOoO.', '......rRRRRRRRRRRRRRRRr.rRRRRr', '.....rRRRyyyyyyyRRRRRRrRRRyRkR', '....rRRyyyyyyyyyyRRRRRRRRRRRRR', '...rRRRyyyyyyyyyRRRRRRRRRRqRqR', '..rRR.rRRRRRRRRRRRr..rRRRRRr..', '.rR...rRr..rRr..rRr...rrrr....', 'rR....rRr..rRr..rRr...........', 'r....rRqr.rRqr.rRqr...........'],
+    ['..............................', '..............................', '..............................', '..rrrr..........rrrr..........', '.rRRRRrr......rrRRRRr.........', 'rRReeeRRrr..rrRReeeRRr....o.o.', '...rrRRRRRRRRRRRRRRRRrr..oOoO.', '......rRRRRRRRRRRRRRRRr.rRRRRr', '.....rRRRyyyyyyyRRRRRRrRRRyRkR', '....rRRyyyyyyyyyyRRRRRRRRRRRRR', '...rRRRyyyyyyyyyRRRRRRRRRRqRqR', '..rRR.rRRRRRRRRRRRr..rRRRRRr..', '.rR...rRr..rRr..rRr...rrrr....', 'rR....rRr..rRr..rRr...........', 'r....rRqr.rRqr.rRqr...........'],
   ],
   lobo: [
     ['..........3..3..', '.........33333..', '.33......3k33qk.', '3233333333333333', '.2233333333333..', '..223322223322..', '..3..3....3..3..', '..2..2....2..2..'],
@@ -2999,6 +3058,70 @@ Object.assign(ARMAS_SPR, {
     '.........v..', '............', '............', '............'] },
 });
 
+// Shai (Seba 30-10, rework de arte 2): asesina templaria ninja — traje negro holgado con faldones, capucha negra grande
+// (le da altura) con leyendas color magia, cara tapada: solo se ven los ojos y la piel de la frente y la nariz. Una sola daga.
+Object.assign(CAPAS, {
+  capuchaShai: L({
+    1: '.........n..........',
+    2: '........nn..........',
+    3: '.......nnn1.........',
+    4: '......nnnn1nn.......',
+    5: '.....nnvnnn1nnn.....',
+    6: '....nnnnnnnn1nnn....',
+    7: '....nnvnnnnnnnnv....',
+    8: '....nnnPPPPPPnn.....',
+    9: '....nnnPvPPvPnn.....',
+    10: '....nnnnnPPnnnn.....',
+    11: '....n1nnnnnnnnn.....',
+    12: '.....n1nnnnnnn......',
+    13: '......nnnnnnnn......',
+  }),
+  tunicaShai: L({
+    14: '.....nn1nnnn1nn.....',
+    15: '.....n1nnvvnn1n.....',
+    16: '....nn1nnvnn1nnn....',
+    17: '....nvXXXXXXXXvn....',
+    18: '....n1nnnnnnnn1n....',
+    19: '...nn1n.nnnn.n1nn...',
+    20: '...n1n..nnnn..n1n...',
+    21: '...v............v...',
+  }),
+  capaShai: L({
+    11: '...nn..........nn...',
+    12: '...n1..........1n...',
+    13: '...n............n...',
+  }),
+});
+Object.assign(APARIENCIA, {
+  shai: {
+    piel: { W: 'n', m: '1', w: 'k' },
+    back: [['capaShai'], ['capaShai']],
+    cuerpo: [['tunicaShai'], ['tunicaShai']],
+    cabeza: [['capuchaShai'], ['capuchaShai']],
+  },
+});
+Object.assign(ARMAS_SPR, {
+  // Daga larga: hoja de acero de 2 píxeles de grosor con brillo, guarda oscura con gema color magia
+  dagaShai: { g: [1, 6], rows: [
+    '............', '............', '............', '............',
+    '............', '...1.444444.', 'PPwv43333334', '...1.222222.',
+    '............', '............', '............', '............'] },
+});
+Object.assign(OTROS, {
+  ganchoShai: [
+    ['..kk....', '.kcck...', 'kcqqck..', '.kccqck.', '..kkcqk.', '....kvk.', '.....k..', '........'],
+    ['....kk..', '...kcck.', '..kcqqck', '.kcqcck.', '.kqck...', '.kvk....', '..k.....', '........'],
+  ],
+});
+Object.assign(GLIFOS, {
+  clonShai: ['...v.v...', '..vvvvv..', '..v.v.v..', '...vvv...', '.v.v.v.v.', 'v.vvvvv.v', '..v.v.v..', '..v...v..', '.vv...vv.'],
+  ganchoShai: ['........4', '.......43', '......43.', '..c..43..', '.c..43...', 'c..v3....', '.c.wv....', '..c..w...', '.........'],
+  mantoLuz: ['...ccc...', '.cc...cc.', '.c.c.c.c.', 'c..cqc..c', 'c.cqqqc.c', 'c..cqc..c', '.c.c.c.c.', '.cc...cc.', '...ccc...'],
+  dagasShai: ['v...v...v', '.v..v..v.', '..v.v.v..', '...vvv...', 'vvvvqvvvv', '...vvv...', '..v.v.v..', '.v..v..v.', 'v...v...v'],
+  selloShai: ['..eeeee..', '.e.....e.', 'e..e.e..e', 'e...e...e', 'e..eee..e', 'e...e...e', 'e..e.e..e', '.e.....e.', '..eeeee..'],
+});
+Object.assign(FONDOS, { shai: ['k', 'n'] });
+
 // ===== sim.js =====
 // =====================================================================
 //  LOLA — SIMULACIÓN AUTORITATIVA (corre en el anfitrión / modo práctica)
@@ -3353,7 +3476,8 @@ class Game {
     // Disparo del ataque básico (contador + ángulo; null = apuntado automático)
     if (Number.isFinite(inp.d)) { p.input.d = inp.d; p.input.da = Number.isFinite(inp.da) ? inp.da : null; p.input.dd = Number.isFinite(inp.dd) ? inp.dd : null; }
     // Bug (Seba 28-10): los contadores del control vienen de la partida anterior; al empezar, se toman como punto de partida
-    if (p.sincronizar) { p.sincronizar = false; p.seen = p.input.s.slice(); p.seenD = p.input.d; }
+    // Bug (Seba 29-10): muerto o fuera del combate (cuenta atrás, resultados), los botones no se acumulan para después
+    if (p.sincronizar || !p.alive || this.phase !== 'combat') { p.sincronizar = false; p.seen = p.input.s.slice(); p.seenD = p.input.d; }
     // Apuntado manual (mouse o arrastre): a = ataque básico; sa/sd = habilidades
     p.input.a = Number.isFinite(inp.a) ? inp.a : null;
     if (Array.isArray(inp.sa)) p.input.sa = inp.sa.map(v => Number.isFinite(v) ? v : null);
@@ -3416,6 +3540,7 @@ class Game {
     const esJugador = !target.esUnidad;
     if (esJugador && target.fx && target.fx.renacer) return 0;   // Seba (28-10): 1,5 s invulnerable al reaparecer
     if (!esJugador && UNIDADES[target.kind].invulnerable) return 0;
+
     if (esJugador && target.fx && target.fx.jetpack) return 0;   // Biteroi en el aire: nada lo daña (Seba)
     // Escudo frontal (escudero): bloquea lo que viene de frente
     if (target.escudo && o.tipo !== 'puro' && !o.silencioso) {
@@ -3436,6 +3561,7 @@ class Game {
       if (at && at === src && at.fx && at.fx.llama && !o.fuegoAzul && o.tipo !== 'puro') amt *= 1 + at.fx.llama.n.extra; }   // Kazaro: +50% con la lanza en fuego azul
     if (esJugador && target.fx && target.fx.cucko) amt *= CONFIG.CUCKO.buff.recibe;
     if (esJugador && target.fx && target.fx.enTela) amt *= 1 - target.fx.enTela.buff;   // Aracnida sobre su tela
+    if (esJugador && target.fx && target.fx.manto) amt *= 1 - target.fx.manto.reduce;   // Shai: Manto de luz (todas las fuentes)
     if (amt <= 0) return 0;
 
     const atacante = src ? (src.esUnidad ? this.players.get(src.owner) : src) : null;
@@ -3472,7 +3598,7 @@ class Game {
     target.ultimoDano = this.combatTime;
     this.numero(target, amt, src, o.silencioso);
     // Rasho (Seba 29-10): cada golpe que daña a un héroe enemigo suma +1% de velocidad (máx. 10); se pierde tras 1 s sin dañar
-    if (atacante && atacante !== target && real > 0 && !o.silencioso && HEROES[atacante.build?.heroe]?.pasiva === 'nubeVoladora' && this.teamOf(atacante.id) !== this.teamOf(target.id)) {
+    if (atacante && atacante.alive && atacante !== target && real > 0 && !o.silencioso && HEROES[atacante.build?.heroe]?.pasiva === 'nubeVoladora' && this.teamOf(atacante.id) !== this.teamOf(target.id)) {
       const c = atacante.fx.carga || (atacante.fx.carga = { t: 1, n: 0 });
       c.n = Math.min(10, c.n + 1); c.t = 1;
     }
@@ -3572,7 +3698,8 @@ class Game {
     if (this.modo === 'pve') { this.caer(p); return; }
     p.hp = 0; p.alive = false; p.hidden = false;
     p.muertes = (p.muertes || 0) + 1;
-    if (this.modo === 'equipos') { p.respawn = CONFIG.REAPARECER_PASO * p.muertes; p.fx = {}; }   // 4, 8, 12... s
+    if (this.modo === 'equipos') { p.respawn = CONFIG.REAPARECER_PASO * p.muertes; p.fx = {}; }   // 3, 6, 9... s
+    p.input.atk = false; p.disparo = null; p.seen = p.input.s.slice(); p.seenD = p.input.d;   // Bug (Seba 29-10): lo que se apretó antes de morir no sale al reaparecer
     this.deathOrder.push(p.id);
     this.emit({ k: 'death', x: p.x | 0, y: p.y | 0, c: p.colorIdx });
     if (p.racha >= 2) this.emit({ k: 'anuncio', s: `Cortaron la racha de ${p.name}`, chico: true });
@@ -3626,6 +3753,25 @@ class Game {
     if (!e.esUnidad) this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: 'ATURDIDO' });
     if (e.fx.aturdido && e.fx.aturdido !== antes && p.alive && HEROES[p.build?.heroe]?.pasiva === 'curacionPlano') { this.heal(p, 15, p); this.emit({ k: 'heal', x: p.x | 0, y: p.y | 0 }); }
   }
+  // Shai (Seba 30-10): blink a la espalda del enemigo y backstab; si lo mata, invisible y +50% de velocidad
+  backstabShai(p, q, n) {
+    const x0 = p.x, y0 = p.y;
+    const atras = Number.isFinite(q.facing) ? q.facing + Math.PI : Math.atan2(q.y - y0, q.x - x0);
+    p.x = q.x + Math.cos(atras) * (CONFIG.RADIO_JUGADOR * 2 + 2); p.y = q.y + Math.sin(atras) * (CONFIG.RADIO_JUGADOR * 2 + 2);
+    this.clampWall(p); if (this.modo === 'equipos') this.chocarCamara(p); this.chocarRocas(p, CONFIG.RADIO_JUGADOR);
+    p.kbx = p.kby = 0; p.facing = Math.atan2(q.y - p.y, q.x - p.x); p.disparo = null;
+    this.emit({ k: 'blink', x1: x0 | 0, y1: y0 | 0, x2: p.x | 0, y2: p.y | 0 });
+    this.emit({ k: 'backstab', x: q.x | 0, y: q.y | 0, lejos: 1 });
+    this.emit({ k: 'txt', x: q.x | 0, y: q.y | 0, s: 'BACKSTAB' });
+    const vivo = q.alive;
+    this.damage(q, n.dano, p, { tipo: 'mag', desde: p });
+    if (vivo && !q.alive) {
+      this.aplicarEfecto(p, 'invisible', { t: n.invis });
+      this.aplicarEfecto(p, 'impulsoShai', { t: n.invis, vel: n.vel });
+      this.emit({ k: 'humo', x: p.x | 0, y: p.y | 0, chico: true });
+    }
+  }
+
   // Muros de roca de la Fisura (Tek'Tal): segmentos que bloquean a todos los cuerpos
   extremosRoca(u) { const L = u.largo / 2, ca = Math.cos(u.facing), sa = Math.sin(u.facing); return [u.x - ca * L, u.y - sa * L, u.x + ca * L, u.y + sa * L]; }
   chocarRocas(e, rad) {
@@ -3713,6 +3859,9 @@ class Game {
     if (p.fx.carga) v *= 1 + 0.01 * p.fx.carga.n;   // Rasho: carga eléctrica
     if (p.fx.fuga) v *= 1 + p.fx.fuga.pct;
     if (p.fx.mayhem) v *= 1.3;
+    if (p.fx.manto) v *= 1 + p.fx.manto.vel;          // Shai: Manto de luz
+    if (p.fx.impulsoShai) v *= 1 + p.fx.impulsoShai.vel;   // Shai: tras matar con el backstab
+    if (p.fx.pacto) v *= 1.05;                         // Shai: Pacto de sangre
     if (p.build && HEROES[p.build.heroe]?.pasiva === 'furiaBosque') {   // Trelgon: +3% por héroe enemigo cerca (máx. 30%)
       let n = 0;
       for (const q of this.players.values()) if (q.alive && q !== p && this.teamOf(q.id) !== this.teamOf(p.id) && dist(q, p) < 250) n++;
@@ -3806,6 +3955,19 @@ class Game {
       this.knock(q, p.x, p.y, 90);
       // Takichi (Seba 29-10): cada básico que daña baja 0,25 s la recarga de sus habilidades 1 y 2
       if (hizo > 0 && !reducido && HEROES[p.build?.heroe]?.pasiva === 'pasoSigiloso') { reducido = true; p.cd[1] = Math.max(0, p.cd[1] - 0.25); p.cd[2] = Math.max(0, p.cd[2] - 0.25); }
+      // Shai (Seba 30-10): Pacto de sangre — cada 3 ataques al mismo enemigo en 3 s explota un sello (15 de daño y +5% de velocidad 3 s)
+      if (hizo > 0 && HEROES[p.build?.heroe]?.pasiva === 'pactoSangre') {
+        const c = p.pactoN || (p.pactoN = {}), r = c[q.id];
+        if (!r || this.combatTime - r.t > 3) c[q.id] = { n: 1, t: this.combatTime };
+        else r.n++;
+        if (c[q.id].n >= 3) {
+          c[q.id] = null;
+          this.emit({ k: 'sello', x: q.x | 0, y: q.y | 0 });
+          if (q.alive) this.damage(q, 15, p, { tipo: 'mag', desde: p });   // Seba (30-10): 25 → 15
+          this.aplicarEfecto(p, 'pacto', { t: 3 });
+          if (!q.esUnidad) this.emit({ k: 'txt', x: q.x | 0, y: q.y | 0, s: 'PACTO DE SANGRE' });
+        }
+      }
       // Tek'Tal (Seba 29-10): cada tercer puñetazo al mismo enemigo lo deja lento 10% por 4 s
       if (hizo > 0 && q.alive && HEROES[p.build?.heroe]?.pasiva === 'temblor') {
         const c = p.temblor || (p.temblor = {});
@@ -3898,6 +4060,31 @@ class Game {
         } });
       };
       golpe(0, hit);
+      return;
+    }
+    if (pr.efecto === 'dagaUlti') {
+      // Shai: la daga daña al primero que toca; si es un héroe, queda clavada y a los 2 s vuelve (le repite el daño y daña a los que cruza)
+      if (!hit || !owner || hit.kind === 'muro') return;
+      const n = pr.extra, H = HABILIDADES.secretoTemplario;
+      this.damage(hit, n.dano, owner, { tipo: 'mag', ulti: true, desde: pr });
+      this.emit({ k: 'boom', x: hit.x | 0, y: hit.y | 0, r: 12, c: 'gaia' });
+      if (hit.esUnidad || !hit.alive) return;
+      this.aplicarEfecto(hit, 'dagasShai', { t: H.vuelta + 1, n: (hit.fx.dagasShai ? hit.fx.dagasShai.n : 0) + 1 });
+      this.zones.push({ id: this.nextId++, kind: 'nada', x: hit.x, y: hit.y, r: 0, t: H.vuelta, total: H.vuelta, fin: () => {
+        if (!owner.alive) return;
+        const q = hit, x0 = q.x, y0 = q.y;
+        this.emit({ k: 'dagaVuelta', x1: x0 | 0, y1: y0 | 0, x2: owner.x | 0, y2: owner.y | 0, d: H.regreso });
+        if (q.alive) {
+          this.damage(q, n.dano, owner, { tipo: 'mag', ulti: true, desde: owner });
+          if (q.fx.dagasShai) { q.fx.dagasShai.n--; if (q.fx.dagasShai.n <= 0) delete q.fx.dagasShai; }
+        }
+        const dx = owner.x - x0, dy = owner.y - y0, L2 = dx * dx + dy * dy || 1;
+        for (const e of this.enemigos(owner.id, false)) {
+          if (e === q) continue;
+          const tt = Math.max(0, Math.min(1, ((e.x - x0) * dx + (e.y - y0) * dy) / L2));
+          if (Math.hypot(e.x - (x0 + dx * tt), e.y - (y0 + dy * tt)) <= 14 + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) this.damage(e, n.dano, owner, { tipo: 'mag', ulti: true, desde: { x: x0, y: y0 } });
+        }
+      } });
       return;
     }
     if (pr.efecto === 'grillete') {
@@ -4016,6 +4203,20 @@ class Game {
       }
       if (!presa) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'SIN PRESA CERCA', id: p.id }); return; }
       this._presa = presa;
+    }
+    // Shai (Seba 30-10): blink a un punto. Apuntado: el héroe enemigo en ese punto; sin apuntar: el más cercano al alcance. Si falla, igual recarga.
+    if (key === 'saltoJuicio') {
+      const vis = (q) => q.alive && this.teamOf(q.id) !== this.teamOf(p.id) && !((q.hidden || (q.fx && q.fx.invisible)) && !(q.fx && q.fx.expuesto));
+      let presa = null, punto;
+      if (this._apunte) {
+        const d = this.distApunte(h.alcance); punto = { x: p.x + Math.cos(this._apunte.a) * d, y: p.y + Math.sin(this._apunte.a) * d };
+        // Seba (30-10): siempre prioriza al héroe enemigo con menos vida
+        for (const q of this.players.values()) if (vis(q) && dist(q, punto) < h.area + CONFIG.RADIO_JUGADOR && (!presa || q.hp < presa.hp)) presa = q;
+      } else {
+        for (const q of this.players.values()) if (vis(q) && dist(q, p) < h.alcance + CONFIG.RADIO_JUGADOR && (!presa || q.hp < presa.hp)) presa = q;
+        punto = presa ? { x: presa.x, y: presa.y } : { x: p.x + Math.cos(p.facing) * h.alcance, y: p.y + Math.sin(p.facing) * h.alcance };
+      }
+      this._presaShai = presa; this._puntoShai = punto;
     }
     // Takichi: la bomba de humo solo funciona sin enemigos cerca (no gasta la recarga si no se puede)
     if (key === 'humo' && !this.bajoArbol(p) && [...this.players.values()].some(q => q.alive && this.teamOf(q.id) !== this.teamOf(p.id) && dist(q, p) < h.sinEnemigos)) {
@@ -4169,6 +4370,26 @@ class Game {
         p.disparo = null; delete p.fx.rafagaGaia;
         p.fx.canalLluvia = { t: h.aviso + (h.distancias.length - 1) * h.cada + 0.1 };
         this.emit({ k: 'anuncio', s: '¡LLUVIA DE ESTRELLAS!', chico: true });
+        break;
+      }
+      // ---------------------------------------------------------- Shai (Seba 30-10)
+      case 'saltoJuicio': {
+        const q = this._presaShai, pt = this._puntoShai; this._presaShai = null; this._puntoShai = null;
+        if (q) this.backstabShai(p, q, n);
+        else { this.emit({ k: 'blinkFalla', x: pt.x | 0, y: pt.y | 0 }); this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'FALLASTE', id: p.id }); }
+        break;
+      }
+      case 'mantoLuz':
+        this.aplicarEfecto(p, 'manto', { t: n.dur, reduce: n.reduce, vel: n.vel });
+        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: 30, c: 'gaia' });
+        this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'MANTO DE LUZ' });
+        break;
+      case 'secretoTemplario': {
+        // Seba (30-10): las dagas salen de a una hacia donde el jugador apunta en ese momento
+        const a0 = this._apunte ? this._apunte.a : this.aim(p, h.alcance + 40).a;
+        p.facing = a0; p.disparo = null;
+        this.aplicarEfecto(p, 'rafagaShai', { t: h.dagas * h.cada + 0.2, restan: h.dagas, prox: 0, a0, n });
+        this.emit({ k: 'anuncio', s: '¡SECRETO TEMPLARIO!', chico: true });
         break;
       }
       // ---------------------------------------------------------- Tek'Tal (Seba 29-10)
@@ -4831,8 +5052,7 @@ class Game {
       if (u.kind === 'dragon' && dd < d.rango) {
         u.cd = d.cd;
         u.facing = objetivo.x > u.x ? 0 : Math.PI;
-        this.emit({ k: 'bolt', x1: u.x | 0, y1: (u.y - 16) | 0, x2: objetivo.x | 0, y2: objetivo.y | 0, c: 'fuego' });
-        this.emit({ k: 'boom', x: objetivo.x | 0, y: objetivo.y | 0, r: d.area });
+        this.emit({ k: 'aliento', x1: (u.x + (objetivo.x > u.x ? 14 : -14)) | 0, y1: (u.y - 18) | 0, x2: objetivo.x | 0, y2: objetivo.y | 0, r: d.area });   // Seba (30-10): aliento de fuego
         for (const e of this.enemigos(u.owner)) if (distA(e, objetivo) < d.area + 10) this.damage(e, u.dano, u, { tipo: 'mag' });
       } else if (u.kind === 'golem' && dd < d.rango + CONFIG.RADIO_JUGADOR + 6) {
         u.cd = d.cd;
@@ -4883,7 +5103,7 @@ class Game {
           p.x = lado * CONFIG.RADIO_ARENA * 0.68; p.y = (Math.random() - 0.5) * 120;
           this.clampWall(p);
           p.alive = true; p.hp = p.st.vidaMax; p.cargas = cargasMax(p); p.fx = { renacer: { t: CONFIG.INVULNERABLE_REAPARECER } }; p.kbx = p.kby = 0;
-          p.disparo = null;
+          p.disparo = null; p.seen = p.input.s.slice(); p.seenD = p.input.d;
           this.emit({ k: 'poof', x: p.x | 0, y: p.y | 0, c: 'magia' });
           this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'DE VUELTA' });
         }
@@ -5013,6 +5233,18 @@ class Game {
         }
       }
 
+      // Shai: Secreto Templario — una daga cada 0,13 s hacia el apuntado actual (vivo: mouse o arrastre del ataque básico)
+      if (p.fx.rafagaShai && !p.fx.aturdido) {
+        const f = p.fx.rafagaShai, H = HABILIDADES.secretoTemplario;
+        f.prox -= dt;
+        while (f.prox <= 0 && f.restan > 0) {
+          f.prox += H.cada; f.restan--;
+          const a = Number.isFinite(p.input.a) ? p.input.a : (p.bot ? this.aim(p, H.alcance + 40).a : f.a0);
+          f.a0 = a; p.facing = a;
+          this.spawnProj(p, a, { vel: H.vel, alcance: H.alcance, radio: 7, dmg: f.n.dano, tipo: 'mag', spr: 'dagaUlti', efecto: 'dagaUlti', extra: f.n });
+        }
+        if (f.restan <= 0) delete p.fx.rafagaShai;
+      }
       // Gaia: ráfaga del ataque básico (3 proyectiles; si cambias el apuntado durante la ráfaga, se dispersan)
       if (p.fx.rafagaGaia && !p.fx.aturdido) {
         const f = p.fx.rafagaGaia, at = p.st.ataque;
@@ -5097,13 +5329,13 @@ class Game {
       p.hidden = oculto;
 
       // Acciones
-      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !canalizando(p.fx) && !p.fx.canalLluvia && !p.fx.jetpack && !p.fx.renacer && !p.fx.decimar && !p.fx.saltoLanza && !p.fx.rafagaGaia) this.basicAttack(p);   // bots
+      if (p.input.atk && p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.mayhem && !p.fx.aturdido && !canalizando(p.fx) && !p.fx.canalLluvia && !p.fx.jetpack && !p.fx.renacer && !p.fx.decimar && !p.fx.saltoLanza && !p.fx.rafagaGaia && !p.fx.rafagaShai) this.basicAttack(p);   // bots
       // Jugadores: un disparo por toque o clic; si llega durante la cadencia, se guarda un instante
       if (p.input.d !== undefined && p.input.d !== p.seenD) { p.seenD = p.input.d; p.disparo = { a: p.input.da, d: p.input.dd, t: 0.4 }; }
       if (p.disparo) {
         p.disparo.t -= dt;
         if (p.disparo.t <= 0 || p.fx.mayhem || p.fx.aturdido || canalizando(p.fx) || p.fx.canalLluvia || p.fx.jetpack || p.fx.renacer || p.fx.decimar || p.fx.saltoLanza) p.disparo = null;
-        else if (p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.rafagaGaia) { this.basicAttack(p, p.disparo.a, p.disparo.d); p.disparo = null; }
+        else if (p.cd[0] <= 0 && p.cargas >= 1 && !p.fx.rafagaGaia && !p.fx.rafagaShai) { this.basicAttack(p, p.disparo.a, p.disparo.d); p.disparo = null; }
         else if (p.cargas < 1 && p.cd[0] <= 0) { this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'SIN CARGAS', id: p.id }); p.disparo = null; }
       }
       for (let s = 0; s < 3; s++) {
@@ -5416,11 +5648,11 @@ class Game {
       const flags = (p.alive ? 1 : 0) | (p.hidden ? 8 : 0)
         | (fx.renacer ? 2 : 0) | (fx.canalJet ? 131072 : 0) | (fx.decimar ? 128 : 0) | (fx.canalArena ? 512 : 0) | (fx.fuegoAzul ? 1024 : 0) | (fx.dot ? 4 : 0) | (fx.burn ? 16 : 0) | (fx.slow || fx.encadenado || fx.encadenando ? 32 : 0) | (fx.silence ? 64 : 0) | (fx.aturdido ? 2048 : 0)
         | (fx.vuln ? 256 : 0) | (fx.mayhem ? 4096 : 0) | (fx.terremoto ? 8192 : 0) | (fx.fuga ? 16384 : 0)
-        | (p.caido || fx.carga ? 32768 : 0) | (fx.marcado || fx.marcaLire ? 65536 : 0) | 0 | (fx.bendecido ? 262144 : 0) | (fx.bombaPegada ? 524288 : 0) | (fx.cucko ? 1048576 : 0) | (fx.rafaga ? 2097152 : 0) | (fx.canalSablazo ? 4194304 : 0) | (fx.invisible && !fx.expuesto ? 8388608 : 0) | (fx.veneno ? 16777216 : 0) | (fx.enTela ? 33554432 : 0)
+        | (p.caido || (fx.carga && p.alive) ? 32768 : 0) | (fx.marcado || fx.marcaLire ? 65536 : 0) | 0 | (fx.bendecido ? 262144 : 0) | (fx.bombaPegada ? 524288 : 0) | (fx.cucko ? 1048576 : 0) | (fx.rafaga ? 2097152 : 0) | (fx.canalSablazo ? 4194304 : 0) | (fx.invisible && !fx.expuesto ? 8388608 : 0) | (fx.veneno ? 16777216 : 0) | (fx.enTela ? 33554432 : 0)
         | (fx.escudo ? 67108864 : 0) | (fx.sobre ? 134217728 : 0) | (fx.enraizando ? 268435456 : 0) | (fx.mazazos ? 536870912 : 0) | (fx.jetpack ? 1073741824 : 0);
       ps.push([p.id, Math.round(p.x), Math.round(p.y), r1(p.hp), p.st.vidaMax, +p.facing.toFixed(2), flags,
         +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3), fx.escudo ? Math.ceil(fx.escudo.v) : 0, this.cargasHab(p), fx.saltoLanza ? +Math.min(1, fx.saltoLanza.el / fx.saltoLanza.total).toFixed(2) : 0,
-        (fx.canalGrillete ? 1 : 0) | (fx.canalPortal ? 2 : 0) | (fx.encadenado ? 4 : 0) | (fx.encadenando ? 8 : 0) | (fx.rafagaGaia ? 16 : 0) | (fx.canalLluvia ? 32 : 0)]);
+        (fx.canalGrillete ? 1 : 0) | (fx.canalPortal ? 2 : 0) | (fx.encadenado ? 4 : 0) | (fx.encadenando ? 8 : 0) | (fx.rafagaGaia ? 16 : 0) | (fx.canalLluvia ? 32 : 0) | (fx.manto ? 128 : 0) | (fx.dagasShai ? 256 : 0) | (fx.pacto || fx.impulsoShai ? 512 : 0)]);
     }
     return {
       t: 's', ph: this.phase, tm: +Math.max(0, this.timer).toFixed(1), ar: Math.round(this.arenaR),
@@ -5643,6 +5875,9 @@ function usarHabilidadesBot(game, p, target, d, vida, ux = 0, uy = 0) {
       case 'mina': si = d < 260 || (game.objetivos && game.objetivos.some(o => o.lado === game.teamOf(p.id) && Math.hypot(o.x - p.x, o.y - p.y) < 80)); break;
       case 'granBombazo': si = d > 150 && d < 480; break;
       case 'discoGaia': si = d < 300; break;
+      case 'saltoJuicio': si = d < HABILIDADES.saltoJuicio.alcance + 20 && (!target.esUnidad); break;
+      case 'mantoLuz': si = d < 140 || vida < 0.5; break;
+      case 'secretoTemplario': si = d < 230; break;
       case 'pasoCeleste': si = (vida < 0.45 && d < 220) || (d > 200 && d < 330 && vida > 0.6); if (si && vida >= 0.45) { inp.sa = inp.sa || []; inp.sa[s] = Math.atan2(target.y - p.y, target.x - p.x); inp.sd = inp.sd || []; inp.sd[s] = Math.max(60, d - 40); inp.s[s] = (inp.s[s] || 0) + 1; si = false; } break;
       case 'lluviaEstrellas': si = d < 420; break;
       case 'fisura': si = d < 300; break;
@@ -7293,8 +7528,8 @@ class Renderer {
   gy(y) { return Math.round(y * ESC) + this.oy; }
 
   addEvent(ev) {
-    const dur = { portal: 0.55, fisura: 0.7, geiser: 0.7, meteoro: 0.55, mazazo: 0.45, raiz: 0.9, escudoRoto: 0.5, cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
-    const f = { ...ev, age: 0, dur: ev.k === 'slash' && ev.h === 'trelgon' ? 0.32 : dur };
+    const dur = { aliento: 0.55, blinkFalla: 0.45, blink: 0.35, gancho: 0.3, backstab: 0.5, daga: 0.25, dagaVuelta: 0.4, sello: 0.5, portal: 0.55, fisura: 0.7, geiser: 0.7, meteoro: 0.55, mazazo: 0.45, raiz: 0.9, escudoRoto: 0.5, cono: 0.35, slash: 0.18, hit: 0.8, cura: 0.9, boom: 0.4, ring: 0.45, heal: 0.8, death: 0.9, block: 0.7, poof: 0.4, bolt: 0.32, tajo: 0.45, humo: 0.8, seda: 0.4, mordida: 0.5, txt: 0.9, trampa: 0.5, spin: 0.3 }[ev.k] || 0.5;
+    const f = { ...ev, age: 0, dur: ev.k === 'slash' && ev.h === 'trelgon' ? 0.32 : (ev.k === 'daga' || ev.k === 'dagaVuelta') && ev.d ? ev.d : dur };
     if (ev.k === 'death' || ev.k === 'heal' || ev.k === 'poof') {
       f.parts = Array.from({ length: ev.k === 'death' ? 16 : 7 }, (_, i) => ({ a: hash(i, ev.x | 0, ev.y | 0) * TAU, v: 20 + hash(i, 9, ev.x | 0) * (ev.k === 'death' ? 70 : 30) }));
     }
@@ -7366,9 +7601,14 @@ class Renderer {
     this.ensureAssets();
 
     const me = view.players.find(p => p.id === myId && (p.flags & (1 | 32768)));
-    const tx = me ? (pred ? pred.x : me.x) : 0, ty = me ? (pred ? pred.y : me.y) : 0;
+    let tx = me ? (pred ? pred.x : me.x) : 0, ty = me ? (pred ? pred.y : me.y) : 0;
     const k = 1 - Math.exp(-dt * 9);
-    if (me || !this.camLista) {   // muerto esperando: la cámara se queda donde estaba
+    // Seba (30-10): muerto, la cámara sigue a un aliado o se arrastra libre
+    let seguir = !!me || !this.camLista;
+    const sp = !me && this.spec;
+    if (sp && sp.id) { const q = view.players.find(p => p.id === sp.id && (p.flags & 1)); if (q) { tx = q.x; ty = q.y; seguir = true; } }
+    else if (sp && sp.libre) { this.cam.x = sp.x; this.cam.y = sp.y; }
+    if (seguir) {
       this.cam.x = lerp(this.cam.x, tx, k);
       this.cam.y = lerp(this.cam.y, ty, k);
       this.camLista = true;
@@ -7713,6 +7953,13 @@ class Renderer {
       }
     }
     if (flota) this.nubeViva(cx, sy + 20, 1, true);
+    // Shai (Seba 30-10): su propio jugador ve siempre el alcance del Salto del juicio, como una zona color magia en el suelo
+    if (isMe && meta.build.heroe === 'shai') {
+      const r = Math.round(HABILIDADES.saltoJuicio.alcance * ESC), lista = !(p.cd[1] > 0);
+      g.globalAlpha = lista ? 0.35 : 0.15; this.discDither(cx, cy, r, PALETA.magia, 4, Math.floor(this.time * 3)); g.globalAlpha = lista ? 0.8 : 0.35;
+      this.ring(cx, cy, r, PALETA.magia, 1, 1);
+      g.globalAlpha = this.alphaPj || 1;
+    }
     // Gaia: brillo bajo el vestido (flota) y chispas color magia
     if (esGaia && gigante === 1) {
       g.globalAlpha = 0.5; this.discDither(cx, cy + 6, 6, PALETA.magia, 3, Math.floor(this.time * 6)); g.globalAlpha = this.alphaPj || 1;
@@ -7752,9 +7999,11 @@ class Renderer {
     const key = armaSprite(meta.build);
     const sw = this.swing.get(p.id);
     let ang = p.f, verArma = key !== 'puno';
+    let estoque = 0;   // Shai: la daga se clava hacia adelante en vez de barrer
     if (sw && sw.t > 0) {
       const t = 1 - Math.max(0, sw.t) / 0.18;
-      ang = sw.a + (key === 'puno' ? 0 : (izq ? 1 : -1) * lerp(-1.1, 1.1, t));
+      ang = sw.a + (key === 'puno' || meta.build.heroe === 'shai' ? 0 : (izq ? 1 : -1) * lerp(-1.1, 1.1, t));
+      if (meta.build.heroe === 'shai') estoque = Math.round(Math.sin(Math.PI * Math.min(1, t * 1.3)) * 9);
       verArma = true;
     }
     if (p.flags & 128) { ang = this.time * 18; verArma = true; } // Decimar: gira
@@ -7772,7 +8021,8 @@ class Renderer {
     }
     const sube = montado ? 11 : 0;
     const atras = montado ? (izq ? 6 : -6) : 0; // el jinete va sobre el lomo, no tapa la cabeza del caballo
-    const dibArma = () => gigante === 1 ? g.drawImage(arma, hx - 14 + atras, hy - 14 - sube)
+    const ex = Math.round(Math.cos(ang) * estoque), ey = Math.round(Math.sin(ang) * estoque);
+    const dibArma = () => gigante === 1 ? g.drawImage(arma, hx - 14 + atras + ex, hy - 14 - sube + ey)
       : g.drawImage(arma, Math.round(hx - 14 * gigante), Math.round(hy - 14 * gigante), Math.round(arma.width * gigante), Math.round(arma.height * gigante));
     // Takichi: el segundo sable en la otra mano, con el mismo ángulo (se mueven juntos)
     const dosArmas = arma && HEROES[meta.build.heroe]?.dosArmas;
@@ -7868,6 +8118,20 @@ class Renderer {
       }
     }
     if (p.flags & 1024) this.llamasAzules(cx, sy + 14, 4, 10);          // Fuego azul: llamas azules en el cuerpo
+    // Shai: Manto de luz — malla de rombos celeste y color magia alrededor
+    if (p.f2 & 128) {
+      const rr = 15, yy = cy - 6, t = this.time * 2;
+      this.ring(cx, yy, rr, PALETA.tinta, 1, 4);
+      this.ring(cx, yy, rr, Math.floor(this.time * 4) % 2 ? PALETA.acero2 : PALETA.acero1, 1, 2);
+      for (let i = 0; i < 6; i++) { const a = t + i * (TAU / 6), x = Math.round(cx + Math.cos(a) * rr), y = Math.round(yy + Math.sin(a) * rr); g.fillStyle = PALETA.tinta; g.fillRect(x - 2, y - 2, 5, 5); g.fillStyle = PALETA.acero2; g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); }
+      g.globalAlpha = 0.12; this.bolaPixel(cx, yy, rr - 2, PALETA.acero1); g.globalAlpha = this.alphaPj || 1;
+    }
+    // Dagas de Shai clavadas: dagas color magia que sobresalen del cuerpo
+    if (p.f2 & 256) {
+      for (let i = 0; i < 4; i++) { const x = cx - 7 + i * 5, y = sy + 10 + (i % 2) * 5; g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 4, 3, 7); g.fillStyle = PALETA.carmesi2; g.fillRect(x, y - 3, 1, 4); g.fillStyle = PALETA.pergamino2; g.fillRect(x, y - 3, 1, 1); }
+    }
+    // Shai: Pacto de sangre o impulso tras matar — estela roja en los pies
+    if ((p.f2 & 512) && meta.build.heroe === 'shai') { const t = Math.floor(this.time * 14); for (let i = 0; i < 3; i++) this.px(cx + (izq ? 8 : -8) + (izq ? 1 : -1) * ((i * 3 + t) % 8), sy + 18 + i * 2, PALETA.carmesi2); }
     // Encadenado por el Grillete de Tek'Tal: grillete de piedra en los pies
     if (p.f2 & 4) {
       const on = Math.floor(this.time * 6) % 2;
@@ -8382,7 +8646,7 @@ class Renderer {
     }
     const g = this.g;
     const izq = Math.cos(u.f) < 0;
-    const frame = 0;
+    const frame = u.kind === 'dragon' ? Math.floor(this.time * 6) % 2 : 0;   // Seba (30-10): el dragón aletea
     const s = otro(u.kind === 'torreta' ? 'ballesta' : u.kind, frame, izq);
     const cx = this.gx(u.x), cy = this.gy(u.y);
     const vuela = u.kind === 'dragon' ? Math.round(Math.sin(this.time * 6) * 2) - 8 : 0;
@@ -8447,6 +8711,19 @@ class Renderer {
 
   drawProj(p) {
     const cx = this.gx(p.x), cy = this.gy(p.y);
+    if (p.spr === 'dagaUlti') {
+      // Daga del Secreto Templario: empuñadura oscura, hoja color magenta (carmesí claro con filo magia), punta blanca y estela
+      const g = this.g, ca = Math.cos(p.a), sa = Math.sin(p.a), y = cy - 6;
+      for (let i = 1; i <= 4; i++) if ((i + Math.floor(this.time * 30)) % 2) { g.fillStyle = PALETA.magia; g.fillRect(Math.round(cx - ca * (12 + i * 4)), Math.round(y - sa * (12 + i * 4)), 1, 1); }
+      const bx = Math.round(cx - ca * 12), by = Math.round(y - sa * 12), mx = Math.round(cx - ca * 8), my = Math.round(y - sa * 8);
+      this.linea(bx, by, cx, y, PALETA.tinta, 0, 0, 5);
+      this.linea(bx, by, mx, my, PALETA.noche, 0, 0, 2);
+      this.linea(mx, my, cx, y, PALETA.carmesi2, 0, 0, 3);
+      this.linea(mx, my, cx, y, PALETA.magia, 0, 0, 1);
+      this.linea(Math.round(mx - sa * 3), Math.round(my + ca * 3), Math.round(mx + sa * 3), Math.round(my - ca * 3), PALETA.tinta, 0, 0, 2);
+      g.fillStyle = PALETA.pergamino2; g.fillRect(cx - 1, y - 1, 2, 2);
+      return;
+    }
     let s;
     if (p.spr === 'flecha') s = flechaRotada(idxAng(p.a));
     else if (p.spr === 'flechaOro') s = flechaRotada(idxAng(p.a), { e: 'y', W: 'O' });
@@ -8455,7 +8732,7 @@ class Renderer {
     else s = otro(p.spr, Math.floor(this.time * 8));
     // Estela: puntos detrás del proyectil, en el color de su tipo
     const col = { flecha: PALETA.pergamino2, flechaBosque: PALETA.bosque2, virote: PALETA.pergamino1, sombra: PALETA.magia,
-      orbeFuego: PALETA.antorcha, bolaFuego: PALETA.oro2, piedra: PALETA.piedra3, rocaGrande: PALETA.piedra3, rayoBola: PALETA.acero2, rayoBolaCargada: PALETA.oro2, trueno: PALETA.acero2, telaGancho: PALETA.pergamino2, petaloGaia: PALETA.magia, discoGaia: PALETA.carmesi2, grillete: PALETA.antorcha }[p.spr] || PALETA.pergamino2;
+      orbeFuego: PALETA.antorcha, bolaFuego: PALETA.oro2, piedra: PALETA.piedra3, rocaGrande: PALETA.piedra3, rayoBola: PALETA.acero2, rayoBolaCargada: PALETA.oro2, trueno: PALETA.acero2, telaGancho: PALETA.pergamino2, petaloGaia: PALETA.magia, ganchoShai: PALETA.acero2, discoGaia: PALETA.carmesi2, grillete: PALETA.antorcha }[p.spr] || PALETA.pergamino2;
     const ca = Math.cos(p.a), sa = Math.sin(p.a);
     for (let i = 1; i <= 5; i++) {
       if (i > 3 && (Math.floor(this.time * 20) + i) % 2) continue;
@@ -8478,6 +8755,23 @@ class Renderer {
       switch (f.k) {
         case 'slash': {
           // Golpes característicos por héroe (Seba 28-10)
+          if (f.h === 'shai') {
+            // Shai (Seba 30-10): estocada de asesina — línea de acero que se clava al frente, imagen residual color magia y un tajo corto
+            const ca = Math.cos(f.a), sa = Math.sin(f.a), L = Math.round((f.r + 12) * ESC * Math.min(1, t * 2.2)), y0 = cy - 6;
+            const x2 = Math.round(cx + ca * L), y2 = Math.round(y0 + sa * L);
+            if (t < 0.7) {
+              this.linea(cx, y0, x2, y2, PALETA.tinta, 0, 0, 4);
+              this.linea(cx, y0, x2, y2, t < 0.35 ? PALETA.pergamino2 : PALETA.acero2, 0, 0, 2);
+              g.globalAlpha = 0.6; this.linea(Math.round(cx - sa * 3), Math.round(y0 + ca * 3), Math.round(x2 - sa * 3), Math.round(y2 + ca * 3), PALETA.magia, 0, 0, 1); g.globalAlpha = 1;
+            }
+            if (t > 0.25) {   // tajo corto en la punta
+              const R0 = 6, a0 = f.a + Math.PI / 2;
+              this.linea(Math.round(x2 + Math.cos(a0) * R0), Math.round(y2 + Math.sin(a0) * R0), Math.round(x2 - Math.cos(a0) * R0), Math.round(y2 - Math.sin(a0) * R0), PALETA.tinta, 0, 0, 3);
+              this.linea(Math.round(x2 + Math.cos(a0) * R0), Math.round(y2 + Math.sin(a0) * R0), Math.round(x2 - Math.cos(a0) * R0), Math.round(y2 - Math.sin(a0) * R0), PALETA.carmesi2, 0, 0, 1);
+              for (let i = 0; i < 3; i++) { const sx = Math.round(x2 + (hash(i, f.x | 0, 3) - 0.5) * 12), sy = Math.round(y2 + (hash(i, 5, f.y | 0) - 0.5) * 10 - t * 6); g.fillStyle = PALETA.tinta; g.fillRect(sx - 1, sy - 1, 3, 3); g.fillStyle = i % 2 ? PALETA.magia : PALETA.pergamino2; g.fillRect(sx, sy, 1, 1); }
+            }
+            break;
+          }
           if (f.h === 'trelgon') {
             // Mazazo de Trelgon: el mazo cae desde arriba y deja un cráter con polvo donde pega
             const R0 = (f.r + CONFIG.RADIO_JUGADOR * 0.5) * ESC, ca = Math.cos(f.a), sa = Math.sin(f.a);
@@ -8621,6 +8915,76 @@ class Renderer {
         case 'seda': {
           const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 8, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 8;
           this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 3); this.linea(x1, y1, x2, y2, PALETA.pergamino2, 0, 0, 1);
+          break;
+        }
+        case 'blinkFalla': {
+          // Salto del juicio fallado: marca gris que se desvanece donde apuntaste
+          const r = Math.round(10 + t * 6);
+          this.ring(cx, cy, r, PALETA.tinta, 1, 3); this.ring(cx, cy, r, PALETA.piedra2, 1 - t, 1);
+          this.linea(cx - 4, cy - 4, cx + 4, cy + 4, PALETA.piedra2, 0, 0, 1); this.linea(cx - 4, cy + 4, cx + 4, cy - 4, PALETA.piedra2, 0, 0, 1);
+          break;
+        }
+        case 'aliento': {
+          // Dragón (Seba 30-10): chorro de fuego que sale de la boca y revienta donde pega
+          const x1 = this.gx(f.x1), y1 = this.gy(f.y1), x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 4;
+          const n = 7, k = Math.min(1, t * 2.2);
+          for (let i = 0; i < n; i++) {
+            const q = (i / (n - 1)) * k, x = Math.round(x1 + (x2 - x1) * q + Math.sin(f.age * 30 + i) * 1.5), y = Math.round(y1 + (y2 - y1) * q + Math.cos(f.age * 25 + i) * 1.5);
+            const r = Math.max(1, Math.round(2 + q * 4 - t * 2));
+            this.bolaPixel(x, y, r + 1, PALETA.tinta); this.bolaPixel(x, y, r, i % 2 ? PALETA.antorcha : PALETA.carmesi2); this.bolaPixel(x, y, Math.max(1, r - 2), PALETA.oro2);
+          }
+          if (k >= 1) {
+            const r = Math.round(f.r * ESC * (0.5 + (t - 0.45) * 0.9));
+            this.discDither(x2, y2 + 4, Math.max(2, r), PALETA.antorcha, t < 0.7 ? 2 : 3, Math.floor(f.age * 30));
+            this.ring(x2, y2 + 4, Math.max(2, r), PALETA.oro2, 1 - t * 0.6);
+            this.llamasAzules(x2, y2 + 6, 3, Math.max(6, r), 'magma');
+          }
+          break;
+        }
+        case 'blink': {
+          // Salto del juicio: humo oscuro donde estaba y donde aparece, con una estela tenue entre ambos
+          for (const [x, y] of [[f.x1, f.y1], [f.x2, f.y2]]) {
+            const px = this.gx(x), py = this.gy(y) - 6, R = Math.round(4 + t * 8);
+            for (let i = 0; i < 6; i++) { const a = i * (TAU / 6) + t * 3, xx = Math.round(px + Math.cos(a) * R), yy = Math.round(py + Math.sin(a) * R * 0.7); this.bolaPixel(xx, yy, 3, PALETA.tinta); this.bolaPixel(xx, yy, 2, i % 2 ? PALETA.noche : PALETA.acero0); }
+          }
+          if (t < 0.5) { const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 8, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 8; for (let i = 1; i < 6; i++) { const k = i / 6; g.fillStyle = PALETA.acero2; g.fillRect(Math.round(x1 + (x2 - x1) * k), Math.round(y1 + (y2 - y1) * k), 1, 1); } }
+          break;
+        }
+        case 'gancho': {
+          // Salto del juicio: cadena celeste del punto de partida a la espalda del enemigo
+          const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 8, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 8;
+          this.linea(x1, y1, x2, y2, PALETA.tinta, 0, 0, 4); this.linea(x1, y1, x2, y2, t < 0.5 ? PALETA.pergamino2 : PALETA.acero2, 0, 0, 2);
+          break;
+        }
+        case 'backstab': {
+          // Puñalada por la espalda: corte en X color magia y destello
+          const r = Math.round(8 + t * 8), y0 = cy - 8;
+          for (const s of [-1, 1]) { this.linea(cx - r, y0 - r * s, cx + r, y0 + r * s, PALETA.tinta, 0, 0, 5); this.linea(cx - r, y0 - r * s, cx + r, y0 + r * s, f.lejos ? PALETA.magia : PALETA.acero2, 0, 0, 3); if (t < 0.4) this.linea(cx - r, y0 - r * s, cx + r, y0 + r * s, PALETA.pergamino2, 0, 0, 1); }
+          break;
+        }
+        case 'daga': case 'dagaVuelta': {
+          // Secreto Templario: daga mágica (rayo color magia) que va al enemigo o vuelve a Shai
+          const x1 = this.gx(f.x1), y1 = this.gy(f.y1) - 8, x2 = this.gx(f.x2), y2 = this.gy(f.y2) - 8;
+          const k = Math.min(1, t), x = Math.round(x1 + (x2 - x1) * k), y = Math.round(y1 + (y2 - y1) * k);
+          const L0 = Math.hypot(x2 - x1, y2 - y1) || 1, ca = (x2 - x1) / L0, sa = (y2 - y1) / L0;
+          // estela tenue
+          for (let i = 1; i <= 4; i++) { const xx = Math.round(x - ca * (10 + i * 4)), yy = Math.round(y - sa * (10 + i * 4)); if ((i + Math.floor(f.age * 30)) % 2) { g.fillStyle = PALETA.magia; g.fillRect(xx, yy, 1, 1); } }
+          // daga: empuñadura oscura, hoja color magenta (carmesí claro con filo magia) y punta blanca
+          const bx = Math.round(x - ca * 12), by = Math.round(y - sa * 12), mx = Math.round(x - ca * 8), my = Math.round(y - sa * 8);
+          this.linea(bx, by, x, y, PALETA.tinta, 0, 0, 5);
+          this.linea(bx, by, mx, my, PALETA.noche, 0, 0, 2);
+          this.linea(mx, my, x, y, PALETA.carmesi2, 0, 0, 3);
+          this.linea(mx, my, x, y, PALETA.magia, 0, 0, 1);
+          this.linea(Math.round(mx - sa * 3), Math.round(my + ca * 3), Math.round(mx + sa * 3), Math.round(my - ca * 3), PALETA.tinta, 0, 0, 2);
+          g.fillStyle = PALETA.pergamino2; g.fillRect(x - 1, y - 1, 2, 2);
+          if (k >= 1 && f.k === 'daga') { this.ring(x2, y2, 5, PALETA.carmesi2, 1, 1); }
+          break;
+        }
+        case 'sello': {
+          // Pacto de sangre: sello rojo que se enciende y explota
+          const r = Math.round(6 + t * 12);
+          this.ring(cx, cy - 6, r, PALETA.tinta, 1, 3); this.ring(cx, cy - 6, r, t < 0.5 ? PALETA.carmesi2 : PALETA.carmesi1, 1, 2);
+          if (t < 0.5) { g.fillStyle = PALETA.carmesi2; g.fillRect(cx - 1, cy - 12, 3, 9); g.fillRect(cx - 4, cy - 8, 9, 3); }
           break;
         }
         case 'portal': {
@@ -9330,7 +9694,7 @@ function renderDraft() {
       return `<div class="dp-col ${eq === 'A' ? 'az' : 'ro'}"><div class="dp-t">${NOM_EQ[eq]}${eq === EB?.miEq || (!EB && eqs[S.myId] === eq) ? ' · tu equipo' : ''}</div>` + js.map(p => {
         const h = p.build.heroe ? HEROES[p.build.heroe] : null;
         const toca = !h && turnoAqui && !marcado; if (toca) marcado = true;
-        return `<div class="dp-slot${h ? ' lleno' : ''}${toca ? ' toca' : ''}${p.id === S.myId ? ' yo' : ''}">${h ? `<img alt="" src="${retratoHeroe(p.build.heroe, p.colorIdx, 3)}">` : '<span class="dp-q">?</span>'}<div class="dp-n"><b>${h ? esc(h.nombre) : toca ? 'Eligiendo…' : 'Sin elegir'}</b><small>${esc(p.name)}${p.id === S.myId ? ' (tú)' : ''}</small></div></div>`;
+        return `<div ${h ? `data-h="${p.build.heroe}" role="button" tabindex="0" title="Ver ficha de ${esc(h.nombre)}" ` : ''}class="dp-slot${h ? ' lleno' : ''}${toca ? ' toca' : ''}${p.id === S.myId ? ' yo' : ''}">${h ? `<img alt="" src="${retratoHeroe(p.build.heroe, p.colorIdx, 3)}">` : '<span class="dp-q">?</span>'}<div class="dp-n"><b>${h ? esc(h.nombre) : toca ? 'Eligiendo…' : 'Sin elegir'}</b><small>${esc(p.name)}${p.id === S.myId ? ' (tú)' : ''}</small></div></div>`;
       }).join('') + '</div>';
     };
     $('dr-picks').innerHTML = col('A') + '<div class="dp-vs">VS</div>' + col('B');
@@ -9351,7 +9715,7 @@ function renderDraft() {
     }
   }
   S.ultFirmaDraft = firma; S.ultPicks = Object.fromEntries(S.meta.players.filter(p => p.build.heroe).map(p => [p.id, 1])); S.ultNBans = (S.meta.bans || []).length;
-  if (baneados.size) $('dr-bans').innerHTML = '<span class="db-t">Baneados</span>' + [...baneados].map(([k, eq]) => `<span class="db ${eq === 'A' ? 'az' : 'ro'}" title="${esc(HEROES[k]?.nombre || k)}"><img alt="${esc(HEROES[k]?.nombre || k)}" src="${retratoHeroe(k, 0, 2)}"></span>`).join('');
+  if (baneados.size) $('dr-bans').innerHTML = '<span class="db-t">Baneados</span>' + [...baneados].map(([k, eq]) => `<span data-h="${k}" role="button" tabindex="0" class="db ${eq === 'A' ? 'az' : 'ro'}" title="${esc(HEROES[k]?.nombre || k)}"><img alt="${esc(HEROES[k]?.nombre || k)}" src="${retratoHeroe(k, 0, 2)}"></span>`).join('');
   g.innerHTML = '';
   // Seba (29-10): dos casas (Aliados y Renegados). Primero eliges la casa y después el héroe.
   const casas = $('dr-casas');
@@ -9440,7 +9804,55 @@ function accionDraft(h) {
   return { ban: false, texto: me && me.build.heroe ? 'Ya elegiste' : EB.tr ? `Turno de ${NOM_EQ[EB.tr.eq]}` : 'Esperando', off: true };
 }
 
+// ------------------------------------------------------------ espectar al morir (Seba 30-10)
+// Muerto en combate: la cámara sigue a un aliado vivo (◀ ▶ para cambiar) o se arrastra libre por el mapa.
+S.spec = null;
+function aliadosVivos(view) {
+  const eqs = S.meta && S.meta.modo === 'equipos' ? S.meta.equipos : null;
+  return view.players.filter(p => p.id !== S.myId && (p.flags & 1) && (!eqs || eqs[p.id] === eqs[S.myId])).map(p => p.id);
+}
+function espectar(view, latest) {
+  const muerto = !!(view && latest && latest.ph === 'combat' && !view.players.some(p => p.id === S.myId && (p.flags & (1 | 32768))));
+  $('spec').classList.toggle('hidden', !muerto);
+  if (!muerto) { S.spec = null; renderer.spec = null; return; }
+  const al = aliadosVivos(view); S.ultAliados = al;
+  if (!S.spec || (S.spec.id && !al.includes(S.spec.id))) S.spec = al.length ? { id: al[0] } : { libre: true, x: renderer.cam.x, y: renderer.cam.y };
+  renderer.spec = S.spec;
+  $('spec-ant').disabled = $('spec-sig').disabled = !al.length;
+  const nom = S.spec.id ? `Mirando a ${S.metaById.get(S.spec.id)?.name || ''}` : 'Cámara libre';
+  if ($('spec-n').textContent !== nom) $('spec-n').textContent = nom;
+}
+function cambiarSpec(paso) {
+  const al = S.ultAliados || [];
+  if (!al.length) return;
+  const i = S.spec && S.spec.id ? al.indexOf(S.spec.id) : -1;
+  S.spec = { id: al[(i + paso + al.length) % al.length] };
+}
+{
+  const capa = $('spec-capa');
+  let arr = null;
+  capa.addEventListener('pointerdown', (e) => { e.stopPropagation(); arr = { x: e.clientX, y: e.clientY, cx: renderer.cam.x, cy: renderer.cam.y, id: e.pointerId }; capa.setPointerCapture(e.pointerId); });
+  capa.addEventListener('pointermove', (e) => {
+    if (!arr || e.pointerId !== arr.id) return;
+    const cv = $('cv'), f = (cv.width / cv.clientWidth) / ESC, lim = CONFIG.RADIO_ARENA + 60;
+    const x = arr.cx - (e.clientX - arr.x) * f, y = arr.cy - (e.clientY - arr.y) * f;
+    if (Math.hypot(e.clientX - arr.x, e.clientY - arr.y) < 6 && !(S.spec && S.spec.libre)) return;
+    const d = Math.hypot(x, y), s = d > lim ? lim / d : 1;
+    S.spec = { libre: true, x: x * s, y: y * s };
+  });
+  const fin = () => { arr = null; };
+  capa.addEventListener('pointerup', fin); capa.addEventListener('pointercancel', fin);
+  $('spec-ant').onclick = () => cambiarSpec(-1);
+  $('spec-sig').onclick = () => cambiarSpec(1);
+}
+
 let fichaAbierta = null;
+// Seba (30-10): tocar un héroe ya elegido (o baneado) abre su ficha
+for (const id of ['dr-picks', 'dr-bans']) {
+  const el = $(id);
+  el.addEventListener('click', (e) => { const s = e.target.closest('[data-h]'); if (s) abrirFicha(s.dataset.h); });
+  el.addEventListener('keydown', (e) => { const s = e.target.closest('[data-h]'); if (s && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirFicha(s.dataset.h); } });
+}
 function abrirFicha(k) {
   const h = HEROES[k], me = S.metaById.get(S.myId);
   if (!h || !me) return;
@@ -9838,6 +10250,7 @@ function frame(now) {
   }
   const enCombate = latest && (latest.ph === 'combat' || latest.ph === 'countdown' || latest.ph === 'results');
   renderer.guia = guiaActual();
+  espectar(view, latest);
   renderer.draw(S.mode && enCombate ? view : null, { metaById: S.metaById, myId: S.myId, pred }, dt);
   updateHud(latest, now);
   if (latest && S.phase === 'mejoras' && latest.ph === 'mejoras') {
