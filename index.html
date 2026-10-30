@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V2.8</title>
+<title>LOLA V2.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -930,7 +930,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V2.8</p>
+        <p class="sub version">LOLA V2.9</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -1526,10 +1526,10 @@ Object.assign(HABILIDADES, {
                    n1: { dano: 100, invis: 2, vel: 0.5 }, n2: { dano: 130, invis: 2, vel: 0.5 } },
   // ---- Tenebris (Seba, 30-10; números (C))
   almaErrante:   { nombre: 'Alma errante', glifo: 'almaErrante', cd: 12, cdFijo: true, alcance: 0, vel: 150, velMax: 300, acelera: 400, radio: 14, curaKill: 25,   // Seba (30-10): sin límite de distancia (borde a borde); acelera hasta el doble
-                   desc: (n) => `Sueltas un alma lenta en línea recta que acelera mientras viaja (hasta el doble de velocidad). Llega hasta el borde del mapa y vuelve hasta el borde contrario. El primer héroe enemigo que toca (ida o vuelta) queda maldito: ${n.dps} de daño por segundo y ${Math.round(n.lento * 100)}% más lento por ${n.dur} s. Atraviesa invocaciones. Si no toca a nadie, desaparece. Si el maldito muere con la maldición encima, recuperas ${HABILIDADES.almaErrante.curaKill} de vida y la recarga de esta habilidad vuelve a 0.`,
-                   n1: { dps: 20, dur: 4, lento: 0.2 }, n2: { dps: 20, dur: 4, lento: 0.2 } },
+                   desc: (n) => `Sueltas un alma lenta en línea recta que acelera mientras viaja (hasta el doble de velocidad). Llega hasta el borde del mapa y vuelve hasta el borde contrario. El primer héroe enemigo que toca (ida o vuelta) queda maldito: ${n.dps} de daño por segundo y ${Math.round(n.lento * 100)}% más lento por ${n.dur} s, y silenciado los primeros ${fmtN(n.silencio)} s. Atraviesa invocaciones. Si no toca a nadie, desaparece. Si el maldito muere con la maldición encima, recuperas ${HABILIDADES.almaErrante.curaKill} de vida y la recarga de esta habilidad vuelve a 0.`,
+                   n1: { dps: 20, dur: 4, lento: 0.2, silencio: 2 }, n2: { dps: 20, dur: 4, lento: 0.2, silencio: 2 } },   // Seba (30-10): silencia 2 s
   siega:         { nombre: 'Siega', glifo: 'siega', cd: 14, cdFijo: true, canal: 1, rango: 80, arco: 180, cura: 75,   // Seba (30-10): +75 de vida por héroe golpeado
-                   desc: (n) => `Canalizas ${fmtN(HABILIDADES.siega.canal)} s quieto (un aturdimiento o un silencio lo corta) y das un tajo de guadaña en arco al frente: los enemigos pierden el ${Math.round(n.pct * 100)}% de su vida actual. Rompe los escudos (Escudo de musgo, Manto de luz) y silencia esas habilidades ${fmtN(n.silencio)} s. Recuperas ${HABILIDADES.siega.cura} de vida por cada héroe enemigo golpeado (las invocaciones no curan). Mata a los esqueletos; al gólem y al dragón les quita el ${Math.round(n.pct * 100)}% de su vida.`,
+                   desc: (n) => `Canalizas ${fmtN(HABILIDADES.siega.canal)} s quieto (un aturdimiento o un silencio lo corta) y das un tajo de guadaña en arco (mientras canalizas, el tajo gira hacia donde apuntas o mueves el joystick): los enemigos pierden el ${Math.round(n.pct * 100)}% de su vida actual. Rompe los escudos (Escudo de musgo, Manto de luz) y silencia esas habilidades ${fmtN(n.silencio)} s. Recuperas ${HABILIDADES.siega.cura} de vida por cada héroe enemigo golpeado (las invocaciones no curan). Mata a los esqueletos; al gólem y al dragón les quita el ${Math.round(n.pct * 100)}% de su vida.`,
                    n1: { pct: 0.5, silencio: 1 }, n2: { pct: 0.5, silencio: 1 } },
   pozoMaldad:    { nombre: 'Pozo de la maldad', glifo: 'pozoMaldad', cd: 45, ulti: true, canal: 1.5, alcance: 300, radio: 100, curaKill: 50,   // Seba (30-10): canal 2 → 1,5 s; +50 de vida si un enemigo muere dentro   // Seba (30-10): 50 → 45 s
                    desc: (n) => `Apuntas un punto (hasta ${HABILIDADES.pozoMaldad.alcance}) y canalizas ${fmtN(HABILIDADES.pozoMaldad.canal)} s quieto (un aturdimiento o un silencio lo corta). Al terminar apareces ahí y silencias ${fmtN(n.silencio)} s a los enemigos del pozo, que te sigue bajo los pies ${n.dur} s: ${n.dps} de daño por segundo y ${Math.round(n.lento * 100)}% más lentos a los enemigos dentro. Si un héroe enemigo muere dentro del pozo, recuperas ${HABILIDADES.pozoMaldad.curaKill} de vida.`,
@@ -4721,6 +4721,8 @@ class Game {
           fin: (z) => {
             if (z.cancelado || !p.alive || !p.fx.canalSiega) return;
             delete p.fx.canalSiega;
+            const a = z.a;   // Seba (30-10): la dirección final es la que quedó apuntada al terminar de canalizar
+            p.facing = a;
             const mitad = h.arco * Math.PI / 360;
             this.emit({ k: 'siega', x: p.x | 0, y: p.y | 0, a: +a.toFixed(2), r: h.rango });
             for (const e of this.enemigos(p.id, false)) {
@@ -5247,7 +5249,7 @@ class Game {
         this.aplicarEfecto(presa, 'dot', { t: u.n.dur, dps: u.n.dps, src: own.id, alma: true });
         this.aplicarEfecto(presa, 'slow', { t: u.n.dur, mult: 1 - u.n.lento, k: 'alma' });
         this.emit({ k: 'boom', x: presa.x | 0, y: presa.y | 0, r: 26, c: 'gaia' });
-        if (!presa.esUnidad) this.emit({ k: 'txt', x: presa.x | 0, y: presa.y | 0, s: 'MALDITO' });
+        if (!presa.esUnidad) { this.aplicarEfecto(presa, 'silence', { t: u.n.silencio }); this.emit({ k: 'txt', x: presa.x | 0, y: presa.y | 0, s: 'MALDITO' }); }   // Seba (30-10): silencia los primeros 2 s
         continue;
       }
       // Seba (30-10): sin límite de distancia — llega al borde del mapa, vuelve y desaparece en el borde contrario
@@ -5672,6 +5674,12 @@ class Game {
           this.spawnProj(p, a, { vel: at.vel, alcance: at.alcance, radio: at.radio, dmg: p.st.dano, tipo: 'fis', spr: at.proj });
         }
         if (f.restan <= 0) delete p.fx.rafagaGaia;
+      }
+      // Tenebris (Seba 30-10): mientras canaliza la Siega, el tajo gira hacia donde apunta (mouse o arrastre) o hacia donde mueve el joystick
+      if (p.fx.canalSiega && p.fx.canalSiega.zona) {
+        const z = p.fx.canalSiega.zona, { mx: jx, my: jy } = p.input;
+        const na = Number.isFinite(p.input.a) ? p.input.a : Math.hypot(jx, jy) > 0.1 ? Math.atan2(jy, jx) : null;
+        if (na !== null) { z.a = na; p.facing = na; }
       }
       // Tenebris: Pozo de la maldad (lo sigue bajo los pies)
       if (p.fx.pozo) {
@@ -10907,6 +10915,9 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
 const PATCH_NOTES = [
+  { v: 'V2.9', f: '30-10-2026', n: [
+    'Tenebris: mientras canaliza la Siega, el tajo gira hacia donde apuntas o hacia donde mueves el joystick (se puede pegar en cualquier dirección).',
+    'Tenebris: la maldición del Alma errante también silencia los primeros 2 s.' ] },
   { v: 'V2.8', f: '30-10-2026', n: [
     'Tenebris: ataque básico 38 de daño (antes 33).' ] },
   { v: 'V2.7', f: '30-10-2026', n: [
