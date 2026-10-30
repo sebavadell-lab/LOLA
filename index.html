@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V2.9</title>
+<title>LOLA V3.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -930,7 +930,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V2.9</p>
+        <p class="sub version">LOLA V3.0</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -4258,7 +4258,7 @@ class Game {
     for (const e of lista) {
       if (distA(e, centro) > r + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) continue;
       this.damage(e, dmg, p, { tipo, desde: centro, ulti: !!o.ulti });
-      this.knock(e, x, y, o.empuje || 70);
+      if (tipo !== 'fis' || o.empuje) this.knock(e, x, y, o.empuje || 70);   // Seba (30-10): los ataques básicos no empujan
     }
   }
 
@@ -4272,7 +4272,6 @@ class Game {
       if (d > rango + CONFIG.RADIO_JUGADOR) continue;
       if (d > CONFIG.RADIO_JUGADOR && angDiff(Math.atan2(pt.y - p.y, pt.x - p.x), a) > half + 0.25) continue;
       const hizo = this.damage(q, dmg, p, { tipo: 'fis' });
-      this.knock(q, p.x, p.y, 90);
       // Takichi (Seba 29-10): cada básico que daña baja 0,25 s la recarga de sus habilidades 1 y 2
       if (hizo > 0 && !reducido && HEROES[p.build?.heroe]?.pasiva === 'pasoSigiloso') { reducido = true; p.cd[1] = Math.max(0, p.cd[1] - 0.25); p.cd[2] = Math.max(0, p.cd[2] - 0.25); }
       // Shai (Seba 30-10): Pacto de sangre — cada 3 ataques al mismo enemigo en 3 s explota un sello (15 de daño y +5% de velocidad 3 s)
@@ -4471,7 +4470,7 @@ class Game {
       this.emit({ k: 'txt', x: hit.x | 0, y: hit.y | 0, s: 'MARCADO' });
     }
     this.damage(hit, pr.dmg, src, { tipo: pr.tipo, desde: pr });
-    this.knock(hit, pr.x - pr.vx * 0.05, pr.y - pr.vy * 0.05, 50);
+    if (pr.tipo !== 'fis') this.knock(hit, pr.x - pr.vx * 0.05, pr.y - pr.vy * 0.05, 50);   // Seba (30-10): los ataques básicos no empujan
   }
 
   // ================================================================ habilidades
@@ -10915,6 +10914,8 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
 const PATCH_NOTES = [
+  { v: 'V3.0', f: '30-10-2026', n: [
+    'Los ataques básicos ya no empujan (cuerpo a cuerpo, proyectiles y bombas de Biteroi). Los choques entre personajes y los empujes de habilidades siguen igual.' ] },
   { v: 'V2.9', f: '30-10-2026', n: [
     'Tenebris: mientras canaliza la Siega, el tajo gira hacia donde apuntas o hacia donde mueves el joystick (se puede pegar en cualquier dirección).',
     'Tenebris: la maldición del Alma errante también silencia los primeros 2 s.' ] },
