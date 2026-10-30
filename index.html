@@ -787,6 +787,16 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
 #b-h2 { right: 26px; bottom: 110px; width: 74px; height: 74px; }
 #b-h3 { right: 176px; bottom: 38px; }
 #actions { height: 230px; }
+/* Seba (30-10): Patch Notes */
+#scr-patch { overflow-y: auto; }
+.pn { background: var(--noche); border: 3px solid var(--tinta); box-shadow: inset 3px 3px 0 var(--piedra0); padding: 8px 12px 10px; }
+.pn.nuevo { box-shadow: inset 3px 3px 0 var(--oro0); border-color: var(--oro1); }
+.pn-t { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.pn-t b { font: 14px var(--f-num); color: var(--oro2); text-shadow: 2px 2px 0 var(--tinta); }
+.pn-t small { font: 10px var(--f-num); color: var(--perg1); }
+.pn ul { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.pn li { color: var(--perg2); font-size: 14px; line-height: 1.3; }
+#patch-lista { display: flex; flex-direction: column; gap: 10px; }
 
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
@@ -886,6 +896,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
           </div>
         </div>
         <button class="btn" id="b-coleccion">Colección de héroes</button>
+        <button class="btn" id="b-patch">Patch Notes</button>
         <button class="btn" id="b-sonido">Sonido: sí</button>
         <p class="demo-note solo-pc"><b>Moverse</b> WASD · <b>Apuntar</b> con el mouse · <b>Atacar</b> clic o Espacio<br><b>Habilidades</b> 1 y 2 · <b>Ulti</b> 3 (se llena haciendo daño)<br>El ataque tiene 3 cargas que se recuperan solas.<br><b>1v1 y 2v2</b>: a los 25 s se abren los círculos (uno en el lado de cada equipo). Gana quien tenga el círculo rival y 10 kills a la vez.</p>
         <p class="demo-note solo-cel">Gira el celular en horizontal.<br><b>Moverse</b>: arrastra el dedo en la mitad izquierda.<br><b>Atacar</b>: arrastra el botón rojo para apuntar y suelta; tocar sin arrastrar apunta solo, pero gasta 1 de tus 3 cargas.<br><b>Ulti</b> (botón dorado): se llena haciendo daño.<br><b>1v1 y 2v2</b>: a los 25 s se abren los círculos (uno en el lado de cada equipo). Gana quien tenga el círculo rival y 10 kills a la vez.</p>
@@ -901,6 +912,14 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <p class="hint">Toca un héroe para leer su ficha.</p>
       <div class="col-acc"><button class="btn small" id="b-col-matriz">Ver tabla de matchups</button></div>
       <div id="col-grid"></div>
+    </div>
+  </section>
+
+  <!-- ================= PATCH NOTES (Seba 30-10) ================= -->
+  <section class="screen hidden" id="scr-patch">
+    <div class="col-wrap">
+      <div class="col-head"><button class="btn small" id="b-patch-volver">Volver</button><h2>Patch Notes</h2></div>
+      <div id="patch-lista"></div>
     </div>
   </section>
 
@@ -1382,7 +1401,7 @@ Object.assign(HABILIDADES, {
                    n1: { dano: 100, aturde: 2 }, n2: { dano: 130, aturde: 2 } },
   tejer:         { nombre: 'Tejer', glifo: 'telarana', cd: 25, radio: 162,   // Seba (29-10): tela 25% más grande (130 → 162)
                    desc: (n) => `Tejes una tela de araña donde estás (solo 1 a la vez) por ${n.dur} s. Encima de ella ganas +${Math.round(n.buff * 100)}% de recarga de ataque y +${Math.round(n.vel * 100)}% de velocidad, y recibes ${Math.round(n.buff * 100)}% menos de daño. Los enemigos que la pisan quedan lentos ${Math.round(n.lento * 100)}%.`,
-                   n1: { dur: 25, buff: 0.2, vel: 0.15, lento: 0.2 }, n2: { dur: 25, buff: 0.25, vel: 0.2, lento: 0.25 } },   // Seba (29-10): recarga y resistencia 15% → 20% (velocidad sigue 15%)
+                   n1: { dur: 25, buff: 0.15, vel: 0.15, lento: 0.15 },   /* Seba (30-10): todo parejo en 15% y lento 15% */ n2: { dur: 25, buff: 0.25, vel: 0.2, lento: 0.25 } },   // Seba (29-10): recarga y resistencia 15% → 20% (velocidad sigue 15%)
   mordida:       { nombre: 'Mordida venenosa', glifo: 'colmillos', cd: 35, ulti: true, alcance: 120, ventanaKill: 1.5, bajaKill: 0.5,   // Seba (28-10)
                    desc: (n) => `Saltas sobre el héroe enemigo más cercano (a menos de 120) y lo muerdes: ${n.dano} de daño y veneno de ${n.dps} por segundo durante ${n.dur} s. Si no hay nadie cerca, no se gasta. Si el mordido muere hasta 1,5 s después, la recarga de la Mordida baja a la mitad.`,
                    n1: { dano: 100, dps: 25, dur: 5 }, n2: { dano: 130, dps: 32.5, dur: 5 } },
@@ -1415,10 +1434,10 @@ Object.assign(HABILIDADES, {
   // ---- Gaia (Seba, 29-10)
   discoGaia:     { nombre: 'Disco de Gaia', glifo: 'discoGaia', cd: 18, cdFijo: true, alcance: 300, vel: 527, radioRebote: 96, rebote: 0.25,   // Seba (29-10): 15% más lento (620 → 527); rebote hasta 96 (20% menos que el radio de caída de Kazaro, 120)
                    desc: (n) => `Lanzas un disco mágico en línea recta. Al primer enemigo: ${n.danos[0]} de daño y aturdido ${fmtN(n.aturde[0])} s. Rebota al azar a otro enemigo a menos de ${HABILIDADES.discoGaia.radioRebote}: ${n.danos[1]} y ${fmtN(n.aturde[1])} s. Último rebote: ${n.danos[2]} y ${fmtN(n.aturde[2])} s. No repite al mismo seguido (con 2 enemigos, el último vuelve al primero). También rebota en invocaciones; ignora las torretas.`,
-                   n1: { danos: [50, 100, 125], aturde: [1.5, 2, 2.5] }, n2: { danos: [65, 130, 162], aturde: [1.5, 2, 2.5] } },
-  pasoCeleste:   { nombre: 'Paso celestial', glifo: 'portalGaia', cd: 12, cdFijo: true, canal: 0.4, largo: 300, radio: 130,
+                   n1: { danos: [50, 100, 125], aturde: [1, 1.5, 2] },   /* Seba (30-10): aturdimientos 1,5/2/2,5 → 1/1,5/2 */ n2: { danos: [65, 130, 162], aturde: [1.5, 2, 2.5] } },
+  pasoCeleste:   { nombre: 'Paso celestial', glifo: 'portalGaia', cd: 13, cdFijo: true,   /* Seba (30-10): 12 → 13 s */ canal: 0.4, largo: 300, radio: 130,
                    desc: (n) => `Canalizas ${fmtN(HABILIDADES.pasoCeleste.canal)} s (un aturdimiento o un silencio lo corta), entras a un portal y sales por otro a ${HABILIDADES.pasoCeleste.largo} de distancia. Al salir, un pulso deja lentos ${Math.round(n.lento * 100)}% por ${n.dur} s a los enemigos cerca y les hace ${n.dano} de daño + 1 por cada punto de vida que te falte (máximo +${n.tope}).`,
-                   n1: { dano: 25, tope: 100, lento: 0.4, dur: 4 }, n2: { dano: 32, tope: 130, lento: 0.4, dur: 4 } },
+                   n1: { dano: 25, tope: 75, lento: 0.25, dur: 4 },   /* Seba (30-10): tope 100 → 75, lento 40% → 25% */ n2: { dano: 32, tope: 130, lento: 0.4, dur: 4 } },
   lluviaEstrellas: { nombre: 'Lluvia de estrellas', glifo: 'estrellas', cd: 50, ulti: true, distancias: [120, 260, 400], radio: 80, cada: 0.805, aviso: 0.575,   // Seba (29-10): meteoros 15% más lentos (0,7 → 0,805 s; caída 0,5 → 0,575 s)
                    desc: (n) => `Te quedas quieta canalizando mientras caen 3 meteoros en línea recta, uno tras otro (cada ${fmtN(HABILIDADES.lluviaEstrellas.cada)} s): uno cerca, otro a media distancia y otro lejos. Nada interrumpe la canalización, pero sí puedes recibir daño. Cada meteoro hace ${n.dano} de daño y aturde ${fmtN(n.aturde)} s.`,
                    n1: { dano: 125, aturde: 1 }, n2: { dano: 162, aturde: 1 } },
@@ -1454,7 +1473,7 @@ const PASIVAS = {
   eco:          { nombre: 'Eco del camino', glifo: 'gotaAzul', desc: 'Curar a tus aliados también carga tu ulti.' },
   nubeVoladora: { nombre: 'Sobre la nube', glifo: 'nube', desc: 'Flotas sobre tu nube: pasas por encima de los obstáculos (muros de hielo y muros de la cámara de The Cucko). Cada golpe que daña a un héroe enemigo te da +1% de velocidad de movimiento (máximo +10%). Si pasas 1 s sin dañar a un héroe, empiezas a perderlo de a 1% por segundo.' },
   pasoSigiloso: { nombre: 'Paso sigiloso', glifo: 'bota', desc: '+10% de velocidad de movimiento si no recibiste daño en los últimos 3 s. Cada ataque básico que daña a un enemigo baja 0,25 s la recarga de tus habilidades 1 y 2.' },
-  festin:       { nombre: 'Festín', glifo: 'colmillos', desc: 'Cuando muere un héroe enemigo al que dañaste en los últimos 1,5 s, recuperas 100 de vida.' },
+  festin:       { nombre: 'Festín', glifo: 'colmillos', desc: 'Cuando muere un héroe enemigo al que dañaste en los últimos 1,5 s, recuperas 50 de vida.' },   // Seba (30-10): 100 → 50
   sentidoAracnido: { nombre: 'Sentido arácnido', glifo: 'ojoArana', desc: 'Los enemigos invisibles o escondidos que pisan tu tela quedan a la vista de todos.' },
   furiaBosque:  { nombre: 'Furia del bosque', glifo: 'huellaTroll', desc: '+3% de velocidad de movimiento por cada héroe enemigo a menos de 250 (máximo +30%).' },
   ultimoAliento: { nombre: 'Último aliento', glifo: 'corazonVerde', desc: 'Por debajo del 30% de vida, tus habilidades se recargan 25% más rápido.' },
@@ -3765,9 +3784,9 @@ class Game {
       for (const [id, t] of Object.entries(p.golpesFestin)) {
         const ar = this.players.get(id);
         if (!ar || !ar.alive || this.combatTime - t > HABILIDADES.mordida.ventanaKill) continue;
-        this.heal(ar, 100, ar);
+        this.heal(ar, 50, ar);   // Seba (30-10): 100 → 50
         this.emit({ k: 'heal', x: ar.x | 0, y: ar.y | 0 });
-        this.emit({ k: 'txt', x: ar.x | 0, y: ar.y | 0, s: 'FESTIN +100', id: ar.id });
+        this.emit({ k: 'txt', x: ar.x | 0, y: ar.y | 0, s: 'FESTIN +50', id: ar.id });
       }
       p.golpesFestin = null;
     }
@@ -9281,7 +9300,7 @@ function toast(text, ok = false) {
   clearTimeout(toastT);
   toastT = setTimeout(() => t.classList.remove('show'), 2400);
 }
-const SCREENS = ['scr-home', 'scr-coleccion', 'scr-lobby', 'scr-draft', 'scr-shop', 'scr-results', 'scr-over'];
+const SCREENS = ['scr-home', 'scr-coleccion', 'scr-patch', 'scr-lobby', 'scr-draft', 'scr-shop', 'scr-results', 'scr-over'];
 function showScreen(id) { for (const s of SCREENS) $(s).classList.toggle('hidden', s !== id); }
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sin almacenamiento */ } }
@@ -10430,6 +10449,43 @@ function abrirColeccion() {
   showScreen('scr-coleccion');
 }
 $('b-coleccion').onclick = abrirColeccion;
+// Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
+// Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
+const PATCH_NOTES = [
+  { v: 'V2.0 · ajuste de balance', f: '30-10-2026', n: [
+    'Gaia: el Disco aturde 1 / 1,5 / 2 s (antes 1,5 / 2 / 2,5); el daño no cambia.',
+    'Gaia: Paso celestial recarga 13 s (antes 12), deja lento 25% (antes 40%) y hace como máximo 100 de daño (antes 125).',
+    'Aracnida: Festín cura 50 (antes 100).',
+    'Aracnida: sobre su tela gana 15% de recarga, 15% menos de daño y 15% de velocidad (antes 20 / 20 / 15); la tela deja lentos 15% (antes 20%).',
+    'Nuevo: botón Patch Notes en el inicio.' ] },
+  { v: 'V2.0', f: '30-10-2026', n: [
+    'Avisos de kill con la cara de cada héroe y los nombres en el color de su equipo.',
+    'Shai: el alcance de su ulti ahora es un cono que ven todos los jugadores; las dagas vuelan 10% más rápido.',
+    'Celular: el joystick solo funciona en la mitad izquierda de la pantalla.',
+    'Celular: el botón para cancelar el apuntado está más lejos de los otros y los botones de ataque y habilidades son 5% más grandes.' ] },
+  { v: 'V1.2 A', f: '30-10-2026', n: [
+    'Shai pasa a la casa Renegados.',
+    'Shai: solo su jugador ve el alcance del Salto del juicio.',
+    'Colección con el color de cada casa y botón para ver la tabla de matchups.' ] },
+  { v: 'V1.1 A', f: '30-10-2026', n: [
+    'Nuevo héroe: Shai, asesina templaria (Salto del juicio, Manto de luz y Secreto Templario).',
+    'Draft con baneos para 1v1 y 2v2, con lo elegido bien visible.',
+    'Al morir puedes mirar la partida: sigue a un aliado o arrastra la cámara.',
+    'Colección de héroes en el inicio y fichas de los héroes ya elegidos en el draft.',
+    'La pausa permite salir al menú inicial. Reaparición más corta: 3, 6, 9 s.',
+    'Arreglos: Rasho ya no queda tirado al morir y los botones apretados estando muerto ya no se disparan solos.' ] },
+  { v: 'V1.0 A', f: '29-10-2026', n: [
+    'Nuevo héroe: Gaia, diosa de la naturaleza (ráfaga, Disco que rebota, Paso celestial y Lluvia de estrellas).',
+    'Draft por casas: Aliados y Renegados, con 3 minutos para elegir.',
+    'Pausa y reinicio en partida.',
+    'Guías de apuntado más transparentes y botón para cancelar el apuntado en el celular.' ] },
+];
+function abrirPatch() {
+  $('patch-lista').innerHTML = PATCH_NOTES.map((p, i) => `<div class="pn${i === 0 ? ' nuevo' : ''}"><div class="pn-t"><b>LOLA ${esc(p.v)}</b><small>${esc(p.f)}</small></div><ul>${p.n.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`).join('');
+  showScreen('scr-patch');
+}
+$('b-patch').onclick = abrirPatch;
+$('b-patch-volver').onclick = () => showScreen('scr-home');
 $('b-col-matriz').onclick = abrirMatriz;
 $('b-col-volver').onclick = () => showScreen('scr-home');
 $('col-grid').addEventListener('click', (e) => { const b = e.target.closest('[data-h]'); if (b) abrirFicha(b.dataset.h); });
