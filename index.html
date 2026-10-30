@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V2.7</title>
+<title>LOLA V2.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -930,7 +930,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V2.7</p>
+        <p class="sub version">LOLA V2.8</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -1335,7 +1335,8 @@ Object.assign(HEROES, {
     casa: 'renegados',
     nombre: 'Tenebris', rol: 'Daño · control', fondo: 'tenebris', arma: 'guadana',
     desc: 'La parca: capucha negra, cara de sombra con ojos que titilan y una guadaña. Maldice con almas errantes, siega la mitad de la vida y cae sobre sus presas en un pozo de almas.',
-    vida: 370, dano: 33, recarga: 1.75, ultiCarga: 300, velocidad: 155,   // Seba (30-10): recarga +25% (1,4 → 1,75)   // Seba (30-10): daño 28 → 33, recarga más lenta (1,2 → 1,4 (C))
+    vida: 370, dano: 38, recarga: 1.75,   // Seba (30-10): daño 33 → 38
+    ultiCarga: 300, velocidad: 155,   // Seba (30-10): recarga +25% (1,4 → 1,75)   // Seba (30-10): daño 28 → 33, recarga más lenta (1,2 → 1,4 (C))
     ataque: { tipo: 'melee', rango: 64, arco: 140 },
     habs: ['almaErrante', 'siega', 'pozoMaldad'],
     pasiva: 'mantoSombras',
@@ -10906,6 +10907,8 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
 const PATCH_NOTES = [
+  { v: 'V2.8', f: '30-10-2026', n: [
+    'Tenebris: ataque básico 38 de daño (antes 33).' ] },
   { v: 'V2.7', f: '30-10-2026', n: [
     'Lentos: ahora se suman entre fuentes distintas (ej. Alma errante 20% + Pozo 25% = 45%). La misma fuente no se suma consigo misma. Cada lento corre su propia duración. Nadie baja del 25% de su velocidad.',
     'Tenebris: Pozo de la maldad deja 40% más lentos (antes 25%) y se canaliza en 1,5 s (antes 2).',
