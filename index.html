@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V2.2</title>
+<title>LOLA V2.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -923,7 +923,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V2.2</p>
+        <p class="sub version">LOLA V2.3</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -10504,10 +10504,13 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
 const PATCH_NOTES = [
+  { v: 'V2.3', f: '30-10-2026', n: [
+    'Las habilidades ya no tienen nivel 2: todas juegan siempre con sus números base.',
+    'Fichas y Patch Notes muestran un solo valor por habilidad.' ] },
   { v: 'V2.2', f: '30-10-2026', n: [
     'Shai — rework del Secreto Templario: durante 1,7 s lanza 55 cuchillas mágicas en todas las direcciones, girando, hasta 137 de distancia.',
     'Puede moverse mientras lo usa: las cuchillas salen de donde esté.',
-    'Cada cuchilla hace 18 / 23 de daño al primer enemigo que toca y se le queda clavada, o se clava en el piso al llegar al borde.',
+    'Cada cuchilla hace 18 de daño al primer enemigo que toca y se le queda clavada, o se clava en el piso al llegar al borde.',
     'A los 2 s vuelven volando hasta Shai (la siguen): repiten el daño al héroe donde estaban y dañan a los enemigos que cruzan.',
     'Mientras lo lanza, todos ven el alcance como un círculo rojizo que sigue a Shai.' ] },
   { v: 'V2.1', f: '30-10-2026', n: [
