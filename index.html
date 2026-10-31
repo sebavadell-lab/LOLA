@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.9</title>
+<title>LOLA V4.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -937,7 +937,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.9</p>
+        <p class="sub version">LOLA V4.0</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -4199,7 +4199,7 @@ class Game {
       if (atacante && this.teamOf(atacante.id) !== this.teamOf(target.owner) && target.kind !== 'muro') this.cargarUlti(atacante, Math.min(amt, Math.max(0, target.hp)), src, o);
       if (atacante && atacante.fx && atacante.fx.llama && this.teamOf(atacante.id) !== this.teamOf(target.owner)) atacante.fx.llama.dano += Math.min(amt, Math.max(0, target.hp));
       target.hp -= amt;
-      this.numero(target, amt, src, o.silencioso);
+      this.numero(target, amt, src, o.silencioso && !o.tick, !!o.tick);
       if (target.hp <= 0) this.killUnit(target, atacante, true);
       return amt;
     }
@@ -4209,7 +4209,7 @@ class Game {
     if (atacante && atacante !== target && HEROES[atacante.build?.heroe]?.pasiva === 'festin') (target.golpesFestin = target.golpesFestin || {})[atacante.id] = this.combatTime;
     target.hp -= amt;
     target.ultimoDano = this.combatTime;
-    this.numero(target, amt, src, o.silencioso);
+    this.numero(target, amt, src, o.silencioso && !o.tick, !!o.tick);
     // Rasho (Seba 29-10): cada golpe que daña a un héroe enemigo suma +1% de velocidad (máx. 10); se pierde tras 1 s sin dañar
     if (atacante && atacante.alive && atacante !== target && real > 0 && !o.silencioso && HEROES[atacante.build?.heroe]?.pasiva === 'nubeVoladora' && this.teamOf(atacante.id) !== this.teamOf(target.id)) {
       const c = atacante.fx.carga || (atacante.fx.carga = { t: 1, n: 0 });
@@ -4243,7 +4243,7 @@ class Game {
     p.stN[k] += v; p.stT[k] += v;
   }
 
-  numero(target, amt, src, acumular) {
+  numero(target, amt, src, acumular, dot = false) {
     const sid = src ? (src.esUnidad ? src.owner : src.id) : null;
     if (acumular) {
       target.acum = target.acum || {};
@@ -4251,7 +4251,7 @@ class Game {
       target.acum[k] = (target.acum[k] || 0) + amt;
       return;
     }
-    this.emit({ k: 'hit', x: target.x | 0, y: target.y | 0, v: Math.round(amt), s: sid, t: target.esUnidad ? null : target.id });
+    this.emit({ k: 'hit', x: target.x | 0, y: target.y | 0, v: Math.round(amt), s: sid, t: target.esUnidad ? null : target.id, ...(dot ? { dot: true } : {}) });
   }
 
   vaciarNumeros(e, dt) {
@@ -4302,7 +4302,8 @@ class Game {
   // La misma fuente (val.k + quien lo lanza) es una sola instancia: se renueva, no se suma (ej. Puños del fénix, Pulso de fuego).
   sumarDot(t, key, val) {
     const I = t.fx.dotsInst || (t.fx.dotsInst = {});
-    I[key + ':' + (val.k || 'otro') + ':' + (val.src ?? '')] = { key, t: val.t, dps: val.dps, src: val.src, alma: !!val.alma, maldicion: !!val.maldicion };
+    const id = key + ':' + (val.k || 'otro') + ':' + (val.src ?? ''), prev = I[id];
+    I[id] = { key, t: val.t, dps: val.dps, src: val.src, alma: !!val.alma, maldicion: !!val.maldicion, acc: prev ? prev.acc : 0 };   // al renovarse conserva su reloj
     this.recalcDots(t);
   }
   recalcDots(t) {
@@ -4325,6 +4326,12 @@ class Game {
       if (g > 0 || st > 0) out.push([isNaN(+id) ? id : +id, +g.toFixed(2), +st.toFixed(2)]);
     }
     return out.length ? out : 0;
+  }
+  // Seba (31-10): «X por segundo» = un golpe de X cada 1 s (no se descuenta de a poquito). Cuenta el tiempo de cada fuente con cada objetivo.
+  porSegundo(store, key, dt) {
+    store[key] = (store[key] || 0) + dt;
+    if (store[key] >= 0.999) { store[key] -= 1; return true; }
+    return false;
   }
   esMaldito(q) { return !!(q.fx && Object.values(q.fx).some(f => f && f.maldito)); }
   recalcLento(t) {
@@ -5675,10 +5682,10 @@ class Game {
       if (DOTS.has(k)) continue;   // es la suma de fx.dotsInst (se recalcula abajo)
       if (k === 'dotsInst') {
         for (const [q, d] of Object.entries(f)) {
-          d.t -= dt;
-          if (e.alive) this.damage(e, d.dps * dt, this.players.get(d.src), { tipo: 'mag', silencioso: true, ulti: d.key === 'veneno' || d.key === 'fuegoAzul', fuegoAzul: d.key === 'fuegoAzul' });
+          d.t -= dt; d.acc = (d.acc || 0) + dt;
+          if (d.acc >= 0.999) { d.acc -= 1; if (e.alive) this.damage(e, d.dps, this.players.get(d.src), { tipo: 'mag', silencioso: true, tick: true, ulti: d.key === 'veneno' || d.key === 'fuegoAzul', fuegoAzul: d.key === 'fuegoAzul' }); }   // un golpe por segundo
           if (e.fx !== fx || !fx.dotsInst) break;   // murió y se limpiaron sus efectos
-          if (d.t <= 0) delete f[q];
+          if (d.t <= 1e-6) delete f[q];
         }
         if (e.fx === fx) this.recalcDots(e);
         continue;
@@ -5743,12 +5750,14 @@ class Game {
       if (!u.alive || u.kind !== 'totemGaia') continue;
       u.t += dt;
       const own = this.players.get(u.owner), H = HABILIDADES.totemGaia;
-      if (u.t >= u.dur || !own) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0 }); continue; }
-      for (const q of this.players.values()) if (q.alive && this.teamOf(q.id) === this.teamOf(own.id) && dist(q, u) <= H.radio + CONFIG.RADIO_JUGADOR) this.heal(q, u.n.cura * dt, own);
+      if (!own) { u.alive = false; continue; }
+      const tk = u.tk || (u.tk = {});   // Seba (31-10): un golpe/curación por cada segundo dentro
+      for (const q of this.players.values()) if (q.alive && this.teamOf(q.id) === this.teamOf(own.id) && dist(q, u) <= H.radio + CONFIG.RADIO_JUGADOR && this.porSegundo(tk, 'c' + q.id, dt)) this.heal(q, u.n.cura, own);
       for (const e of this.enemigos(own.id, false)) {
         if (e.esUnidad && UNIDADES[e.kind]?.invulnerable) continue;
-        if (dist(e, u) <= H.radio + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) this.damage(e, u.n.dps * dt, own, { tipo: 'mag', silencioso: true });
+        if (dist(e, u) <= H.radio + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR) && this.porSegundo(tk, 'd' + e.id, dt)) this.damage(e, u.n.dps, own, { tipo: 'mag', silencioso: true, tick: true });
       }
+      if (u.t >= u.dur - 1e-6) { u.alive = false; this.emit({ k: 'poof', x: u.x | 0, y: u.y | 0 }); continue; }
     }
     // Tenebris: Alma errante (lenta; va y vuelve por el mismo camino; maldice al primer héroe que toca)
     for (const u of this.units) {
@@ -5808,7 +5817,7 @@ class Game {
         borde(q, 'u' + q.id, 10);
         if (u.dentro.has('u' + q.id)) this.aplicarEfecto(q, 'fuegoAzul', { t: 0.25, dps: u.n.fuego * mult, src: u.owner, k: 'arena' });
       }
-      if (own.alive && dist(own, u) < u.r) this.heal(own, u.n.cura * mult * dt, own);
+      if (own.alive && dist(own, u) < u.r && this.porSegundo(u.tk || (u.tk = {}), 'c', dt)) this.heal(own, u.n.cura * mult, own);
     }
     // Kazaro: Lanza errante (vuela, queda clavada 2 s y, si no salta, vuelve a sus manos dañando)
     for (const u of this.units) {
@@ -6223,7 +6232,7 @@ class Game {
         const f = p.fx.espirituFenix, Rr = HABILIDADES.espirituFenix.radio;
         for (const e of this.enemigos(p.id, false)) {
           if (e.esUnidad && UNIDADES[e.kind]?.invulnerable) continue;
-          if (dist(e, p) <= Rr + (e.esUnidad ? 10 : R)) this.damage(e, f.n.dps * (e.esUnidad && !e.enemigo ? 2 : 1) * dt, p, { tipo: 'mag', silencioso: true, ulti: true });   // doble a invocaciones
+          if (dist(e, p) <= Rr + (e.esUnidad ? 10 : R) && this.porSegundo(f.tk || (f.tk = {}), e.id, dt)) this.damage(e, f.n.dps * (e.esUnidad && !e.enemigo ? 2 : 1), p, { tipo: 'mag', silencioso: true, tick: true, ulti: true });   // doble a invocaciones
         }
       }
       if (p.fx.embateGiro) {
@@ -6260,7 +6269,7 @@ class Game {
         const f = p.fx.pozo, Rp = HABILIDADES.pozoMaldad.radio;
         for (const e of this.enemigos(p.id, false)) {
           if (e.kind === 'muro' || (e.esUnidad && UNIDADES[e.kind]?.invulnerable) || dist(e, p) > Rp + (e.esUnidad ? 10 : R)) continue;
-          this.damage(e, f.n.dps * dt, p, { tipo: 'mag', silencioso: true, ulti: true });
+          if (this.porSegundo(f.tk || (f.tk = {}), e.id, dt)) this.damage(e, f.n.dps, p, { tipo: 'mag', silencioso: true, tick: true, ulti: true });
           if (e.alive) this.aplicarEfecto(e, 'slow', { t: 0.25, mult: 1 - f.n.lento, k: 'pozo' });
         }
       }
@@ -11713,6 +11722,9 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
 const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V4.0', f: '31-10-2026', n: [
+    'Daño y curación «por segundo»: ahora es un golpe del total cada 1 s (antes se descontaba de a poquito como un medidor). Ej.: 25 por segundo durante 4 s = 4 golpes de 25.',
+    'Aplica a quemaduras, maldiciones, veneno, Tótem de Gaia, Espíritu del Fénix, Pozo de la maldad y la arena de Kazaro. Cada fuente lleva su propio reloj y se suman entre sí.' ] },
   { v: 'V3.9', f: '31-10-2026', n: [
     'Sin empuje en los golpes del Gólem, la Torreta y el Mayhem (los choques entre cuerpos siguen igual).',
     'Su\'rulfar: cada golpe del Mayhem aturde 0,3 s (máximo 1 aturdimiento por segundo a cada enemigo). Quien juega Su\'rulfar ve sobre cada enemigo dos cuadritos que se rellenan: cuándo puede volver a golpearlo (rojo) y a aturdirlo (dorado).',
