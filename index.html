@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.7</title>
+<title>LOLA V3.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -937,7 +937,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.7</p>
+        <p class="sub version">LOLA V3.8</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -4169,7 +4169,7 @@ class Game {
     { const at = src ? (src.esUnidad ? this.players.get(src.owner) : src) : null;
       if (o.tipo !== 'puro' && at && at.fx && at.fx.bendecido) amt *= 1 + (at.fx.bendecido.dano || 0);   // Seba (28-10): +25% a habilidades y ataques
       if (at && at.fx && at.fx.cucko) amt *= CONFIG.CUCKO.buff.dano;
-      if (at && at === src && at.fx && at.fx.llama && !o.fuegoAzul && o.tipo !== 'puro') amt *= 1 + at.fx.llama.n.extra; }   // Kazaro: +50% con la lanza en fuego azul
+    }   // Seba (31-10): se quitó el +50% de daño de Kazaro durante la Llama (resto de la ulti antigua; `extra` ahora es el +50% de fuego por héroe extra en la arena)
     if (esJugador && target.fx && target.fx.cucko) amt *= CONFIG.CUCKO.buff.recibe;
     if (esJugador && target.fx && target.fx.enTela) amt *= 1 - target.fx.enTela.buff;   // Aracnida sobre su tela
     if (esJugador && o.basico && HEROES[target.build?.heroe]?.pasiva === 'pielBrasa') amt *= 0.9;   // Ash: Piel de brasa
@@ -11685,6 +11685,8 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
 const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V3.8', f: '31-10-2026', n: [
+    'Kazaro: arreglo — durante la Llama de la estepa ya no gana +50% de daño en básicos y habilidades (otro resto de la ulti antigua). El fuego de la arena, los básicos y las habilidades se suman entre sí.' ] },
   { v: 'V3.7', f: '31-10-2026', n: [
     'Kazaro: arreglo — durante la Llama de la estepa, la Lanza y el Decimar ya no dejan Fuego azul (era un resto de la ulti antigua). El fuego azul de sus habilidades es solo visual; el daño de fuego azul viene solo de la arena.' ] },
   { v: 'V3.6', f: '31-10-2026', n: [
