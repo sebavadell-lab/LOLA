@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.4</title>
+<title>LOLA V3.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -937,7 +937,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.4</p>
+        <p class="sub version">LOLA V3.5</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -1440,8 +1440,8 @@ const HABILIDADES = {
                 // Nerf de Seba (27-10): -30% de vida y de daño (antes 50 de vida y 3 de daño)
                 // Seba (27-10): menos esqueletos (antes 3 por invocación, máximo 6)
                 n1: { cant: 3, dano: 2, vida: 45, dur: 20, max: 6 }, n2: { cant: 3, dano: 2.7, vida: 46, dur: 20, max: 5 } },
-  maldicion:  { nombre: 'Maldición', glifo: 'espiral', cd: 18.8, cdFijo: true,   // Seba (28-10): +2 s (16,8 → 18,8)
-                desc: (n) => `Onda en todas direcciones: los enemigos alcanzados quedan malditos (calavera negra encima): ${fmtN(n.dps)} de daño por segundo por ${n.dur} s y silenciados ${fmtN(n.silencio)} s (el silencio corta canalizaciones).`,
+  maldicion:  { nombre: 'Maldición', glifo: 'espiral', cd: 18.8, cdFijo: true, expande: 1.5,   // Seba (31-10): nube que tarda 1,5 s en llegar a todo el alcance   // Seba (28-10): +2 s (16,8 → 18,8)
+                desc: (n) => `Sueltas una nube morada y negra que avanza contigo y se expande en ${fmtN(HABILIDADES.maldicion.expande)} s hasta ${HABILIDADES.maldicion.radio} de distancia: los enemigos que toca quedan malditos (calavera negra encima): ${fmtN(n.dps)} de daño por segundo por ${n.dur} s y silenciados ${fmtN(n.silencio)} s (el silencio corta canalizaciones).`,
                 n1: { dps: 20, dur: 4, silencio: 1.5 }, n2: { dps: 26, dur: 4, silencio: 1.5 }, radio: 187 },   // Seba (29-10): radio 220 → 187 (−15%)   // Seba (28-10): daño 5 → 4 s, silencio 2 → 1,5 s   // Seba (28-10): 15 → 20 por segundo
   golem:      { nombre: 'Invocar gólem', glifo: 'calaveraPiedra', cd: 50, ulti: true,
                 desc: (n) => `Gólem de ${n.vida} de vida que golpea en área cada 1,5 s por ${fmtN(n.dano)}. Te cura 25 por cada jugador que golpea. Dura ${n.dur} s o hasta morir.`,
@@ -5461,15 +5461,20 @@ class Game {
         break;
       }
       case 'maldicion': {
-        this.emit({ k: 'ring', x: p.x | 0, y: p.y | 0, r: h.radio, c: 'magia' });
-        for (const e of this.enemigos(p.id, false)) {
-          if (dist(e, p) > h.radio + CONFIG.RADIO_JUGADOR) continue;
-          this.aplicarEfecto(e, 'dot', { t: n.dur, dps: n.dps, src: p.id });
-          if (!e.esUnidad) {
-            this.aplicarEfecto(e, 'silence', { t: n.silencio });
-            this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: 'SILENCIO' });
+        // Seba (31-10): nube morada y negra que tarda 1,5 s en llegar a todo su alcance; maldice al enemigo que toca (una vez)
+        const tocados = new Set();   // Seba (31-10): la nube avanza con Karilthal
+        this.zones.push({ id: this.nextId++, kind: 'nubeMald', x: p.x, y: p.y, sigue: p, r: h.radio, t: h.expande, total: h.expande, tick: (z) => {
+          const rr = h.radio * (1 - Math.max(0, z.t) / z.total);
+          for (const e of this.enemigos(p.id, false)) {
+            if (tocados.has(e.id) || Math.hypot(e.x - z.x, e.y - z.y) > rr + CONFIG.RADIO_JUGADOR) continue;
+            tocados.add(e.id);
+            this.aplicarEfecto(e, 'dot', { t: n.dur, dps: n.dps, src: p.id });
+            if (!e.esUnidad) {
+              this.aplicarEfecto(e, 'silence', { t: n.silencio });
+              this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: 'SILENCIO' });
+            }
           }
-        }
+        } });
         break;
       }
       case 'golem':
@@ -6357,6 +6362,7 @@ class Game {
     for (const z of this.zones) {
       z.t -= dt;
       if (z.sigue) { z.x = z.sigue.x; z.y = z.sigue.y; }
+      if (z.tick && !z.done) z.tick(z, dt);
       if (z.t <= 0 && !z.done) { z.done = true; if (z.fin) z.fin(z); }
     }
     this.zones = this.zones.filter(z => !z.done);
@@ -8706,6 +8712,19 @@ class Renderer {
         this.linea(cx, cy, x2, y2, PALETA.tinta, 0, 0, w + 2);
         this.linea(cx, cy, x2, y2, PALETA.noche, 0, 0, w);
         this.linea(cx, cy, Math.round(cx + (x2 - cx) * z.prog), Math.round(cy + (y2 - cy) * z.prog), parpadeo ? PALETA.pergamino2 : PALETA.magia, 0, 0, Math.max(2, w - 2));
+      } else if (z.kind === 'nubeMald') {
+        // Maldición de Karilthal (Seba 31-10): nube morada y negra que crece hasta su alcance
+        const rr = Math.max(2, Math.round(r * z.prog));
+        this.discDither(cx, cy, rr, PALETA.tinta, 2, t);
+        this.discDither(cx, cy, Math.max(1, rr - 3), PALETA.magia, 2, t + 1);
+        this.ring(cx, cy, rr, PALETA.magia, 1);
+        this.ring(cx, cy, Math.max(1, rr - 2), PALETA.tinta, 1);
+        for (let k = 0; k < 10; k++) {   // jirones de humo en el borde
+          const a = k * 0.628 + this.time * 1.5, q = rr + ((k + t) % 3) - 1;
+          this.g.fillStyle = k % 2 ? PALETA.magia : PALETA.noche;
+          this.g.fillRect(Math.round(cx + Math.cos(a) * q) - 1, Math.round(cy + Math.sin(a) * q) - 1, 3, 2);
+        }
+        this.ring(cx, cy, r, PALETA.magia, 1);
       } else if (z.kind === 'cuadro') {
         // Danza silenciosa: cuadrado morado
         const L = r;
@@ -11634,6 +11653,8 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
 const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V3.5', f: '31-10-2026', n: [
+    'Karilthal: la Maldición ahora es una nube morada y negra que avanza con él y tarda 1,5 s en llegar a todo su alcance. Maldice y silencia a cada enemigo que toca (una vez).' ] },
   { v: 'V3.4', f: '31-10-2026', n: [
     'Takichi: Sablazo 160 → 150 y 20% más angosto (también los tajos del ulti). La pasiva ya no baja recargas con los básicos (se mantiene la recarga a la mitad si el Sablazo mata).',
     'Driiar: Embate recarga 9 → 10 s y cura 25 una vez por giro que daña a un héroe. Nephilim regenera 10 de vida por segundo (antes 20).',
