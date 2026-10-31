@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.2</title>
+<title>LOLA V3.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -862,6 +862,13 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
   .ro-t { font-size: 13px; } .ro-casa { padding: 8px 10px 10px; }
 }
 
+/* Seba (31-10): en celular, avisos de muerte y selector de espectar 20% más chicos */
+@media (hover: none) and (pointer: coarse) {
+  #feed .fi.kf { zoom: .8; }
+  #spec-bar { transform: translateX(-50%) scale(.8); transform-origin: 50% 100%; }
+  #spec-tip { transform: translateX(-50%) scale(.8); transform-origin: 50% 100%; bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
+}
+
 
 .demo-note{font-size:14px;color:var(--madera1);text-align:center;line-height:1.4}
 .demo-note b{color:var(--carm1)}
@@ -930,7 +937,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.2</p>
+        <p class="sub version">LOLA V3.3</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -10654,8 +10661,9 @@ function boletin(text, tipo = '') {
   el.textContent = text;
   f.prepend(el);
   while (f.children.length > 4) f.lastChild.remove();
-  setTimeout(() => el.classList.add('fuera'), 3200);
-  setTimeout(() => el.remove(), 3800);
+  const cel = matchMedia('(hover: none) and (pointer: coarse)').matches;   // Seba (31-10): en celular dura 10% menos
+  setTimeout(() => el.classList.add('fuera'), cel ? 2880 : 3200);
+  setTimeout(() => el.remove(), cel ? 3420 : 3800);
 }
 
 // Seba (30-10): aviso de kill con la cara 8 bit de cada héroe y el nombre en el color de su equipo
@@ -11620,6 +11628,9 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
 const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V3.3', f: '31-10-2026', n: [
+    'Celular: los avisos de muerte con caras son 20% más chicos y duran 10% menos.',
+    'Celular: el selector para mirar a otro jugador al morir es 20% más chico.' ] },
   { v: 'V3.2', f: '31-10-2026', n: [
     'Fichas de héroes: se quitó el texto que describe a cada héroe y su apariencia (se reescribirá).' ] },
   { v: 'V3.1', f: '31-10-2026', n: [
