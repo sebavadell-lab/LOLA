@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.5</title>
+<title>LOLA V3.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -937,7 +937,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.5</p>
+        <p class="sub version">LOLA V3.6</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -3740,6 +3740,7 @@ const TAU = Math.PI * 2;
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const r1 = (v) => Math.round(v * 10) / 10;
 
+const DOTS = new Set(['burn', 'dot', 'veneno', 'fuegoAzul']);   // daño en el tiempo: cada fuente es una instancia propia (Seba 31-10)
 const NEGATIVOS = new Set(['aturdido', 'slow', 'silence', 'arrastre', 'burn', 'dot', 'veneno', 'marcado', 'bombaPegada', 'vuln', 'enraizando', 'fuegoAzul', 'marcaLire', 'encadenado']);
 // Kazaro (Seba 29-10): durante Decimar es inmune a todo control
 const LENTO_MINIMO = 0.25;   // Seba (30-10): con todos los lentos juntos, nadie baja del 25% de su velocidad
@@ -4282,6 +4283,10 @@ class Game {
       this.emit({ k: 'txt', x: t.x | 0, y: t.y | 0, s: 'CORTADO' });
     }
     if (key === 'slow') { this.sumarLento(t, val); return; }
+    if (DOTS.has(key)) { this.sumarDot(t, key, val); return; }
+    // Seba (31-10): los estados de solo duración (silencio, aturdido, etc.) corren todos a la vez: uno más corto no acorta al que ya está
+    const ant = t.fx[key];
+    if (ant && Number.isFinite(ant.t) && val && Object.keys(val).length === 1 && Number.isFinite(val.t) && ant.t >= val.t) return;
     t.fx[key] = val;
   }
 
@@ -4292,6 +4297,24 @@ class Game {
     if (!ant || pct >= ant.pct) L[k] = { t: Math.max(val.t, ant && ant.pct === pct ? ant.t : 0), pct };
     else ant.t = Math.max(ant.t, val.t);
     this.recalcLento(t);
+  }
+  // Seba (31-10): los daños en el tiempo de fuentes distintas se suman, cada uno con su duración.
+  // La misma fuente (val.k + quien lo lanza) es una sola instancia: se renueva, no se suma (ej. Puños del fénix, Pulso de fuego).
+  sumarDot(t, key, val) {
+    const I = t.fx.dotsInst || (t.fx.dotsInst = {});
+    I[key + ':' + (val.k || 'otro') + ':' + (val.src ?? '')] = { key, t: val.t, dps: val.dps, src: val.src, alma: !!val.alma };
+    this.recalcDots(t);
+  }
+  recalcDots(t) {
+    const I = t.fx.dotsInst;
+    for (const key of DOTS) delete t.fx[key];
+    if (!I) return;
+    for (const d of Object.values(I)) {
+      const f = t.fx[d.key] || (t.fx[d.key] = { t: 0, dps: 0, src: d.src });
+      f.t = Math.max(f.t, d.t); f.dps += d.dps;
+      if (d.alma) { f.alma = true; f.src = d.src; }
+    }
+    if (!Object.keys(I).length) delete t.fx.dotsInst;
   }
   recalcLento(t) {
     const L = t.fx.lentos;
@@ -4461,7 +4484,7 @@ class Game {
       if (d > H.rango + CONFIG.RADIO_JUGADOR) continue;
       if (d > CONFIG.RADIO_JUGADOR && angDiff(Math.atan2(pt.y - p.y, pt.x - p.x), a) > half + 0.25) continue;
       this.damage(q, p.st.dano * (p.fx.espirituFenix ? 1 : 1) + f.n.extra, p, { tipo: 'fis', basico: true });
-      if (q.alive && q.kind !== 'muro') this.aplicarEfecto(q, 'burn', { t: f.n.dur, dps: f.n.quema, src: p.id });
+      if (q.alive && q.kind !== 'muro') this.aplicarEfecto(q, 'burn', { t: f.n.dur, dps: f.n.quema, src: p.id, k: 'punosFenix' });
     }
     if (--f.n2 <= 0) delete p.fx.punosFenix;
   }
@@ -4523,7 +4546,7 @@ class Game {
   // Kazaro: con la Llama de la estepa, sus habilidades dejan «Fuego azul»
   fuegoAzulEn(p, e) {
     if (!p.fx || !p.fx.llama || !e.alive || e.kind === 'muro') return;
-    this.aplicarEfecto(e, 'fuegoAzul', { t: 5, dps: p.fx.llama.n.fuego, src: p.id });
+    this.aplicarEfecto(e, 'fuegoAzul', { t: 5, dps: p.fx.llama.n.fuego, src: p.id, k: 'llamaHab' });
   }
   // Kazaro: salta hasta su lanza clavada (0,2 s) y se cura por cada héroe enemigo cerca de ella
   saltarALanza(p, l) {
@@ -4713,7 +4736,7 @@ class Game {
         for (const e of this.enemigos(pr.owner)) {
           if (distA(e, pr) > R + (e.esUnidad ? 10 : CONFIG.RADIO_JUGADOR)) continue;
           this.damage(e, pr.dmg, owner, { tipo: 'mag', desde: pr });
-          if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'burn', { t: HABILIDADES.pulso.n1.quema || 3, dps: pr.extra, src: pr.owner });
+          if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'burn', { t: HABILIDADES.pulso.n1.quema || 3, dps: pr.extra, src: pr.owner, k: 'pulso' });
         }
         return;
       }
@@ -5348,7 +5371,7 @@ class Game {
         this.clampWall(p);
         q.mordidaDe = { id: p.id, t: this.combatTime };   // Seba (28-10): si muere en 1,5 s, la ulti recarga a la mitad
         this.damage(q, n.dano, p, { tipo: 'mag', ulti: true });
-        this.aplicarEfecto(q, 'veneno', { t: n.dur, dps: n.dps, src: p.id });
+        this.aplicarEfecto(q, 'veneno', { t: n.dur, dps: n.dps, src: p.id, k: 'mordida' });
         this.emit({ k: 'mordida', x: q.x | 0, y: q.y | 0 });
         this.emit({ k: 'txt', x: q.x | 0, y: q.y | 0, s: 'ENVENENADO' });
         break;
@@ -5468,7 +5491,7 @@ class Game {
           for (const e of this.enemigos(p.id, false)) {
             if (tocados.has(e.id) || Math.hypot(e.x - z.x, e.y - z.y) > rr + CONFIG.RADIO_JUGADOR) continue;
             tocados.add(e.id);
-            this.aplicarEfecto(e, 'dot', { t: n.dur, dps: n.dps, src: p.id });
+            this.aplicarEfecto(e, 'dot', { t: n.dur, dps: n.dps, src: p.id, k: 'maldicion' });
             if (!e.esUnidad) {
               this.aplicarEfecto(e, 'silence', { t: n.silencio });
               this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: 'SILENCIO' });
@@ -5638,8 +5661,18 @@ class Game {
       if (!f) continue;   // se borró en esta misma vuelta (ej. murió y perdió el Sobrecrecimiento)
       if (k === 'slow') continue;   // es la suma de fx.lentos (se recalcula abajo)
       if (k === 'lentos') { for (const [q, l] of Object.entries(f)) { l.t -= dt; if (l.t <= 0) delete f[q]; } this.recalcLento(e); continue; }
+      if (DOTS.has(k)) continue;   // es la suma de fx.dotsInst (se recalcula abajo)
+      if (k === 'dotsInst') {
+        for (const [q, d] of Object.entries(f)) {
+          d.t -= dt;
+          if (e.alive) this.damage(e, d.dps * dt, this.players.get(d.src), { tipo: 'mag', silencioso: true, ulti: d.key === 'veneno' || d.key === 'fuegoAzul', fuegoAzul: d.key === 'fuegoAzul' });
+          if (e.fx !== fx || !fx.dotsInst) break;   // murió y se limpiaron sus efectos
+          if (d.t <= 0) delete f[q];
+        }
+        if (e.fx === fx) this.recalcDots(e);
+        continue;
+      }
       f.t -= dt;
-      if ((k === 'burn' || k === 'dot' || k === 'veneno' || k === 'fuegoAzul') && e.alive) this.damage(e, f.dps * dt, this.players.get(f.src), { tipo: 'mag', silencioso: true, ulti: k === 'veneno' || k === 'fuegoAzul', fuegoAzul: k === 'fuegoAzul' });
       // Atrapar presa: arrastre hasta los pies de Aracnida
       if (k === 'arrastre' && e.alive) {
         const q = Math.min(1, dt / Math.max(dt, f.t + dt));
@@ -5721,7 +5754,7 @@ class Game {
       for (const q of this.jugadoresEnemigos(own.id)) { if (q.esUnidad && !q.enemigo) continue; if (dist(q, u) <= H.radio + CONFIG.RADIO_JUGADOR) { presa = q; break; } }
       if (presa) {
         u.alive = false;
-        this.aplicarEfecto(presa, 'dot', { t: u.n.dur, dps: u.n.dps, src: own.id, alma: true });
+        this.aplicarEfecto(presa, 'dot', { t: u.n.dur, dps: u.n.dps, src: own.id, alma: true, k: 'alma' });
         this.aplicarEfecto(presa, 'slow', { t: u.n.dur, mult: 1 - u.n.lento, k: 'alma' });
         this.emit({ k: 'boom', x: presa.x | 0, y: presa.y | 0, r: 26, c: 'gaia' });
         if (!presa.esUnidad) { this.aplicarEfecto(presa, 'silence', { t: u.n.silencio }); this.emit({ k: 'txt', x: presa.x | 0, y: presa.y | 0, s: 'MALDITO' }); }   // Seba (30-10): silencia los primeros 2 s
@@ -5757,12 +5790,12 @@ class Game {
       for (const q of this.players.values()) {
         if (!q.alive || this.teamOf(q.id) === this.teamOf(u.owner)) continue;
         if (q.fx && (q.fx.jetpack || q.fx.saltoLanza)) { /* en el aire no lo frena el borde */ } else borde(q, q.id, CONFIG.RADIO_JUGADOR);
-        if (u.dentro.has(q.id) && dist(q, u) < u.r) this.aplicarEfecto(q, 'fuegoAzul', { t: 0.25, dps: u.n.fuego * mult, src: u.owner });
+        if (u.dentro.has(q.id) && dist(q, u) < u.r) this.aplicarEfecto(q, 'fuegoAzul', { t: 0.25, dps: u.n.fuego * mult, src: u.owner, k: 'arena' });
       }
       for (const q of this.units) {
         if (!q.alive || q.sinCuerpo || q.kind === 'muro' || q.kind === 'cucko' || this.teamOf(q.owner) === this.teamOf(u.owner)) continue;
         borde(q, 'u' + q.id, 10);
-        if (u.dentro.has('u' + q.id)) this.aplicarEfecto(q, 'fuegoAzul', { t: 0.25, dps: u.n.fuego * mult, src: u.owner });
+        if (u.dentro.has('u' + q.id)) this.aplicarEfecto(q, 'fuegoAzul', { t: 0.25, dps: u.n.fuego * mult, src: u.owner, k: 'arena' });
       }
       if (own.alive && dist(own, u) < u.r) this.heal(own, u.n.cura * mult * dt, own);
     }
@@ -6168,7 +6201,7 @@ class Game {
           if (e.esUnidad && UNIDADES[e.kind]?.invulnerable) continue;
           if (dist(e, p) > R + (e.esUnidad ? 12 : R)) continue;
           this.damage(e, f.n.dano, p, { tipo: 'fis', desde: p });
-          if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'burn', { t: f.n.dur, dps: f.n.quema, src: p.id });
+          if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'burn', { t: f.n.dur, dps: f.n.quema, src: p.id, k: 'patadaFenix' });
           if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'slow', { t: HABILIDADES.patadaFenix.lentoDur, mult: 1 - HABILIDADES.patadaFenix.lento, k: 'patadaFenix' });   // Seba (31-10)
           this.emit({ k: 'boom', x: e.x | 0, y: e.y | 0, r: 40, c: 'fuego' }); this.emit({ k: 'fuegoHit', x: e.x | 0, y: e.y | 0 });
           this.emit({ k: 'tajo', x1: f.x0 | 0, y1: f.y0 | 0, x2: p.x | 0, y2: p.y | 0, c: 'fuego' });
@@ -11653,6 +11686,9 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
 const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V3.6', f: '31-10-2026', n: [
+    'Los estados ahora corren todos a la vez: un silencio o aturdimiento más corto ya no acorta a uno más largo que ya estaba.',
+    'Los daños en el tiempo de fuentes distintas se suman, cada uno con su duración (ej. Maldición + Alma errante, Puños + Patada de Ash). La misma fuente no se suma: se renueva (Puños del fénix, Pulso de fuego).' ] },
   { v: 'V3.5', f: '31-10-2026', n: [
     'Karilthal: la Maldición ahora es una nube morada y negra que avanza con él y tarda 1,5 s en llegar a todo su alcance. Maldice y silencia a cada enemigo que toca (una vez).' ] },
   { v: 'V3.4', f: '31-10-2026', n: [
