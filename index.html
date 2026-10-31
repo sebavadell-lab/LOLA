@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.8</title>
+<title>LOLA V3.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -937,7 +937,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.8</p>
+        <p class="sub version">LOLA V3.9</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -1355,7 +1355,7 @@ Object.assign(HEROES, {
     casa: 'aliados',
     nombre: 'Driiar', rol: 'Luchador · sustento', fondo: 'driiar', arma: 'halabarda',
     desc: 'Viejo druida feérico del bosque, de barba blanca y ojos verdes. Pelea con una halabarda y magia de la naturaleza; en la ulti se transforma en Nephilim, un semi-ángel de alas rojas.',
-    vida: 400, dano: 30, recarga: 1.1, ultiCarga: 300, velocidad: 150,
+    vida: 390, dano: 30, recarga: 1.1, ultiCarga: 300, velocidad: 150,
     ataque: { tipo: 'melee', rango: 70, arco: 110 },
     habs: ['embate', 'totemGaia', 'nephilim'],
     pasiva: 'dueloBosque',
@@ -1420,11 +1420,11 @@ const HABILIDADES = {
                 desc: (n) => `Durante ${n.dur} s, cada paso largo (un cuerpo y cuarto) que avanzas dispara 4 piedras: primero norte, sur, este y oeste, y en el siguiente paso las diagonales: ${n.dano} de daño, ${n.danoInv} a invocaciones.`,
                 n1: { dur: 3, dano: 23, danoInv: 46 }, n2: { dur: 3, dano: 32.5, danoInv: 65 }, paso: 45, alcancePiedra: 180 },   // Seba (28-10): menos piedras (antes cada 18 = medio cuerpo)
   mayhem:     { nombre: 'Mayhem', glifo: 'remolinoBestia', cd: 40, ulti: true,
-                desc: (n) => `Te enrollas ${n.dur} s: +30% de velocidad. Cada enemigo que pisas recibe ${n.dano} de daño y queda lento ${Math.round(n.lento * 100)}% por ${fmtN(n.cada)} s; al mismo enemigo puedes volver a dañarlo cada ${fmtN(n.cada)} s. No puedes usar habilidades mientras ruedas.`,
-                n1: { dur: 5, dano: 50, cada: 0.5, lento: 0.1 }, n2: { dur: 5, dano: 65, cada: 0.5, lento: 0.1 } },   // Seba (28-10): antes 47 cada 2 s, sin lento
+                desc: (n) => `Te enrollas ${n.dur} s: +30% de velocidad. Cada enemigo que pisas recibe ${n.dano} de daño, queda lento ${Math.round(n.lento * 100)}% por ${fmtN(n.cada)} s y aturdido ${fmtN(n.aturde)} s (máximo un aturdimiento por segundo a cada enemigo); al mismo enemigo puedes volver a dañarlo cada ${fmtN(n.cada)} s. No puedes usar habilidades mientras ruedas.`,
+                n1: { dur: 5, dano: 50, cada: 0.5, lento: 0.1, aturde: 0.3, stunCada: 1 }, n2: { dur: 5, dano: 65, cada: 0.5, lento: 0.1, aturde: 0.3, stunCada: 1 } },   // Seba (31-10): aturde 0,3 s (1 por segundo por enemigo); sin empuje   // Seba (28-10): antes 47 cada 2 s, sin lento
 
   // ---- Lire
-  torreta:    { nombre: 'Torreta', glifo: 'diana', cd: 15, cdFijo: true,   // Seba (29-10): 14 → 15 s cargas: 2, max: 2,   // Seba (28-10): 2 cargas, recarga 14 s al gastar la segunda, máximo 2 activas
+  torreta:    { nombre: 'Torreta', glifo: 'diana', cd: 15, cdFijo: true, cargas: 2, max: 2,   // Seba (29-10): 14 → 15 s   // Seba (31-10): arreglo, un comentario se había comido «cargas» y «máximo»   // Seba (28-10): 2 cargas, recarga 14 s al gastar la segunda, máximo 2 activas
                 desc: (n) => `Montas una torreta a tus pies que dispara sola, a tu mismo ritmo: ${fmtN(n.dano)} por flecha. Indestructible, dura ${n.dur} s. Tienes 2 cargas; la recarga (15 s) parte al gastar la segunda y devuelve las dos. Máximo 2 activas a la vez.`,
                 n1: { dano: 21, dur: 6 }, n2: { dano: 27, dur: 6 } },   // Seba (28-10): 75% del daño de Lire (28 → 21), duran 6 s   // Seba (28-10): 4 → 25 → 20 por flecha
   fuga:       { nombre: 'Fuga', glifo: 'bota', cd: 14, cdFijo: true,   // Seba (29-10): 14 s exactos (antes 14,4), 25%
@@ -1580,7 +1580,7 @@ Object.assign(HABILIDADES, {
   // ---- Tenebris (Seba, 30-10; números (C))
   almaErrante:   { nombre: 'Alma errante', glifo: 'almaErrante', cd: 12, cdFijo: true, alcance: 0, vel: 150, velMax: 300, acelera: 400, radio: 14, curaKill: 25,   // Seba (30-10): sin límite de distancia (borde a borde); acelera hasta el doble
                    desc: (n) => `Sueltas un alma lenta en línea recta que acelera mientras viaja (hasta el doble de velocidad). Llega hasta el borde del mapa y vuelve hasta el borde contrario. El primer héroe enemigo que toca (ida o vuelta) queda maldito: ${n.dps} de daño por segundo y ${Math.round(n.lento * 100)}% más lento por ${n.dur} s, y silenciado los primeros ${fmtN(n.silencio)} s. Atraviesa invocaciones. Si no toca a nadie, desaparece. Si el maldito muere con la maldición encima, recuperas ${HABILIDADES.almaErrante.curaKill} de vida y la recarga de esta habilidad vuelve a 0.`,
-                   n1: { dps: 20, dur: 4, lento: 0.2, silencio: 2 }, n2: { dps: 20, dur: 4, lento: 0.2, silencio: 2 } },   // Seba (30-10): silencia 2 s
+                   n1: { dps: 20, dur: 4, lento: 0.2, silencio: 1.5 }, n2: { dps: 20, dur: 4, lento: 0.2, silencio: 1.5 } },   // Seba (30-10): silencia 2 s   // Seba (31-10): 2 → 1,5 s
   siega:         { nombre: 'Siega', glifo: 'siega', cd: 14, cdFijo: true, canal: 1, rango: 80, arco: 180, cura: 75,   // Seba (30-10): +75 de vida por héroe golpeado
                    desc: (n) => `Canalizas ${fmtN(HABILIDADES.siega.canal)} s quieto (un aturdimiento o un silencio lo corta) y das un tajo de guadaña en arco (mientras canalizas, el tajo gira hacia donde apuntas o mueves el joystick): los enemigos pierden el ${Math.round(n.pct * 100)}% de su vida actual. Rompe los escudos (Escudo de musgo, Manto de luz) y silencia esas habilidades ${fmtN(n.silencio)} s. Recuperas ${HABILIDADES.siega.cura} de vida por cada héroe enemigo golpeado (las invocaciones no curan). Mata a los esqueletos; al gólem y al dragón les quita el ${Math.round(n.pct * 100)}% de su vida.`,
                    n1: { pct: 0.5, silencio: 1 }, n2: { pct: 0.5, silencio: 1 } },
@@ -1622,7 +1622,7 @@ const PASIVAS = {
   curacionPlano: { nombre: 'Curación del otro plano', glifo: 'corazonVerde', desc: 'Cada aturdimiento que provocas te cura 15 de vida.' },
   pielBrasa: { nombre: 'Piel de brasa', glifo: 'pielBrasa', desc: 'Recibes 10% menos de daño de ataques básicos.' },
   dueloBosque: { nombre: 'Duelo del bosque', glifo: 'dueloBosque', desc: 'Por cada héroe aliado muerto regeneras 5 de vida por segundo. Al reaparecer el aliado, pierdes ese bono.' },
-  mantoSombras: { nombre: 'Manto de sombras', glifo: 'mantoSombras', desc: 'Mientras canalizas la Siega o el Pozo de la maldad, recibes 10% menos de daño de todas las fuentes.' },
+  mantoSombras: { nombre: 'Manto de sombras', glifo: 'mantoSombras', desc: 'Mientras canalizas la Siega o el Pozo de la maldad, recibes 10% menos de daño de todas las fuentes. Además, ganas 5% de velocidad de movimiento por cada héroe enemigo maldito (por cualquier maldición).' },   // Seba (31-10): +5% por maldito
   pactoSangre:  { nombre: 'Pacto de sangre', glifo: 'selloShai', desc: 'Cada 3 ataques al mismo enemigo en 3 s explota un sello: 15 de daño y +5% de velocidad por 3 s.' },
   temblor:      { nombre: 'Temblor', glifo: 'roca', desc: 'Cada tercer puñetazo al mismo enemigo lo deja lento 10% por 4 s.' },
 };
@@ -4302,7 +4302,7 @@ class Game {
   // La misma fuente (val.k + quien lo lanza) es una sola instancia: se renueva, no se suma (ej. Puños del fénix, Pulso de fuego).
   sumarDot(t, key, val) {
     const I = t.fx.dotsInst || (t.fx.dotsInst = {});
-    I[key + ':' + (val.k || 'otro') + ':' + (val.src ?? '')] = { key, t: val.t, dps: val.dps, src: val.src, alma: !!val.alma };
+    I[key + ':' + (val.k || 'otro') + ':' + (val.src ?? '')] = { key, t: val.t, dps: val.dps, src: val.src, alma: !!val.alma, maldicion: !!val.maldicion };
     this.recalcDots(t);
   }
   recalcDots(t) {
@@ -4313,9 +4313,20 @@ class Game {
       const f = t.fx[d.key] || (t.fx[d.key] = { t: 0, dps: 0, src: d.src });
       f.t = Math.max(f.t, d.t); f.dps += d.dps;
       if (d.alma) { f.alma = true; f.src = d.src; }
+      if (d.maldicion) f.maldito = true;   // Seba (31-10): cualquier maldición (Karilthal, Tenebris y las que vengan) marca «maldito»
     }
     if (!Object.keys(I).length) delete t.fx.dotsInst;
   }
+  timersMayhem(p) {
+    const f = p.fx.mayhem; if (!f || !f.golpes) return 0;
+    const out = [], ahora = this.combatTime;
+    for (const [id, t] of Object.entries(f.golpes)) {
+      const g = Math.max(0, 1 - (ahora - t) / f.n.cada), st = f.stuns && f.stuns[id] !== undefined ? Math.max(0, 1 - (ahora - f.stuns[id]) / f.n.stunCada) : 0;
+      if (g > 0 || st > 0) out.push([isNaN(+id) ? id : +id, +g.toFixed(2), +st.toFixed(2)]);
+    }
+    return out.length ? out : 0;
+  }
+  esMaldito(q) { return !!(q.fx && Object.values(q.fx).some(f => f && f.maldito)); }
   recalcLento(t) {
     const L = t.fx.lentos;
     let total = 0, dur = 0;
@@ -4597,6 +4608,7 @@ class Game {
       v *= 1 + Math.min(0.3, 0.03 * n);
     }
     if (p.fx.nephilim) v *= 1 + p.fx.nephilim.n.bono;   // Driiar
+    if (HEROES[p.build?.heroe]?.pasiva === 'mantoSombras') { let m = 0; for (const q of this.players.values()) if (q.alive && q.fx && this.esMaldito(q) && this.teamOf(q.id) !== this.teamOf(p.id)) m++; v *= 1 + 0.05 * m; }   // Tenebris (Seba 31-10): +5% por enemigo maldito
     let lento = p.fx.slow ? 1 - p.fx.slow.mult : 0;   // Seba (30-10): todos los lentos se suman, con tope (mínimo 25% de velocidad)
     if (p.fx.encadenado) lento += p.fx.encadenado.lento;   // Grillete de roca (Tek'Tal)
     if (p.fx.encadenando) lento += p.fx.encadenando.lento;   // Tek'Tal también queda lento
@@ -4721,7 +4733,7 @@ class Game {
       x: p.x + Math.cos(a) * start, y: p.y + Math.sin(a) * start,
       vx: Math.cos(a) * o.vel, vy: Math.sin(a) * o.vel,
       left: o.alcance, radio: o.radio || 5, dmg: o.dmg, dmgInv: o.dmgInv, tipo: o.tipo || 'fis', spr: o.spr,
-      efecto: o.efecto || null, basico: !!o.basico, soloJugadores: !!o.soloJugadores, atraviesa: !!o.atraviesa, extra: o.extra, src: p.esUnidad ? p : null,
+      efecto: o.efecto || null, basico: !!o.basico, soloJugadores: !!o.soloJugadores, atraviesa: !!o.atraviesa, sinEmpuje: !!o.sinEmpuje, extra: o.extra, src: p.esUnidad ? p : null,
     });
   }
 
@@ -4886,7 +4898,7 @@ class Game {
       this.emit({ k: 'txt', x: hit.x | 0, y: hit.y | 0, s: 'MARCADO' });
     }
     this.damage(hit, pr.dmg, src, { tipo: pr.tipo, desde: pr, basico: pr.basico });
-    if (pr.tipo !== 'fis') this.knock(hit, pr.x - pr.vx * 0.05, pr.y - pr.vy * 0.05, 50);   // Seba (30-10): los ataques básicos no empujan
+    if (pr.tipo !== 'fis' && !pr.sinEmpuje) this.knock(hit, pr.x - pr.vx * 0.05, pr.y - pr.vy * 0.05, 50);   // Seba (30-10): los ataques básicos no empujan
   }
 
   // ================================================================ habilidades
@@ -5490,7 +5502,7 @@ class Game {
           for (const e of this.enemigos(p.id, false)) {
             if (tocados.has(e.id) || Math.hypot(e.x - z.x, e.y - z.y) > rr + CONFIG.RADIO_JUGADOR) continue;
             tocados.add(e.id);
-            this.aplicarEfecto(e, 'dot', { t: n.dur, dps: n.dps, src: p.id, k: 'maldicion' });
+            this.aplicarEfecto(e, 'dot', { t: n.dur, dps: n.dps, src: p.id, k: 'maldicion', maldicion: true });
             if (!e.esUnidad) {
               this.aplicarEfecto(e, 'silence', { t: n.silencio });
               this.emit({ k: 'txt', x: e.x | 0, y: e.y | 0, s: 'SILENCIO' });
@@ -5753,7 +5765,7 @@ class Game {
       for (const q of this.jugadoresEnemigos(own.id)) { if (q.esUnidad && !q.enemigo) continue; if (dist(q, u) <= H.radio + CONFIG.RADIO_JUGADOR) { presa = q; break; } }
       if (presa) {
         u.alive = false;
-        this.aplicarEfecto(presa, 'dot', { t: u.n.dur, dps: u.n.dps, src: own.id, alma: true, k: 'alma' });
+        this.aplicarEfecto(presa, 'dot', { t: u.n.dur, dps: u.n.dps, src: own.id, alma: true, k: 'alma', maldicion: true });
         this.aplicarEfecto(presa, 'slow', { t: u.n.dur, mult: 1 - u.n.lento, k: 'alma' });
         this.emit({ k: 'boom', x: presa.x | 0, y: presa.y | 0, r: 26, c: 'gaia' });
         if (!presa.esUnidad) { this.aplicarEfecto(presa, 'silence', { t: u.n.silencio }); this.emit({ k: 'txt', x: presa.x | 0, y: presa.y | 0, s: 'MALDITO' }); }   // Seba (30-10): silencia los primeros 2 s
@@ -5941,7 +5953,7 @@ class Game {
           u.facing = Math.atan2(obj.y - u.y, obj.x - u.x);
           if (u.cd <= 0 && own) {
             u.cd = HEROES.lire.recarga;   // Claude (28-10): con 25 por flecha, dispara al ritmo de Lire (antes cada 0,45 s)
-            this.spawnProj(u, u.facing, { vel: 640, alcance: 440, radio: 5, dmg: u.dano, tipo: 'mag', spr: 'virote' });
+            this.spawnProj(u, u.facing, { vel: 640, alcance: 440, radio: 5, dmg: u.dano, tipo: 'mag', spr: 'virote', sinEmpuje: true });   // Seba (31-10): la torreta no empuja
           }
         }
         continue;
@@ -5984,8 +5996,7 @@ class Game {
         let jugadores = 0;
         for (const e of this.enemigos(u.owner)) if (distA(e, objetivo) < d.area + 10) {
           const hizo = this.damage(e, u.dano, u, { tipo: 'mag' });
-          if (hizo > 0 && !e.esUnidad) jugadores++;
-          this.knock(e, u.x, u.y, 120);
+          if (hizo > 0 && !e.esUnidad) jugadores++;   // Seba (31-10): el gólem ya no empuja
         }
         if (jugadores && own && own.alive) { this.heal(own, 25 * jugadores, own); this.emit({ k: 'heal', x: own.x | 0, y: own.y | 0 }); }
       } else if (u.kind === 'esqueleto' && distA(objetivo, u) < d.rango + CONFIG.RADIO_JUGADOR + 6) {
@@ -6277,7 +6288,9 @@ class Game {
           f.golpes[e.id] = this.combatTime;
           this.damage(e, f.n.dano, p, { tipo: 'mag', ulti: true });
           if (e.alive) this.aplicarEfecto(e, 'slow', { t: f.n.cada, mult: 1 - f.n.lento, k: 'mayhem' });   // Seba (28-10): lento 10% por 0,5 s
-          this.knock(e, p.x, p.y, 220);
+          // Seba (31-10): el golpe ya no empuja (los cuerpos sí siguen chocando); aturde 0,3 s, máximo 1 aturdimiento por segundo a cada enemigo
+          const st = f.stuns || (f.stuns = {});
+          if (e.alive && (st[e.id] === undefined || this.combatTime - st[e.id] >= f.n.stunCada)) { st[e.id] = this.combatTime; this.aplicarEfecto(e, 'aturdido', { t: f.n.aturde }); }
           this.emit({ k: 'boom', x: e.x | 0, y: e.y | 0, r: 30, c: 'piedra' });
         }
       }
@@ -6664,7 +6677,7 @@ class Game {
       ps.push([p.id, Math.round(p.x), Math.round(p.y), r1(p.hp), p.st.vidaMax, +p.facing.toFixed(2), flags,
         +p.cd[0].toFixed(1), +p.cd[1].toFixed(1), +p.cd[2].toFixed(1), +p.cd[3].toFixed(1), p.caido ? +(p.revive / PVE.REVIVIR_T).toFixed(2) : (p.respawn > 0 ? -+p.respawn.toFixed(1) : 0), p.ack || 0, +p.cargas.toFixed(2), +p.ulti.toFixed(3), fx.escudo ? Math.ceil(fx.escudo.v) : 0, this.cargasHab(p), fx.saltoLanza ? +Math.min(1, fx.saltoLanza.el / fx.saltoLanza.total).toFixed(2) : 0,
         (fx.canalGrillete ? 1 : 0) | (fx.canalPortal ? 2 : 0) | (fx.encadenado ? 4 : 0) | (fx.encadenando ? 8 : 0) | (fx.rafagaGaia ? 16 : 0) | (fx.canalLluvia ? 32 : 0) | (fx.rafagaShai ? 64 : 0) | (fx.manto ? 128 : 0) | (fx.dagasShai ? 256 : 0) | (fx.pacto || fx.impulsoShai ? 512 : 0) | (fx.canalSiega ? 1024 : 0) | (fx.canalPozo ? 2048 : 0) | (fx.pozo ? 4096 : 0) | (fx.nephilim ? 8192 : 0) | (fx.embateGiro ? (fx.embateGiro.paso >= 3 ? 32768 : 16384) : 0) | this.bitsPasiva(p), fx.rafagaShai ? +fx.rafagaShai.a0.toFixed(2) : 0,
-        fx.punosFenix ? fx.punosFenix.n2 : 0, fx.canalPatada ? +Math.min(1, (HABILIDADES.patadaFenix.carga + 0.1 - fx.canalPatada.t) / HABILIDADES.patadaFenix.crece).toFixed(2) : 0]);   // 20: puños del fénix que quedan; 21: carga de la patada (Ash)   // 19: hacia dónde salen las dagas de Shai
+        fx.punosFenix ? fx.punosFenix.n2 : 0, fx.canalPatada ? +Math.min(1, (HABILIDADES.patadaFenix.carga + 0.1 - fx.canalPatada.t) / HABILIDADES.patadaFenix.crece).toFixed(2) : 0, this.timersMayhem(p)]);   // 22: (Seba 31-10) timers del Mayhem por enemigo [id, golpe 0–1, aturdir 0–1]   // 20: puños del fénix que quedan; 21: carga de la patada (Ash)   // 19: hacia dónde salen las dagas de Shai
     }
     return {
       t: 's', ph: this.phase, tm: +Math.max(0, this.timer).toFixed(1), ar: Math.round(this.arenaR),
@@ -8283,7 +8296,7 @@ class StateBuffer {
     const pa = new Map(a.s.p.map(p => [p[0], p]));
     const players = b.s.p.map(pb => {
       const q = pa.get(pb[0]) || pb;
-      return { id: pb[0], x: lerp(q[1], pb[1], k), y: lerp(q[2], pb[2], k), hp: pb[3], mh: pb[4], f: lerpAng(q[5], pb[5], k), flags: pb[6], cd: pb.slice(7, 12), ack: pb[12], cargas: pb[13], ulti: pb[14], esc: pb[15] || 0, salto: pb[17] || 0, f2: pb[18] || 0, ex: pb[20] || 0, cp: pb[21] || 0, ua: lerpAng(q[19] || pb[19] || 0, pb[19] || 0, k) };   // ua suavizado entre fotos
+      return { id: pb[0], x: lerp(q[1], pb[1], k), y: lerp(q[2], pb[2], k), hp: pb[3], mh: pb[4], f: lerpAng(q[5], pb[5], k), flags: pb[6], cd: pb.slice(7, 12), ack: pb[12], cargas: pb[13], ulti: pb[14], esc: pb[15] || 0, salto: pb[17] || 0, f2: pb[18] || 0, ex: pb[20] || 0, cp: pb[21] || 0, my: pb[22] || 0, ua: lerpAng(q[19] || pb[19] || 0, pb[19] || 0, k) };   // ua suavizado entre fotos
     });
     const ua = new Map((a.s.u || []).map(u => [u[0], u]));
     const units = (b.s.u || []).map(ub => {
@@ -8676,6 +8689,8 @@ class Renderer {
     this.ensureAssets();
 
     const me = view.players.find(p => p.id === myId && (p.flags & (1 | 32768)));
+    this.timMay = null;   // Seba (31-10): timers del Mayhem (solo los ve quien juega Su'rulfar)
+    { const yo = view.players.find(p => p.id === myId); if (yo && yo.my) { this.timMay = new Map(); for (const [id, a, b] of yo.my) this.timMay.set(id, [a, b]); } }
     // Dirección del apuntado automático (enemigo visible más cercano), para dibujar guías sin arrastrar
     this.autoA = null;
     if (me && (me.flags & 1)) { let bd = 700; for (const q of view.players) { if (q.id === myId || !(q.flags & 1) || (this.equipos && this.equipos[q.id] === this.equipos[myId]) || (q.flags & (8 | 8388608))) continue; const d = Math.hypot(q.x - me.x, q.y - me.y); if (d < bd) { bd = d; this.autoA = Math.atan2(q.y - me.y, q.x - me.x); } } if (this.autoA === null) this.autoA = me.f; }
@@ -9387,6 +9402,19 @@ class Renderer {
     { let y = sy - 30 - sube;
       if (p.flags & 4) { this.calaveraMaldita(cx, y); y -= 12; }
       if (p.flags & 65536) { this.marcaLire(cx, y); y -= 12; }
+      // Seba (31-10): Mayhem — dos cuadritos grises que se rellenan: golpe (borde rojo) y aturdimiento (borde dorado); desaparecen al estar listos
+      { const tm = this.timMay && this.timMay.get(p.id);
+        if (tm) {
+          [[tm[0], PALETA.carmesi2], [tm[1], PALETA.oro2]].forEach(([v, col], i) => {
+            if (v <= 0) return;
+            const x = cx - 9 + i * 10, h = Math.round(6 * (1 - v));
+            g.fillStyle = PALETA.tinta; g.fillRect(x - 1, y - 1, 10, 10);
+            g.fillStyle = col; g.fillRect(x, y, 8, 8);
+            g.fillStyle = PALETA.noche; g.fillRect(x + 1, y + 1, 6, 6);
+            g.fillStyle = PALETA.piedra2; g.fillRect(x + 1, y + 7 - h, 6, h);
+          });
+          y -= 12;
+        } }
       // Ash: golpes de fénix que quedan (lo ven todos) y medalla del fénix en la ulti
       if ((p.f2 & 33554432) && p.ex > 0) { for (let i = 0; i < p.ex; i++) this.llama(cx - (p.ex - 1) * 5 + i * 10, y + 6, 0.8, 'rojo', i * 2.3); y -= 14; }
       if (p.f2 & 536870912) this.medallaFenix(cx + (izq ? 10 : -10), y + 2 + Math.round(Math.sin(this.time * 4) * 1.5), 1.6); }
@@ -11685,6 +11713,12 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
 const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V3.9', f: '31-10-2026', n: [
+    'Sin empuje en los golpes del Gólem, la Torreta y el Mayhem (los choques entre cuerpos siguen igual).',
+    'Su\'rulfar: cada golpe del Mayhem aturde 0,3 s (máximo 1 aturdimiento por segundo a cada enemigo). Quien juega Su\'rulfar ve sobre cada enemigo dos cuadritos que se rellenan: cuándo puede volver a golpearlo (rojo) y a aturdirlo (dorado).',
+    'Lire: arreglo — la Torreta vuelve a tener 2 cargas (la recarga parte al poner la segunda) y máximo 2 activas.',
+    'Driiar: vida 400 → 390.',
+    'Tenebris: el Alma errante silencia 1,5 s (antes 2). Manto de sombras: +5% de velocidad por cada héroe enemigo maldito (por cualquier maldición).' ] },
   { v: 'V3.8', f: '31-10-2026', n: [
     'Kazaro: arreglo — durante la Llama de la estepa ya no gana +50% de daño en básicos y habilidades (otro resto de la ulti antigua). El fuego de la arena, los básicos y las habilidades se suman entre sí.' ] },
   { v: 'V3.7', f: '31-10-2026', n: [
