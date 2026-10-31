@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.6</title>
+<title>LOLA V3.7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -937,7 +937,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.6</p>
+        <p class="sub version">LOLA V3.7</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -4545,8 +4545,7 @@ class Game {
 
   // Kazaro: con la Llama de la estepa, sus habilidades dejan «Fuego azul»
   fuegoAzulEn(p, e) {
-    if (!p.fx || !p.fx.llama || !e.alive || e.kind === 'muro') return;
-    this.aplicarEfecto(e, 'fuegoAzul', { t: 5, dps: p.fx.llama.n.fuego, src: p.id, k: 'llamaHab' });
+    return;   // Seba (31-10): el fuego azul de la Lanza y el Decimar es solo estético; el daño de fuego azul viene únicamente de la arena
   }
   // Kazaro: salta hasta su lanza clavada (0,2 s) y se cura por cada héroe enemigo cerca de ella
   saltarALanza(p, l) {
@@ -11686,6 +11685,8 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
 const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V3.7', f: '31-10-2026', n: [
+    'Kazaro: arreglo — durante la Llama de la estepa, la Lanza y el Decimar ya no dejan Fuego azul (era un resto de la ulti antigua). El fuego azul de sus habilidades es solo visual; el daño de fuego azul viene solo de la arena.' ] },
   { v: 'V3.6', f: '31-10-2026', n: [
     'Los estados ahora corren todos a la vez: un silencio o aturdimiento más corto ya no acorta a uno más largo que ya estaba.',
     'Los daños en el tiempo de fuentes distintas se suman, cada uno con su duración (ej. Maldición + Alma errante, Puños + Patada de Ash). La misma fuente no se suma: se renueva (Puños del fénix, Pulso de fuego).' ] },
