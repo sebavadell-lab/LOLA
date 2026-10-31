@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.3</title>
+<title>LOLA V3.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -937,7 +937,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.3</p>
+        <p class="sub version">LOLA V3.4</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -1496,14 +1496,14 @@ Object.assign(HABILIDADES, {
                    desc: (n) => `Lanzas una nube de tormenta que avanza en línea recta. Cada 0,9 s suelta una descarga (${n.descargas} en total): ${n.dano} de daño a los enemigos bajo la nube. No daña a tus aliados.`,
                    n1: { dano: 135, descargas: 4 }, n2: { dano: 175, descargas: 4 } },   // Seba (28-10): +35% (100 → 135)
   // ---- Takichi (Seba, 28-10)
-  sablazo:       { nombre: 'Sablazo', glifo: 'sablazo', cd: 8, cdFijo: true, canal: 0.7, largo: 220, ancho: 34, bajaKill: 0.5,   // Seba (28-10): recarga 10 → 9 → 8 s; si mata a un héroe, la recarga baja a la mitad
+  sablazo:       { nombre: 'Sablazo', glifo: 'sablazo', cd: 8, cdFijo: true, canal: 0.7, largo: 220, ancho: 27, bajaKill: 0.5,   // Seba (31-10): ancho 34 → 27 (−20%, también los tajos del ulti)   // Seba (28-10): recarga 10 → 9 → 8 s; si mata a un héroe, la recarga baja a la mitad
                    desc: (n) => `Canalizas 0,7 s (brillas en morado; un aturdimiento o un silencio lo corta) y avanzas de un sablazo: ${n.dano} de daño a todos los enemigos que atraviesas. Quedas al final del tajo. Si matas a un héroe con el tajo, la recarga baja a la mitad.`,
-                   n1: { dano: 160 }, n2: { dano: 208 } },   // Seba (28-10): 150 → 160
+                   n1: { dano: 150 }, n2: { dano: 208 } },   // Seba (28-10): 150 → 160   // Seba (31-10): 160 → 150
   humo:          { nombre: 'Bomba de humo', glifo: 'humo', cd: 14.17, sinEnemigos: 250,
                    desc: (n) => `Solo sin enemigos a menos de 250, salvo que estés bajo un árbol (ahí siempre se puede): te vuelves invisible hasta ${n.dur} s. Los rivales no te ven ni te apuntan solos, pero los tiros y las áreas te pegan. Atacar o usar una habilidad te revela; recibir daño no.`,
                    n1: { dur: 6 }, n2: { dur: 7 } },
   danza:         { nombre: 'Danza silenciosa', glifo: 'clones', cd: 50, ulti: true, lado: 180,
-                   desc: (n) => `Marcas un cuadrado donde estás con 5 clones (uno en cada esquina y uno al centro) por ${n.dur} s. Al aparecer, los 4 de las esquinas canalizan 0,5 s y cruzan en diagonal con un Sablazo (160 a todos los que atraviesan) hasta la esquina opuesta. Cada clon golpea por ${Math.round(n.mult * 100)}% de tu daño a los enemigos pegados a él, a tu mismo ritmo de ataque (si estás potenciado, ellos también). Los enemigos dentro quedan lentos ${Math.round(n.lento * 100)}%. Prefieren héroes antes que invocaciones.`,
+                   desc: (n) => `Marcas un cuadrado donde estás con 5 clones (uno en cada esquina y uno al centro) por ${n.dur} s. Al aparecer, los 4 de las esquinas canalizan 0,5 s y cruzan en diagonal con un Sablazo (${numerosHab('sablazo', 1).dano} a todos los que atraviesan) hasta la esquina opuesta. Cada clon golpea por ${Math.round(n.mult * 100)}% de tu daño a los enemigos pegados a él, a tu mismo ritmo de ataque (si estás potenciado, ellos también). Los enemigos dentro quedan lentos ${Math.round(n.lento * 100)}%. Prefieren héroes antes que invocaciones.`,
                    n1: { dur: 6, mult: 0.5, lento: 0.35 }, n2: { dur: 6, mult: 0.65, lento: 0.35 } },
   // ---- Aracnida (Seba, 28-10)
   atraparPresa:  { nombre: 'Atrapar presa', glifo: 'gancho', cd: 13.3, alcance: 400, vel: 900,
@@ -1561,14 +1561,14 @@ Object.assign(HABILIDADES, {
   punosFenix:    { nombre: 'Puños del fénix', glifo: 'punosFenix', cd: 14, cdFijo: true, golpes: 3, rango: 110, arco: 50, dura: 8,
                    desc: (n) => `Tus próximos ${HABILIDADES.punosFenix.golpes} ataques básicos son destellos de fénix con más alcance (${HABILIDADES.punosFenix.rango}): +${n.extra} de daño cada uno y quema al enemigo (${n.quema} de daño por segundo durante ${n.dur} s; no se acumula). Se pierden si no los usas en ${HABILIDADES.punosFenix.dura} s.`,
                    n1: { extra: 20, quema: 25, dur: 2 }, n2: { extra: 20, quema: 25, dur: 2 } },   // Seba (31-10): +20 y quema en 2 s
-  patadaFenix:   { nombre: 'Patada del fénix', glifo: 'patadaFenix', cd: 17, cdFijo: true, min: 80, max: 286, crece: 1.2, carga: 3, salto: 0.3,   // Seba (31-10): canaliza hasta 3 s; el alcance crece (+10%) solo hasta 1,2 s (C) y el resto se mantiene
-                   desc: (n) => `Canalizas una patada hasta ${HABILIDADES.patadaFenix.carga} s: el alcance crece de ${HABILIDADES.patadaFenix.min} a ${HABILIDADES.patadaFenix.max} en ${fmtN(HABILIDADES.patadaFenix.crece)} s y luego se mantiene (puedes seguir apuntando). Mientras cargas, apuntas con el joystick (o con el botón): una marca en el suelo muestra dónde vas a caer. Vuelve a apretar para saltar (o salta solo al terminar la canalización). El primer enemigo que alcanzas recibe ${n.dano} de daño y queda en llamas (${n.quema} de daño por segundo durante ${n.dur} s). Un aturdimiento o un silencio corta la carga.`,
+  patadaFenix:   { nombre: 'Patada del fénix', glifo: 'patadaFenix', cd: 15, cdFijo: true, lento: 0.25, lentoDur: 2, min: 80, max: 286, crece: 1.2, carga: 3, salto: 0.3,   // Seba (31-10): recarga 17 → 15; lento 25% por 2 s al acertar   // Seba (31-10): canaliza hasta 3 s; el alcance crece (+10%) solo hasta 1,2 s (C) y el resto se mantiene
+                   desc: (n) => `Canalizas una patada hasta ${HABILIDADES.patadaFenix.carga} s: el alcance crece de ${HABILIDADES.patadaFenix.min} a ${HABILIDADES.patadaFenix.max} en ${fmtN(HABILIDADES.patadaFenix.crece)} s y luego se mantiene (puedes seguir apuntando). Mientras cargas, apuntas con el joystick (o con el botón): una marca en el suelo muestra dónde vas a caer. Vuelve a apretar para saltar (o salta solo al terminar la canalización). El primer enemigo que alcanzas recibe ${n.dano} de daño y queda en llamas (${n.quema} de daño por segundo durante ${n.dur} s) y ${Math.round(HABILIDADES.patadaFenix.lento * 100)}% más lento por ${fmtN(HABILIDADES.patadaFenix.lentoDur)} s. Un aturdimiento o un silencio corta la carga.`,
                    n1: { dano: 75, quema: 25, dur: 2 }, n2: { dano: 75, quema: 25, dur: 2 } },   // Seba (31-10): 75 y quema en 2 s
-  espirituFenix: { nombre: 'Espíritu del Fenix', glifo: 'espirituFenix', cd: 45, ulti: true, radio: 120,
-                   desc: (n) => `El Espíritu del Fenix te acompaña ${n.dur} s: ${n.dps} de daño por segundo a todos los enemigos a menos de ${HABILIDADES.espirituFenix.radio} (el doble a las invocaciones), +${Math.round(n.vel * 100)}% de velocidad de movimiento y tus habilidades se recargan ${Math.round(n.cdr * 100)}% más rápido. La recarga de la ulti empieza al terminar.`,
-                   n1: { dur: 6, dps: 30, vel: 0.4, cdr: 0.25 }, n2: { dur: 6, dps: 30, vel: 0.4, cdr: 0.25 } },   // Seba (31-10): 6 s, 30/s, doble a invocaciones
+  espirituFenix: { nombre: 'Espíritu del Fenix', glifo: 'espirituFenix', cd: 45, ulti: true, radio: 120, bajaKill: 3,   // Seba (31-10): sin recarga más rápida; −3 s a las habilidades por cada héroe enemigo que muere dentro
+                   desc: (n) => `El Espíritu del Fenix te acompaña ${n.dur} s: ${n.dps} de daño por segundo a todos los enemigos a menos de ${HABILIDADES.espirituFenix.radio} (el doble a las invocaciones), +${Math.round(n.vel * 100)}% de velocidad de movimiento. Por cada héroe enemigo que muere dentro del radio, la recarga de tus habilidades 1 y 2 baja ${HABILIDADES.espirituFenix.bajaKill} s. La recarga de la ulti empieza al terminar.`,
+                   n1: { dur: 6, dps: 30, vel: 0.4 }, n2: { dur: 6, dps: 30, vel: 0.4 } },   // Seba (31-10): 6 s, 30/s, doble a invocaciones
   // ---- Driiar (Seba, 30-10)
-  embate:        { nombre: 'Embate de halabarda', glifo: 'embate', cd: 9, cdFijo: true, ventana: 3, avance: 45, alcance: 35, radio: 45, giro: 0.4, cura: 50,   // Seba (30-10): físico, con vueltas en el aire; golpe en un radio chico al frente
+  embate:        { nombre: 'Embate de halabarda', glifo: 'embate', cd: 10, cdFijo: true, ventana: 3, avance: 45, alcance: 35, radio: 45, giro: 0.4, cura: 25,   // Seba (31-10): recarga 9 → 10, cura 50 → 25 (una vez por giro que daña al menos a un héroe)   // Seba (30-10): físico, con vueltas en el aire; golpe en un radio chico al frente
                    desc: (n) => `Hasta 3 veces (tienes ${HABILIDADES.embate.ventana} s entre cada una): giras en el aire (inmune a control mientras giras; cada giro que acierta a un héroe te cura ${HABILIDADES.embate.cura}) con la halabarda avanzando un poco y golpeas en un radio chico al frente (${n.dano} de daño). La 3ra es un martillazo de frente: mismo daño y aturde ${fmtN(n.aturde)} s a los que acierta. Un aturdimiento o un silencio corta el giro.`,
                    n1: { dano: 50, aturde: 0.75 }, n2: { dano: 50, aturde: 0.75 } },
   totemGaia:     { nombre: 'Tótem de Gaia', glifo: 'totemGaia', cd: 16, cdFijo: true, radio: 90,
@@ -1576,7 +1576,7 @@ Object.assign(HABILIDADES, {
                    n1: { cura: 25, dps: 25, dur: 4 }, n2: { cura: 25, dps: 25, dur: 4 } },   // Seba (30-10): 40 → 25
   nephilim:      { nombre: 'Nephilim', glifo: 'nephilim', cd: 50, ulti: true, onda: { alcance: 380, vel: 420, cd: 2.5 },   // Seba (31-10): la onda pasa a ser un orbe
                    desc: (n) => `Te transformas en Nephilim por ${n.dur} s (dejas la halabarda, peleas a puños y el Tótem queda sellado): creces, regeneras ${n.regen} de vida por segundo y ganas ${Math.round(n.bono * 100)}% de daño de ataque, de velocidad de ataque, de movimiento y de vida (sobre la vida que tienes al transformarte). Mientras dura, tu 1ra habilidad pasa a ser el Orbe de la naturaleza: ${n.onda} de daño y ${Math.round(n.lento * 100)}% más lento por ${n.lentoDur} s (cada ${HABILIDADES.nephilim.onda.cd} s).`,
-                   n1: { dur: 8, bono: 0.25, regen: 20, onda: 50, lento: 0.25, lentoDur: 2 }, n2: { dur: 8, bono: 0.25, regen: 20, onda: 50, lento: 0.25, lentoDur: 2 } },   // Seba (31-10): +25% en todo y 20 de vida por segundo   // Seba (31-10): orbe 50, lento 25% 2 s
+                   n1: { dur: 8, bono: 0.25, regen: 10, onda: 50, lento: 0.25, lentoDur: 2 }, n2: { dur: 8, bono: 0.25, regen: 20, onda: 50, lento: 0.25, lentoDur: 2 } },   // Seba (31-10): +25% en todo y 20 de vida por segundo   // Seba (31-10): orbe 50, lento 25% 2 s
   // ---- Tenebris (Seba, 30-10; números (C))
   almaErrante:   { nombre: 'Alma errante', glifo: 'almaErrante', cd: 12, cdFijo: true, alcance: 0, vel: 150, velMax: 300, acelera: 400, radio: 14, curaKill: 25,   // Seba (30-10): sin límite de distancia (borde a borde); acelera hasta el doble
                    desc: (n) => `Sueltas un alma lenta en línea recta que acelera mientras viaja (hasta el doble de velocidad). Llega hasta el borde del mapa y vuelve hasta el borde contrario. El primer héroe enemigo que toca (ida o vuelta) queda maldito: ${n.dps} de daño por segundo y ${Math.round(n.lento * 100)}% más lento por ${n.dur} s, y silenciado los primeros ${fmtN(n.silencio)} s. Atraviesa invocaciones. Si no toca a nadie, desaparece. Si el maldito muere con la maldición encima, recuperas ${HABILIDADES.almaErrante.curaKill} de vida y la recarga de esta habilidad vuelve a 0.`,
@@ -1613,7 +1613,7 @@ const PASIVAS = {
   almas:        { nombre: 'Cosecha de almas', glifo: 'gotaVerde', desc: 'Cuando matan a una de tus invocaciones, recuperas 15 de vida.' },
   eco:          { nombre: 'Eco del camino', glifo: 'gotaAzul', desc: 'Curar a tus aliados también carga tu ulti.' },
   nubeVoladora: { nombre: 'Sobre la nube', glifo: 'nube', desc: 'Flotas sobre tu nube: pasas por encima de los obstáculos (muros de hielo y muros de la cámara de The Cucko). Cada golpe que daña a un héroe enemigo te da +1% de velocidad de movimiento (máximo +10%). Si pasas 1 s sin dañar a un héroe, empiezas a perderlo de a 1% por segundo.' },
-  pasoSigiloso: { nombre: 'Paso sigiloso', glifo: 'bota', desc: '+10% de velocidad de movimiento si no recibiste daño en los últimos 3 s. Cada ataque básico que daña a un enemigo baja 0,25 s la recarga de tus habilidades 1 y 2.' },
+  pasoSigiloso: { nombre: 'Paso sigiloso', glifo: 'bota', desc: '+10% de velocidad de movimiento si no recibiste daño en los últimos 3 s.'   /* Seba (31-10): ya no baja recargas con los básicos */ },
   festin:       { nombre: 'Festín', glifo: 'colmillos', desc: 'Cuando muere un héroe enemigo al que dañaste en los últimos 1,5 s, recuperas 50 de vida.' },   // Seba (30-10): 100 → 50
   sentidoAracnido: { nombre: 'Sentido arácnido', glifo: 'ojoArana', desc: 'Los enemigos invisibles o escondidos que pisan tu tela quedan a la vista de todos.' },
   furiaBosque:  { nombre: 'Furia del bosque', glifo: 'huellaTroll', desc: '+3% de velocidad de movimiento por cada héroe enemigo a menos de 250 (máximo +30%).' },
@@ -1708,7 +1708,7 @@ const GUIAS = {
   pulso: { tipo: 'punto', alcance: 420, r: 70 }, muro: { tipo: 'muro', alcance: 70, largo: 108 }, dragon: { tipo: 'propio', r: 50 },
   circulo: { tipo: 'propio', r: 108 },
   bombaPegajosa: { tipo: 'punto', alcance: 420, r: 40 }, jetpack: { tipo: 'linea', alcance: 320, ancho: 60 }, mina: { tipo: 'propio', r: 20 }, granBombazo: { tipo: 'punto', alcance: 420, r: 108 }, orbeVida: { tipo: 'linea', alcance: 360, ancho: 70 },
-  trueno: { tipo: 'linea', alcance: 420, ancho: 20 }, sablazo: { tipo: 'linea', alcance: 220, ancho: 34 }, humo: { tipo: 'propio', r: 250 }, danza: { tipo: 'propio', r: 90 },
+  trueno: { tipo: 'linea', alcance: 420, ancho: 20 }, sablazo: { tipo: 'linea', alcance: 220, ancho: 27 }, humo: { tipo: 'propio', r: 250 }, danza: { tipo: 'propio', r: 90 },
   atraparPresa: { tipo: 'linea', alcance: 400, ancho: 20 }, tejer: { tipo: 'propio', r: 162 }, mordida: { tipo: 'propio', r: 120 }, manosRayo: { tipo: 'linea', alcance: 420, ancho: 6 }, tormenta: { tipo: 'linea', alcance: 400, ancho: 180 }, bendicion: { tipo: 'propio', r: 40 },
   lanzaErrante: { tipo: 'linea', alcance: 380, ancho: 26 }, decimar: { tipo: 'propio', r: 110 }, llamaEstepa: { tipo: 'propio', r: 135 },
   mazazos: { tipo: 'propio', r: 110 }, escudoMusgo: { tipo: 'propio', r: 200 }, sobrecrecimiento: { tipo: 'propio', r: 130 },
@@ -1746,102 +1746,102 @@ for (const u of Object.values(UNIDADES)) if (u.vel) u.vel = Math.round(u.vel * R
 // Medido con bots (apuntado automático), 20 duelos por par.
 const MATCHUPS = {
  "beast": {
-  "lire": 85,
+  "lire": 70,
   "nigromante": 100,
-  "maidas": 40,
+  "maidas": 45,
   "monh": 100,
   "biteroi": 0,
   "rasho": 0,
-  "takichi": 90,
-  "aracnida": 80,
+  "takichi": 100,
+  "aracnida": 85,
   "kazaro": 45,
-  "trelgon": 95,
-  "gaia": 65,
-  "ash": 95,
-  "driiar": 20,
-  "tenebris": 70,
-  "shai": 15
+  "trelgon": 100,
+  "gaia": 50,
+  "ash": 100,
+  "driiar": 40,
+  "tenebris": 45,
+  "shai": 10
  },
  "lire": {
-  "beast": 15,
-  "nigromante": 15,
-  "maidas": 25,
-  "monh": 5,
-  "biteroi": 55,
+  "beast": 30,
+  "nigromante": 5,
+  "maidas": 35,
+  "monh": 15,
+  "biteroi": 80,
   "rasho": 80,
   "takichi": 0,
   "aracnida": 65,
   "kazaro": 50,
   "trelgon": 0,
-  "gaia": 65,
-  "ash": 75,
-  "driiar": 35,
-  "tenebris": 75,
-  "shai": 0
+  "gaia": 60,
+  "ash": 50,
+  "driiar": 70,
+  "tenebris": 95,
+  "shai": 5
  },
  "nigromante": {
   "beast": 0,
-  "lire": 85,
-  "maidas": 85,
+  "lire": 95,
+  "maidas": 75,
   "monh": 100,
-  "biteroi": 75,
-  "rasho": 95,
-  "takichi": 45,
+  "biteroi": 85,
+  "rasho": 90,
+  "takichi": 60,
   "aracnida": 100,
-  "kazaro": 0,
+  "kazaro": 10,
   "trelgon": 0,
   "gaia": 95,
-  "ash": 65,
-  "driiar": 5,
-  "tenebris": 90,
+  "ash": 55,
+  "driiar": 40,
+  "tenebris": 80,
   "shai": 5
  },
  "maidas": {
-  "beast": 60,
-  "lire": 75,
-  "nigromante": 15,
+  "beast": 55,
+  "lire": 65,
+  "nigromante": 25,
   "monh": 75,
-  "biteroi": 75,
-  "rasho": 95,
-  "takichi": 25,
-  "aracnida": 80,
-  "kazaro": 40,
-  "trelgon": 60,
+  "biteroi": 80,
+  "rasho": 70,
+  "takichi": 30,
+  "aracnida": 70,
+  "kazaro": 50,
+  "trelgon": 65,
   "gaia": 80,
-  "ash": 85,
-  "driiar": 15,
-  "tenebris": 75,
-  "shai": 25
+  "ash": 90,
+  "driiar": 20,
+  "tenebris": 85,
+  "shai": 15
  },
  "monh": {
   "beast": 0,
-  "lire": 95,
+  "lire": 85,
   "nigromante": 0,
   "maidas": 25,
-  "biteroi": 65,
-  "rasho": 75,
+  "biteroi": 50,
+  "rasho": 60,
   "takichi": 0,
-  "aracnida": 0,
+  "aracnida": 10,
   "kazaro": 0,
-  "trelgon": 5,
+  "trelgon": 0,
   "gaia": 90,
   "ash": 5,
   "driiar": 0,
-  "tenebris": 75,
+  "tenebris": 70,
   "shai": 0
  },
  "biteroi": {
   "beast": 100,
-  "lire": 45,
-  "nigromante": 25,
-  "maidas": 25,
-  "monh": 35,
-  "rasho": 50,
+  "lire": 20,
+  "nigromante": 15,
+  "maidas": 20,
+  "monh": 50,
+  "rasho": 80,
   "takichi": 100,
   "aracnida": 100,
-  "kazaro": 90,
+  "kazaro": 95,
   "trelgon": 20,
-  "gaia": 65,
+  "gaia": 50,
   "ash": 100,
   "driiar": 100,
   "tenebris": 100,
@@ -1850,171 +1850,171 @@ const MATCHUPS = {
  "rasho": {
   "beast": 100,
   "lire": 20,
-  "nigromante": 5,
-  "maidas": 5,
-  "monh": 25,
-  "biteroi": 50,
-  "takichi": 30,
-  "aracnida": 70,
+  "nigromante": 10,
+  "maidas": 30,
+  "monh": 40,
+  "biteroi": 20,
+  "takichi": 65,
+  "aracnida": 75,
   "kazaro": 85,
   "trelgon": 100,
   "gaia": 40,
   "ash": 100,
-  "driiar": 50,
+  "driiar": 90,
   "tenebris": 100,
-  "shai": 20
+  "shai": 25
  },
  "takichi": {
-  "beast": 10,
+  "beast": 0,
   "lire": 100,
-  "nigromante": 55,
-  "maidas": 75,
+  "nigromante": 40,
+  "maidas": 70,
   "monh": 100,
   "biteroi": 0,
-  "rasho": 70,
-  "aracnida": 5,
-  "kazaro": 75,
-  "trelgon": 65,
-  "gaia": 25,
-  "ash": 85,
-  "driiar": 30,
-  "tenebris": 80,
+  "rasho": 35,
+  "aracnida": 0,
+  "kazaro": 60,
+  "trelgon": 80,
+  "gaia": 10,
+  "ash": 95,
+  "driiar": 25,
+  "tenebris": 75,
   "shai": 0
  },
  "aracnida": {
-  "beast": 20,
+  "beast": 15,
   "lire": 35,
   "nigromante": 0,
-  "maidas": 20,
-  "monh": 100,
+  "maidas": 30,
+  "monh": 90,
   "biteroi": 0,
-  "rasho": 30,
-  "takichi": 95,
-  "kazaro": 20,
-  "trelgon": 100,
-  "gaia": 35,
-  "ash": 60,
+  "rasho": 25,
+  "takichi": 100,
+  "kazaro": 45,
+  "trelgon": 95,
+  "gaia": 40,
+  "ash": 70,
   "driiar": 30,
   "tenebris": 75,
-  "shai": 90
+  "shai": 95
  },
  "kazaro": {
   "beast": 55,
   "lire": 50,
-  "nigromante": 100,
-  "maidas": 60,
+  "nigromante": 90,
+  "maidas": 50,
   "monh": 100,
-  "biteroi": 10,
+  "biteroi": 5,
   "rasho": 15,
-  "takichi": 25,
-  "aracnida": 80,
-  "trelgon": 95,
-  "gaia": 25,
+  "takichi": 40,
+  "aracnida": 55,
+  "trelgon": 100,
+  "gaia": 50,
   "ash": 100,
-  "driiar": 20,
-  "tenebris": 35,
+  "driiar": 35,
+  "tenebris": 50,
   "shai": 25
  },
  "trelgon": {
-  "beast": 5,
+  "beast": 0,
   "lire": 100,
   "nigromante": 100,
-  "maidas": 40,
-  "monh": 95,
+  "maidas": 35,
+  "monh": 100,
   "biteroi": 80,
   "rasho": 0,
-  "takichi": 35,
-  "aracnida": 0,
-  "kazaro": 5,
-  "gaia": 25,
-  "ash": 25,
-  "driiar": 10,
-  "tenebris": 90,
+  "takichi": 20,
+  "aracnida": 5,
+  "kazaro": 0,
+  "gaia": 45,
+  "ash": 65,
+  "driiar": 0,
+  "tenebris": 100,
   "shai": 0
  },
  "gaia": {
-  "beast": 35,
-  "lire": 35,
+  "beast": 50,
+  "lire": 40,
   "nigromante": 5,
   "maidas": 20,
   "monh": 10,
-  "biteroi": 35,
+  "biteroi": 50,
   "rasho": 60,
-  "takichi": 75,
-  "aracnida": 65,
-  "kazaro": 75,
-  "trelgon": 75,
-  "ash": 95,
-  "driiar": 10,
-  "tenebris": 85,
+  "takichi": 90,
+  "aracnida": 60,
+  "kazaro": 50,
+  "trelgon": 55,
+  "ash": 80,
+  "driiar": 15,
+  "tenebris": 95,
   "shai": 0
  },
  "ash": {
-  "beast": 5,
-  "lire": 25,
-  "nigromante": 35,
-  "maidas": 15,
+  "beast": 0,
+  "lire": 50,
+  "nigromante": 45,
+  "maidas": 10,
   "monh": 95,
   "biteroi": 0,
   "rasho": 0,
-  "takichi": 15,
-  "aracnida": 40,
+  "takichi": 5,
+  "aracnida": 30,
   "kazaro": 0,
-  "trelgon": 75,
-  "gaia": 5,
+  "trelgon": 35,
+  "gaia": 20,
   "driiar": 25,
   "tenebris": 95,
   "shai": 0
  },
  "driiar": {
-  "beast": 80,
-  "lire": 65,
+  "beast": 60,
+  "lire": 30,
+  "nigromante": 60,
+  "maidas": 80,
+  "monh": 100,
+  "biteroi": 0,
+  "rasho": 10,
+  "takichi": 75,
+  "aracnida": 70,
+  "kazaro": 65,
+  "trelgon": 100,
+  "gaia": 85,
+  "ash": 75,
+  "tenebris": 75,
+  "shai": 15
+ },
+ "tenebris": {
+  "beast": 55,
+  "lire": 5,
+  "nigromante": 20,
+  "maidas": 15,
+  "monh": 30,
+  "biteroi": 0,
+  "rasho": 0,
+  "takichi": 25,
+  "aracnida": 25,
+  "kazaro": 50,
+  "trelgon": 0,
+  "gaia": 5,
+  "ash": 5,
+  "driiar": 25,
+  "shai": 100
+ },
+ "shai": {
+  "beast": 90,
+  "lire": 95,
   "nigromante": 95,
   "maidas": 85,
   "monh": 100,
   "biteroi": 0,
-  "rasho": 50,
-  "takichi": 70,
-  "aracnida": 70,
-  "kazaro": 80,
-  "trelgon": 90,
-  "gaia": 90,
-  "ash": 75,
-  "tenebris": 85,
-  "shai": 45
- },
- "tenebris": {
-  "beast": 30,
-  "lire": 25,
-  "nigromante": 10,
-  "maidas": 25,
-  "monh": 25,
-  "biteroi": 0,
-  "rasho": 0,
-  "takichi": 20,
-  "aracnida": 25,
-  "kazaro": 65,
-  "trelgon": 10,
-  "gaia": 15,
-  "ash": 5,
-  "driiar": 15,
-  "shai": 100
- },
- "shai": {
-  "beast": 85,
-  "lire": 100,
-  "nigromante": 95,
-  "maidas": 75,
-  "monh": 100,
-  "biteroi": 0,
-  "rasho": 80,
+  "rasho": 75,
   "takichi": 100,
-  "aracnida": 10,
+  "aracnida": 5,
   "kazaro": 75,
   "trelgon": 100,
   "gaia": 100,
   "ash": 100,
-  "driiar": 55,
+  "driiar": 85,
   "tenebris": 0
  }
 };
@@ -4336,6 +4336,13 @@ class Game {
       this.heal(q, HABILIDADES.pozoMaldad.curaKill, q); this.emit({ k: 'heal', x: q.x | 0, y: q.y | 0 });
       this.emit({ k: 'txt', x: q.x | 0, y: q.y | 0, s: `POZO +${HABILIDADES.pozoMaldad.curaKill}`, id: q.id });
     }
+    // Ash (Seba 31-10): si un héroe enemigo muere dentro de su Espíritu del Fenix, sus habilidades 1 y 2 bajan 3 s
+    for (const q of this.players.values()) {
+      if (!q.alive || !q.fx.espirituFenix || this.teamOf(q.id) === this.teamOf(p.id) || dist(q, p) > HABILIDADES.espirituFenix.radio + CONFIG.RADIO_JUGADOR) continue;
+      const b = HABILIDADES.espirituFenix.bajaKill;
+      q.cd[1] = Math.max(0, q.cd[1] - b); q.cd[2] = Math.max(0, q.cd[2] - b);
+      this.emit({ k: 'txt', x: q.x | 0, y: q.y | 0, s: `FÉNIX −${b} S`, id: q.id });
+    }
     if (this.modo === 'pve') { this.caer(p); return; }
     p.hp = 0; p.alive = false; p.hidden = false;
     p.muertes = (p.muertes || 0) + 1;
@@ -4655,7 +4662,6 @@ class Game {
       if (d > CONFIG.RADIO_JUGADOR && angDiff(Math.atan2(pt.y - p.y, pt.x - p.x), a) > half + 0.25) continue;
       const hizo = this.damage(q, dmg, p, { tipo: 'fis', basico: true });
       // Takichi (Seba 29-10): cada básico que daña baja 0,25 s la recarga de sus habilidades 1 y 2
-      if (hizo > 0 && !reducido && HEROES[p.build?.heroe]?.pasiva === 'pasoSigiloso') { reducido = true; p.cd[1] = Math.max(0, p.cd[1] - 0.25); p.cd[2] = Math.max(0, p.cd[2] - 0.25); }
       // Shai (Seba 30-10): Pacto de sangre — cada 3 ataques al mismo enemigo en 3 s explota un sello (15 de daño y +5% de velocidad 3 s)
       if (hizo > 0 && HEROES[p.build?.heroe]?.pasiva === 'pactoSangre') {
         const c = p.pactoN || (p.pactoN = {}), r = c[q.id];
@@ -5994,8 +6000,7 @@ class Game {
     for (const p of alive) {
       if (p.bot) botThink(this, p, dt);
       const aliento = HEROES[p.build.heroe]?.pasiva === 'ultimoAliento' && p.hp < p.st.vidaMax * 0.3 ? 1 / 0.75 : 1;   // Kazaro: 25% menos de recarga bajo 30% de vida
-      const fenix = p.fx.espirituFenix ? 1 + p.fx.espirituFenix.n.cdr : 1;   // Ash: habilidades 25% más rápido (no la ulti)
-      for (let i = 0; i < 5; i++) p.cd[i] = Math.max(0, p.cd[i] - dt * (i > 0 ? aliento : 1) * (i === 1 || i === 2 ? fenix : 1));
+      for (let i = 0; i < 5; i++) p.cd[i] = Math.max(0, p.cd[i] - dt * (i > 0 ? aliento : 1) );
       // Ulti lista = carga llena Y recarga terminada (Seba 28-10)
       const ultiLista = p.ulti >= 1 && p.cd[3] <= 0;
       if (ultiLista && !p.ultiAvisada) this.emit({ k: 'txt', x: p.x | 0, y: p.y | 0, s: 'ULTI LISTA', id: p.id });
@@ -6159,6 +6164,7 @@ class Game {
           if (dist(e, p) > R + (e.esUnidad ? 12 : R)) continue;
           this.damage(e, f.n.dano, p, { tipo: 'fis', desde: p });
           if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'burn', { t: f.n.dur, dps: f.n.quema, src: p.id });
+          if (e.alive && e.kind !== 'muro') this.aplicarEfecto(e, 'slow', { t: HABILIDADES.patadaFenix.lentoDur, mult: 1 - HABILIDADES.patadaFenix.lento, k: 'patadaFenix' });   // Seba (31-10)
           this.emit({ k: 'boom', x: e.x | 0, y: e.y | 0, r: 40, c: 'fuego' }); this.emit({ k: 'fuegoHit', x: e.x | 0, y: e.y | 0 });
           this.emit({ k: 'tajo', x1: f.x0 | 0, y1: f.y0 | 0, x2: p.x | 0, y2: p.y | 0, c: 'fuego' });
           delete p.fx.saltoPatada; break;
@@ -11628,6 +11634,10 @@ $('b-coleccion').onclick = abrirColeccion;
 // Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
 const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V3.4', f: '31-10-2026', n: [
+    'Takichi: Sablazo 160 → 150 y 20% más angosto (también los tajos del ulti). La pasiva ya no baja recargas con los básicos (se mantiene la recarga a la mitad si el Sablazo mata).',
+    'Driiar: Embate recarga 9 → 10 s y cura 25 una vez por giro que daña a un héroe. Nephilim regenera 10 de vida por segundo (antes 20).',
+    'Ash: Patada del fénix recarga 15 s y deja 25% más lento por 2 s. Espíritu del Fénix ya no acelera recargas: cada héroe enemigo que muere dentro baja 3 s las habilidades 1 y 2.' ] },
   { v: 'V3.3', f: '31-10-2026', n: [
     'Celular: los avisos de muerte con caras son 20% más chicos y duran 10% menos.',
     'Celular: el selector para mirar a otro jugador al morir es 20% más chico.' ] },
