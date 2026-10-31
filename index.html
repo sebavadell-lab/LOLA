@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
-<title>LOLA V3.1</title>
+<title>LOLA V3.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
 <style>
@@ -930,7 +930,7 @@ select { font: 600 16px var(--f-titulo); color: var(--tinta); background: var(--
       <div class="logo">
         <h1>LOLA</h1>
         <p class="sub">Elige tu héroe y sobrevive en el claro del bosque.</p>
-        <p class="sub version">LOLA V3.1</p>
+        <p class="sub version">LOLA V3.2</p>
       </div>
       <div class="parade" id="parade"></div>
       <div class="panel">
@@ -11165,7 +11165,7 @@ function fichaHtml(k, colorIdx = 0, conId = true) {
       <div class="mu-fila"><span class="mu-t">Parejo con</span>${mu.parejo.map(x => chip(x, 'p')).join('') || '<span class="mu-nada">—</span>'}</div>
       <p class="fi-nota">% de duelos que gana, medido con bots (${MATCHUPS_INFO.duelos} por pareja). Es una guía: un jugador que apunta bien cambia los números.</p>` : '';
   return `<div class="fi-top"><img alt="" src="${retratoHeroe(k, colorIdx, 4)}">
-      <div><h3 ${conId ? 'id="fi-nombre"' : ''}>${esc(h.nombre)}</h3><div class="hr">${esc(h.rol)}</div><p class="fi-desc">${esc(h.desc)}</p></div></div>
+      <div><h3 ${conId ? 'id="fi-nombre"' : ''}>${esc(h.nombre)}</h3><div class="hr">${esc(h.rol)}</div>${MOSTRAR_DESC_HEROE ? `<p class="fi-desc">${esc(h.desc)}</p>` : ''}</div></div>
     <div class="heroe fi-stats">${statsHtml(h)}</div>
     <div class="fi-sec">Ataque básico</div><p class="fi-at">${esc(textoAtaque(h))}</p>
     <div class="fi-sec">Habilidades</div>${habs}
@@ -11237,7 +11237,7 @@ function renderMejoras() {
 
   const P = PASIVAS[h.pasiva] || { glifo: 'candado', nombre: 'Sin pasiva', desc: '' };
   $('sh-hoja').innerHTML = `<div class="hoja-top"><img class="retrato" alt="" src="${retratoDe(me, 4)}">
-      <div class="ht"><div class="hn1">${esc(me.name)}</div><div class="hc">${esc(h.nombre)} · ${esc(h.rol)}</div><div class="hd">${esc(h.desc)}</div></div></div>
+      <div class="ht"><div class="hn1">${esc(me.name)}</div><div class="hc">${esc(h.nombre)} · ${esc(h.rol)}</div>${MOSTRAR_DESC_HEROE ? `<div class="hd">${esc(h.desc)}</div>` : ''}</div></div>
     <div class="heroe" style="padding:6px">${statsHtml(h)}
       <div class="hab"><img alt="" src="${imgIcono(P.glifo, me.build.heroe)}"><div><b>Pasiva: ${esc(P.nombre)}</b><br>${esc(P.desc)}</div></div></div>`;
 
@@ -11617,7 +11617,11 @@ function abrirColeccion() {
 $('b-coleccion').onclick = abrirColeccion;
 // Seba (30-10): Patch Notes — historial de cambios de cada versión oficial (la más nueva arriba).
 // Al publicar una versión nueva en GitHub, agregar su entrada al principio de PATCH_NOTES.
+// Seba (31-10): la descripción del héroe (HEROES.x.desc) se oculta en las fichas mientras la reescribe; queda en config.js
+const MOSTRAR_DESC_HEROE = false;
 const PATCH_NOTES = [
+  { v: 'V3.2', f: '31-10-2026', n: [
+    'Fichas de héroes: se quitó el texto que describe a cada héroe y su apariencia (se reescribirá).' ] },
   { v: 'V3.1', f: '31-10-2026', n: [
     'Nuevo héroe: Driiar (Aliados). Embate en 3 pasos, Tótem de Gaia, Nephilim (ulti) y pasiva Duelo del bosque.',
     'Nuevo héroe: Ash, luchador del fénix (Aliados). Puños del fénix, Patada del fénix (carga y salta), Espíritu del Fénix (ulti) y pasiva Piel de brasa (−10% de daño de ataques básicos).' ] },
